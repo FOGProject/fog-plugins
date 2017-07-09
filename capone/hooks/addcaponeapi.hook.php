@@ -1,30 +1,30 @@
 <?php
 /**
- * Injects access control stuff into the api system.
+ * Injects capone stuff into the api system.
  *
  * PHP version 5
  *
- * @category AddSiteAPI
+ * @category AddCaponeAPI
  * @package  FOGProject
- * @author   Fernando Gietz <fernando.gietz@gmail.com>
+ * @author   Tom Elliott <tommygunsster@gmail.com>
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
 /**
- * Injects access control stuff into the api system.
+ * Injects capone stuff into the api system.
  *
- * @category AddSiteAPI
+ * @category AddCaponeAPI
  * @package  FOGProject
- * @author   Fernando Gietz <fernando.gietz@gmail.com>
+ * @author   Tom Elliott <tommygunsster@gmail.com>
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddSiteAPI extends Hook
+class AddCaponeAPI extends Hook
 {
-    public $name = 'AddSiteAPI';
-    public $description = 'Add Site stuff into the api system.';
+    public $name = 'AddCaponeAPI';
+    public $description = 'Add Capone stuff into the api system.';
     public $active = true;
-    public $node = 'site';
+    public $node = 'capone';
     /**
      * Initialize object.
      *
@@ -79,8 +79,7 @@ class AddSiteAPI extends Hook
         $arguments['validClasses'] = self::fastmerge(
             $arguments['validClasses'],
             array(
-                'site',
-                'sitehostassociation'
+                'capone'
             )
         );
     }
@@ -109,24 +108,6 @@ class AddSiteAPI extends Hook
         if (!in_array($this->node, (array)self::$pluginsinstalled)) {
             return;
         }
-        switch ($arguments['classname']) {
-        case 'site':
-            $arguments['data'][$arguments['classname'].'s'] = array();
-            $arguments['data']['count'] = 0;
-            $find = Route::getsearchbody($arguments['classname']);
-            foreach ((array)$arguments['classman']->find($find) as &$Site) {
-                $arguments['data'][$arguments['classname'].'s'][] = self::fastmerge(
-                    $Site->get(),
-                    array(
-                        'hosts' => array_map('intval', $Site->get('hosts')),
-                        'users' => array_map('intval', $Site->get('users'))
-                    )
-                );
-                $arguments['data']['count']++;
-                unset($Site);
-            }
-            break;
-        }
     }
     /**
      * This function changes the getter to enact on this particular item.
@@ -141,26 +122,17 @@ class AddSiteAPI extends Hook
             return;
         }
         switch ($arguments['classname']) {
-        case 'site':
+        case 'capone':
             $arguments['data'] = FOGCore::fastmerge(
                 $arguments['class']->get(),
                 array(
-                    'hosts' => $arguments['class']->get('hosts'),
-                    'hostcount' => count($arguments['class']->get('hosts')),
-                )
-            );
-            break;
-        case 'sitehostassociation':
-            $arguments['data'] = FOGCore::fastmerge(
-                $arguments['class']->get(),
-                array(
-                    'site' => Route::getter(
-                        'site',
-                        $arguments['class']->get('site')
+                    'image' => Route::getter(
+                        'image',
+                        $arguments['class']->get('image')
                     ),
-                    'host' => Route::getter(
-                        'host',
-                        $arguments['class']->get('host')
+                    'os' => Route::getter(
+                        'os',
+                        $arguments['class']->get('os')
                     )
                 )
             );
