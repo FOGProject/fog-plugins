@@ -81,6 +81,14 @@ class AccessControlDeleteMassItems extends Hook
                     'accesscontrolruleID' => $arguments['itemIDs']
                 ];
                 break;
+            // Below causes infinite loop when deleting any item from list with access control enabled, kept commented for reference
+            // default:
+            //     $arguments['removeItems']['accesscontrolassociation'] = [
+            //         'accesscontrolID' => $arguments['itemIDs']
+            //     ];
+            //     $arguments['removeItems']['accesscontrolruleassociation'] = [
+            //         'accesscontrolID' => $arguments['itemIDs']
+            //     ];
         }
     }
 }
