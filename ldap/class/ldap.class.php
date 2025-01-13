@@ -63,7 +63,8 @@ class LDAP extends FOGController
         'useGroupMatch' => 'lsUseGroupMatch',
         'displayNameOn' => 'lsDisplayNameEnabled',
         'displayNameAttr' => 'lsDisplayNameAttr',
-        'isLdaps' => 'lsIsLDAPs'
+        'isLdaps' => 'lsIsLDAPs',
+        'allowapi' => 'lsAllowAPI'
     ];
     /**
      * The required fields

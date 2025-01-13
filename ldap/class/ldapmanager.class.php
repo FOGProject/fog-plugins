@@ -64,7 +64,8 @@ class LDAPManager extends FOGManagerController
                 'lsUserFilter',
                 'lsDisplayNameEnabled',
                 'lsDisplayNameAttr',
-                'lsIsLDAPs'
+                'lsIsLDAPs',
+                'lsAllowAPI'
             ],
             [
                 'INTEGER',
@@ -88,9 +89,11 @@ class LDAPManager extends FOGManagerController
                 'VARCHAR(255)',
                 "ENUM('0','1')",
                 'VARCHAR(255)',
+                "ENUM('0', '1')",
                 "ENUM('0', '1')"
             ],
             [
+                false,
                 false,
                 false,
                 false,
@@ -133,6 +136,7 @@ class LDAPManager extends FOGManagerController
                 false,
                 false,
                 '0',
+                false,
                 false,
                 false,
                 false,

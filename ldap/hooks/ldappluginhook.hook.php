@@ -136,6 +136,7 @@ class LDAPPluginHook extends Hook
                 $displayName = self::getClass('LDAP', $ldap->id)
                     ->getDisplayName($user, $pass);
             }
+            $ldapAPI = self::getClass('LDAP', $ldap->id)->get('allowapi');
             unset($ldap);
             switch ($access) {
                 case 2:
@@ -145,6 +146,7 @@ class LDAPPluginHook extends Hook
                         ->set('password', $pass)
                         ->set('display', $displayName)
                         ->set('type', self::LDAP_ADMIN)
+                        ->set('api', $ldapAPI)
                         ->save();
                     break 2;
                 case 1:
@@ -154,6 +156,7 @@ class LDAPPluginHook extends Hook
                         ->set('password', $pass)
                         ->set('display', $displayName)
                         ->set('type', self::LDAP_MOBILE)
+                        ->set('api', $ldapAPI)
                         ->save();
                     break;
                 default:

@@ -138,6 +138,12 @@ class LDAPManagement extends FOGPage
             $isLDAPs ? 'checked' : ''
         );
 
+        $allowAPI = (
+            isset($_POST['allowapi']) ?: $this->obj->get('allowapi')
+        );
+
+        $isAPI = ($allowAPI ? 'checked' : '');
+
         $labelClass = 'col-sm-3 control-label';
 
         $fields = [
@@ -244,6 +250,26 @@ class LDAPManagement extends FOGPage
                 'text',
                 'grpSearchDN',
                 $grpSearchDN
+            ),
+            self::makeLabel(
+                $labelClass,
+                'allowapi',
+                _('Allow API')
+                . '<br/>('
+                . _('recommended')
+                . ')'
+            ) => self::makeInput(
+                '',
+                'allowapi',
+                '',
+                'checkbox',
+                'allowapi',
+                '',
+                false,
+                false,
+                -1,
+                -1,
+                'checked'
             ),
             self::makeLabel(
                 $labelClass,
@@ -608,6 +634,26 @@ class LDAPManagement extends FOGPage
                 'text',
                 'grpSearchDN',
                 $grpSearchDN
+            ),
+            self::makeLabel(
+                $labelClass,
+                'allowapi',
+                _('Allow API')
+                . '<br/>('
+                . _('recommended')
+                . ')'
+            ) => self::makeInput(
+                '',
+                'allowapi',
+                '',
+                'checkbox',
+                'allowapi',
+                '',
+                false,
+                false,
+                -1,
+                -1,
+                'checked'
             ),
             self::makeLabel(
                 $labelClass,
@@ -1042,6 +1088,12 @@ class LDAPManagement extends FOGPage
             $isLDAPs ? 'checked' : ''
         );
 
+        $allowAPI = (
+            isset($_POST['allowapi']) ?: $this->obj->get('allowapi')
+        );
+
+        $isAPI = ($allowAPI ? 'checked' : '');
+
         $labelClass = 'col-sm-3 control-label';
 
         $fields = [
@@ -1148,6 +1200,26 @@ class LDAPManagement extends FOGPage
                 'text',
                 'grpSearchDN',
                 $grpSearchDN
+            ),
+            self::makeLabel(
+                $labelClass,
+                'allowapi',
+                _('Allow API')
+                . '<br/>('
+                . _('recommended')
+                . ')'
+            ) => self::makeInput(
+                '',
+                'allowapi',
+                '',
+                'checkbox',
+                'allowapi',
+                '',
+                false,
+                false,
+                -1,
+                -1,
+                $isAPI
             ),
             self::makeLabel(
                 $labelClass,
@@ -1386,6 +1458,7 @@ class LDAPManagement extends FOGPage
         );
 
         $isLDAPs = (int)isset($_POST['isLDAPs']);
+        $isAPI = (int)isset($_POST['allowapi']);
 
         if (!is_numeric($searchScope)) {
             $searchScope = 0;
@@ -1430,6 +1503,7 @@ class LDAPManagement extends FOGPage
             ->set('useGroupMatch', $useGroupMatch)
             ->set('grpSearchDN', $grpSearchDN)
             ->set('displayNameOn', $displayNameOn)
+            ->set('allowapi', $isAPI)
             ->set('displayNameAttr', $displayNameAttr);
     }
     /**
