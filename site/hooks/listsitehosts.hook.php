@@ -85,6 +85,9 @@ class ListSiteHosts extends Hook
             Route::getData(),
             true
         );
+        if (!$sites) {
+            return;
+        }
         $find = ['siteID' => $sites];
         Route::ids(
             'sitehostassociation',
@@ -95,6 +98,9 @@ class ListSiteHosts extends Hook
             Route::getData(),
             true
         );
+        if (!$hosts) {
+            return;
+        }
         Route::listem(
             'host',
             ['id' => $hosts]
