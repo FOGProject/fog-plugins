@@ -111,6 +111,21 @@ class DelAccessControlMenuItem extends Hook
         return $Rules;
     }
     /**
+     * Check if rule = node more consistently
+     *
+     * @param stdClass $Rule The rule we're checking
+     *
+     * @return bool
+     */
+    private function checkRuleNode($Rule)
+    {
+        global $node;
+        if ($Rule->node) {
+            return $Rule->node == $node;
+        }
+        return true;
+    }
+    /**
      * Remove the action box
      *
      * @param mixed $arguments The arguments to change.
@@ -118,12 +133,10 @@ class DelAccessControlMenuItem extends Hook
     public function deleteActionBoxData($arguments)
     {
         $Rules = $this->getAccessControlRules($arguments['event']);
-        foreach ($Rules->data as &$Rule) {
-            $arguments[$Rule->value] = '';
-            unset(
-                $arguments[$Rule->value],
-                $Rule
-            );
+        foreach ($Rules->data as $Rule) {
+            if ($this->checkRuleNode($Rule)) {
+                $arguments[$Rule->value] = '';
+            }
         }
     }
     /**
@@ -136,11 +149,10 @@ class DelAccessControlMenuItem extends Hook
     public function deleteMenuData($arguments)
     {
         $Rules = $this->getAccessControlRules($arguments['event']);
-        foreach ($Rules->data as &$Rule) {
-            unset(
-                $arguments[$Rule->parent][$Rule->value],
-                $Rule
-            );
+        foreach ($Rules->data as $Rule) {
+            if ($this->checkRuleNode($Rule)) {
+                unset($arguments[$Rule->parent][$Rule->value]);
+            }
         }
     }
     /**
@@ -153,18 +165,10 @@ class DelAccessControlMenuItem extends Hook
     public function deleteSubMenuData($arguments)
     {
         $Rules = $this->getAccessControlRules($arguments['event']);
-        foreach ($Rules->data as &$Rule) {
-            // If to impact a specific node.
-            if ($Rule->node) {
-                if ($arguments['node'] != $Rule->node) {
-                    continue;
-                }
+        foreach ($Rules->data as $Rule) {
+            if ($this->checkRuleNode($Rule)) {
                 unset($arguments[$Rule->parent][$Rule->value]);
-                continue;
             }
-            // If to impact a specific link.
-            unset($arguments[$Rule->parent][$Rule->value]);
-            unset($Rule);
         }
     }
 }
