@@ -62,16 +62,19 @@ class DelAccessControlMenuItem extends Hook
         )->register(
             'DELETE_MENULINK_DATA',
             [$this, 'deleteSubMenuData']
+        )->register(
+            'ACTIONBOX',
+            [$this, 'deleteActionBoxData']
         );
     }
     /**
-     * The menu data to change.
+     * Get the access control rules more centrally.
      *
-     * @param mixed $arguments The arguments to change.
+     * @param string $event The rule type to get
      *
-     * @return void
+     * @return []
      */
-    public function deleteMenuData($arguments)
+    private function getAccessControlRules($event)
     {
         $find = ['userID' => self::$FOGUser->get('id')];
         Route::ids(
@@ -84,18 +87,47 @@ class DelAccessControlMenuItem extends Hook
             true
         );
         $find = ['accesscontrolID' => $accesscontrols];
-        Route::listem(
+        Route::ids(
             'accesscontrolruleassociation',
+            $find,
+            'accesscontrolruleID'
+        );
+        $ruleIDs = json_decode(
+            Route::getData(),
+            true
+        );
+        $find = ['id' => $ruleIDs, 'type' => $event];
+        Route::listem(
+            'accesscontrolrule',
             $find
         );
-        $Rules = json_decode(
-            Route::getData()
-        );
+        $Rules = json_decode(Route::getData());
+        return $Rules;
+    }
+    /**
+     * Remove the action box
+     *
+     * @param mixed $arguments The arguments to change.
+     */
+    public function deleteActionBoxData($arguments)
+    {
+        $Rules = $this->getAccessControlRules($arguments['event']);
         foreach ($Rules->data as &$Rule) {
-            Route::indiv('accesscontrolrule', $Rule->accesscontrolruleID);
-            $Rule = json_decode(
-                Route::getData()
-            );
+            $arguments[$Rule->value] = '';
+            unset($Rule);
+        }
+    }
+    /**
+     * The menu data to change.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function deleteMenuData($arguments)
+    {
+        $Rules = $this->getAccessControlRules($arguments['event']);
+        foreach ($Rules->data as &$Rule) {
             unset(
                 $arguments[$Rule->parent][$Rule->value],
                 $Rule
@@ -111,29 +143,8 @@ class DelAccessControlMenuItem extends Hook
      */
     public function deleteSubMenuData($arguments)
     {
-        $find = ['userID' => self::$FOGUser->get('id')];
-        Route::ids(
-            'accesscontrolassociation',
-            $find,
-            'accesscontrolID'
-        );
-        $accesscontrols = json_decode(
-            Route::getData(),
-            true
-        );
-        $find = ['accesscontrolID' => $accesscontrols];
-        Route::listem(
-            'accesscontrolruleassociation',
-            $find
-        );
-        $Rules = json_decode(
-            Route::getData()
-        );
+        $Rules = $this->getAccessControlRules($arguments['event']);
         foreach ($Rules->data as &$Rule) {
-            Route::indiv('accesscontrolrule', $Rule->accesscontrolruleID);
-            $Rule = json_decode(
-                Route::getData()
-            );
             // If to impact a specific node.
             if ($Rule->node) {
                 if ($arguments['node'] != $Rule->node) {
