@@ -74,8 +74,9 @@ class DelAccessControlMenuItem extends Hook
      *
      * @return []
      */
-    private function getAccessControlRules($event)
+    private function getAccessControlRules($event, $anode = '')
     {
+        global $node;
         $find = ['userID' => self::$FOGUser->get('id')];
         Route::ids(
             'accesscontrolassociation',
@@ -102,28 +103,21 @@ class DelAccessControlMenuItem extends Hook
         if (!$ruleIDs) {
             return new stdClass(['data' => []]);
         }
-        $find = ['id' => $ruleIDs, 'type' => $event];
+        $nodes = [
+            '',
+            $node
+        ];
+        if ($anode) {
+            array_push($nodes, $anode);
+        }
+
+        $find = ['id' => $ruleIDs, 'type' => $event, 'node' => $nodes];
         Route::listem(
             'accesscontrolrule',
             $find
         );
         $Rules = json_decode(Route::getData());
         return $Rules;
-    }
-    /**
-     * Check if rule = node more consistently
-     *
-     * @param stdClass $Rule The rule we're checking
-     *
-     * @return bool
-     */
-    private function checkRuleNode($Rule)
-    {
-        global $node;
-        if ($Rule->node) {
-            return $Rule->node == $node;
-        }
-        return true;
     }
     /**
      * Remove the action box
@@ -134,9 +128,7 @@ class DelAccessControlMenuItem extends Hook
     {
         $Rules = $this->getAccessControlRules($arguments['event']);
         foreach ($Rules->data as $Rule) {
-            if ($this->checkRuleNode($Rule)) {
-                $arguments[$Rule->value] = '';
-            }
+            $arguments[$Rule->value] = '';
         }
     }
     /**
@@ -150,9 +142,7 @@ class DelAccessControlMenuItem extends Hook
     {
         $Rules = $this->getAccessControlRules($arguments['event']);
         foreach ($Rules->data as $Rule) {
-            if ($this->checkRuleNode($Rule)) {
-                unset($arguments[$Rule->parent][$Rule->value]);
-            }
+            unset($arguments[$Rule->parent][$Rule->value]);
         }
     }
     /**
@@ -164,11 +154,9 @@ class DelAccessControlMenuItem extends Hook
      */
     public function deleteSubMenuData($arguments)
     {
-        $Rules = $this->getAccessControlRules($arguments['event']);
+        $Rules = $this->getAccessControlRules($arguments['event'], $arguments['node']);
         foreach ($Rules->data as $Rule) {
-            if ($this->checkRuleNode($Rule)) {
-                unset($arguments[$Rule->parent][$Rule->value]);
-            }
+            unset($arguments[$Rule->parent][$Rule->value]);
         }
     }
 }
