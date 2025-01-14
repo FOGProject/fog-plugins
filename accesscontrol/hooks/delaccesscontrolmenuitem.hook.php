@@ -86,6 +86,9 @@ class DelAccessControlMenuItem extends Hook
             Route::getData(),
             true
         );
+        if (!$accesscontrols) {
+            return new stdClass(['data' => []]);
+        }
         $find = ['accesscontrolID' => $accesscontrols];
         Route::ids(
             'accesscontrolruleassociation',
@@ -96,6 +99,9 @@ class DelAccessControlMenuItem extends Hook
             Route::getData(),
             true
         );
+        if (!$ruleIDs) {
+            return new stdClass(['data' => []]);
+        }
         $find = ['id' => $ruleIDs, 'type' => $event];
         Route::listem(
             'accesscontrolrule',
@@ -114,7 +120,10 @@ class DelAccessControlMenuItem extends Hook
         $Rules = $this->getAccessControlRules($arguments['event']);
         foreach ($Rules->data as &$Rule) {
             $arguments[$Rule->value] = '';
-            unset($Rule);
+            unset(
+                $arguments[$Rule->value],
+                $Rule
+            );
         }
     }
     /**
