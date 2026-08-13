@@ -1,0 +1,5 @@
+# Repository docs are not web content. The installer untars this straight into
+# lib/plugins, so anything exported here ends up served by the web server.
+README.md      export-ignore
+LICENSE        export-ignore
+.gitattributes export-ignore
