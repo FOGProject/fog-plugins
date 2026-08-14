@@ -54,7 +54,11 @@ plugin is active and installed — a plugin never ships a systemd unit of its
 own. It runs as the web user rather than root, and `run()` has to be
 idempotent. See `helloworld/tasks/helloworldheartbeat.task.php` for a worked
 example and ADR 0010 in `FOGProject/fogproject` for why it is shaped this way.
-Requires FOG 1.6.0-beta.3349 or newer.
+
+Requires FOG **1.6.0-beta.3350** or newer. The runner itself landed in
+beta.3349, but `PluginTask::log()` — which the example uses — landed one build
+later; on beta.3349 the task is discovered and then fails with an undefined
+method, which the runner catches and logs rather than crashing on.
 
 `index.php` at the root is the directory-listing guard, and is shipped with
 the rest.
