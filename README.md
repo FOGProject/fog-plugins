@@ -44,8 +44,17 @@ Each directory is one plugin, laid out exactly as it appears under
   class/                      model + manager (schema migrations live here)
   pages/                      the management page
   hooks/                      hook registrations
+  tasks/                      scheduled background work (optional)
   js/                         fog.<node>.<sub>.js
 ```
+
+A `tasks/<name>.task.php` declares a class extending `PluginTask` with an
+`$interval` and a `run()`, and the `FOGPluginRunner` daemon runs it while the
+plugin is active and installed — a plugin never ships a systemd unit of its
+own. It runs as the web user rather than root, and `run()` has to be
+idempotent. See `helloworld/tasks/helloworldheartbeat.task.php` for a worked
+example and ADR 0010 in `FOGProject/fogproject` for why it is shaped this way.
+Requires FOG 1.6.0-beta.3349 or newer.
 
 `index.php` at the root is the directory-listing guard, and is shipped with
 the rest.
@@ -60,7 +69,7 @@ the rest.
 | `location` | 1.6.0 | Serve images from the storage node nearest a host — multi-site installs |
 | `ntfy` | 1.6.0 | Notifications via ntfy.sh or a self-hosted ntfy server |
 | `ou` | 1.6.0 | Predefine Active Directory OUs and associate them with hosts |
-| `persistentgroups` | 1.6.0 | Keep group membership across re-registration |
+| `persistentgroups` | 1.6.0 | On joining a group, copy image, AD, printer and location settings from a template host named after that group |
 | `pushbullet` | 1.6.0 | Pushbullet notifications |
 | `site` | 1.6.0 | Group hosts into sites; limit which hosts a user can see |
 | `slack` | 1.6.0 | Slack API integration |
