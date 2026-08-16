@@ -147,15 +147,12 @@ abstract class NtfyExtends extends Event
     public function onEvent($event, $data)
     {
         self::$elements = $data;
-        Route::listem('ntfy');
-        $Ntfys = json_decode(
-            Route::getData()
-        );
+        $Ntfys = Route::getList('ntfy');
         // Invoke the closure stored in the static property. Calling
         // self::$eventloop($x) directly is parsed as a static method named
         // by a local variable, not as invoking the closure.
         $eventloop = self::$eventloop;
-        foreach ($Ntfys->data as &$Ntfy) {
+        foreach ($Ntfys as &$Ntfy) {
             $eventloop($Ntfy);
             unset($Ntfy);
         }

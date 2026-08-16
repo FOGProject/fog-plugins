@@ -90,12 +90,9 @@ class AddSiteHost extends Hook
      */
     public function hostSite($obj)
     {
-        Route::listem('sitehostassociation');
-        $items = json_decode(
-            Route::getData()
-        );
+        $items = Route::getList('sitehostassociation');
         $site = 0;
-        foreach ((array)$items->data as &$item) {
+        foreach ($items as &$item) {
             if ($item->hostID == $obj->get('id')) {
                 $site = $item->siteID;
                 unset($item);

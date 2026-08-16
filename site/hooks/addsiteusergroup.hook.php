@@ -90,12 +90,9 @@ class AddSiteUserGroup extends Hook
      */
     public function usergroupSite($obj)
     {
-        Route::listem('siteusergroupassociation');
-        $items = json_decode(
-            Route::getData()
-        );
+        $items = Route::getList('siteusergroupassociation');
         $site = 0;
-        foreach ((array)$items->data as &$item) {
+        foreach ($items as &$item) {
             if ($item->usergroupID == $obj->get('id')) {
                 $site = $item->siteID;
                 unset($item);

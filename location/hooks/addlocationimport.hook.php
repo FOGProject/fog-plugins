@@ -83,9 +83,7 @@ class AddLocationImport extends Hook
         if (count($ids) < 1) {
             return;
         }
-        Route::listem('Location', false, true);
-        $locations = json_decode(Route::getData());
-        $locations = isset($locations->data) ? $locations->data : [];
+        $locations = Route::getList('Location');
         $locationNames = [];
         foreach ($locations as $l) {
             if (isset($l->id)) {
@@ -93,9 +91,7 @@ class AddLocationImport extends Hook
                     ? (string)$l->name : '';
             }
         }
-        Route::listem('LocationAssociation', ['hostID' => $ids], true);
-        $rows = json_decode(Route::getData());
-        $rows = isset($rows->data) ? $rows->data : [];
+        $rows = Route::getList('LocationAssociation', ['hostID' => $ids]);
         $byHost = [];
         foreach ($rows as $r) {
             $hid = isset($r->hostID) ? (string)$r->hostID : '';

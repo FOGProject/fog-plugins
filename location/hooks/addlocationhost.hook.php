@@ -94,12 +94,9 @@ class AddLocationHost extends Hook
      */
     public function hostLocation($obj)
     {
-        Route::listem('locationassociation');
-        $items = json_decode(
-            Route::getData()
-        );
+        $items = Route::getList('locationassociation');
         $location = 0;
-        foreach ((array)$items->data as &$item) {
+        foreach ($items as &$item) {
             if ($item->hostID == $obj->get('id')) {
                 $location = $item->locationID;
                 unset($item);

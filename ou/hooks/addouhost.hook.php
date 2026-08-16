@@ -94,12 +94,9 @@ class AddOUHost extends Hook
      */
     public function hostOU($obj)
     {
-        Route::listem('ouassociation');
-        $items = json_decode(
-            Route::getData()
-        );
+        $items = Route::getList('ouassociation');
         $ou = 0;
-        foreach ((array)$items->data as &$item) {
+        foreach ($items as &$item) {
             if ($item->hostID == $obj->get('id')) {
                 $ou = $item->ouID;
                 unset($item);

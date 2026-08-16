@@ -51,12 +51,9 @@ class SnapinComplete_Slack extends Event
      */
     public function onEvent($event, $data)
     {
-        Route::listem('slack');
-        $Slacks = json_decode(
-            Route::getData()
-        );
+        $Slacks = Route::getList('slack');
         $hostname = $data['Host']->get('name');
-        foreach ($Slacks->data as $Slack) {
+        foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,
                 'text' => sprintf(

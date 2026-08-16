@@ -54,11 +54,8 @@ class SnapinTaskComplete_Slack extends Event
         $hostname = $data['Host']->get('name');
         $snapinname = $data['Snapin']->get('name');
         $statuscode = $data['SnapinTask']->get('return');
-        Route::listem('slack');
-        $Slacks = json_decode(
-            Route::getData()
-        );
-        foreach ($Slacks->data as $Slack) {
+        $Slacks = Route::getList('slack');
+        foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,
                 'text' => sprintf(

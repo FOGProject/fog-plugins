@@ -109,15 +109,12 @@ abstract class PushbulletExtends extends Event
     public function onEvent($event, $data)
     {
         self::$elements = $data;
-        Route::listem('pushbullet');
-        $Pushbullets = json_decode(
-            Route::getData()
-        );
+        $Pushbullets = Route::getList('pushbullet');
         // Invoke the closure stored in the static property. Calling
         // self::$eventloop($x) directly is parsed as a static method named
         // by a local variable, not as invoking the closure.
         $eventloop = self::$eventloop;
-        foreach ($Pushbullets->data as &$Pushbullet) {
+        foreach ($Pushbullets as &$Pushbullet) {
             $eventloop($Pushbullet);
             unset($Pushbullet);
         }
