@@ -129,7 +129,7 @@ class LDAPManagement extends FOGPage
             $verify = 'inherit';
         }
         if (!in_array($verify, LDAP::TLS_VERIFY_LEVELS, true)) {
-            throw new Exception(
+            throw new \Exception(
                 _('Please select a valid certificate verification level')
             );
         }
@@ -181,7 +181,7 @@ class LDAPManagement extends FOGPage
             $strategy = 'off';
         }
         if (!array_key_exists($strategy, self::_nestedStrategies())) {
-            throw new Exception(
+            throw new \Exception(
                 _('Please select a valid nested group strategy')
             );
         }
@@ -192,14 +192,14 @@ class LDAPManagement extends FOGPage
             $depth = 0;
         }
         if (!is_numeric($depth)) {
-            throw new Exception(_('Nested depth must be a number'));
+            throw new \Exception(_('Nested depth must be a number'));
         }
         $depth = (int)$depth;
         // Upper bound is a typo guard, not a policy: each level is one more
         // query on every sign-in, and a fat-fingered 1000 would hang logins
         // against a slow directory rather than fail visibly.
         if ($depth < 0 || $depth > 100) {
-            throw new Exception(
+            throw new \Exception(
                 _('Nested depth must be between 0 and 100, or blank to inherit')
             );
         }
@@ -228,7 +228,7 @@ class LDAPManagement extends FOGPage
                 $tls['caCert']
             );
             if (false === $supported) {
-                throw new Exception(
+                throw new \Exception(
                     _(
                         'This directory does not advertise support for '
                         . 'nested group chaining, so the chain strategy '
@@ -707,7 +707,7 @@ class LDAPManagement extends FOGPage
                 $ports = preg_replace('#\s+#', '', $ports);
                 $ports = explode(',', $ports);
                 if (!in_array($port, $ports)) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('Please select a valid ldap port')
                     );
                 }
@@ -718,7 +718,7 @@ class LDAPManagement extends FOGPage
                 $exists = self::getClass('LDAPManager')
                     ->exists($ldap);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('An LDAP server already exists with this name!')
                     );
                 }
@@ -746,7 +746,7 @@ class LDAPManagement extends FOGPage
                     ->set('displayNameAttr', $displayNameAttr);
                 if (!$LDAP->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add LDAP server failed!'));
+                    throw new \Exception(_('Add LDAP server failed!'));
                 }
                 return $LDAP;
             }
@@ -1304,7 +1304,7 @@ class LDAPManagement extends FOGPage
         $ports = preg_replace('#\s+#', '', $ports);
         $ports = explode(',', $ports);
         if (!in_array($port, $ports)) {
-            throw new Exception(
+            throw new \Exception(
                 _('Please select a valid ldap port')
             );
         }
@@ -1317,7 +1317,7 @@ class LDAPManagement extends FOGPage
         if ($ldap != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A LDAP setup already exists with this name!')
             );
         }
@@ -1576,20 +1576,20 @@ class LDAPManagement extends FOGPage
         $serverFault = false;
         try {
             if (!$port) {
-                throw new Exception(_('A port must be specified'));
+                throw new \Exception(_('A port must be specified'));
             }
             $port = preg_replace('#\s+#', '', $port);
             $ports = explode(',', $port);
             foreach ($ports as &$port) {
                 $port = intval($port);
                 if (!is_int($port) || $port < 1 || $port > 65535) {
-                    throw new Exception(_('All ports must be numeric, greater than 0, and less than 65536'));
+                    throw new \Exception(_('All ports must be numeric, greater than 0, and less than 65536'));
                 }
                 unset($port);
             }
             if (!self::setSetting('FOG_PLUGIN_LDAP_PORTS', implode(',', $ports))) {
                 $serverFault = true;
-                throw new Exception(_('Unable to set ldap ports.'));
+                throw new \Exception(_('Unable to set ldap ports.'));
             }
             // The global floor for the `expand` strategy. Unlike the
             // per-server override, 0 is not "inherit" here -- there is
@@ -1603,7 +1603,7 @@ class LDAPManagement extends FOGPage
                 || (int)$nestedDepth < 1
                 || (int)$nestedDepth > 100
             ) {
-                throw new Exception(
+                throw new \Exception(
                     _('Nested group depth must be between 1 and 100')
                 );
             }
@@ -1612,7 +1612,7 @@ class LDAPManagement extends FOGPage
                 (int)$nestedDepth
             )) {
                 $serverFault = true;
-                throw new Exception(_('Unable to set nested group depth.'));
+                throw new \Exception(_('Unable to set nested group depth.'));
             }
             // Blank is a legitimate choice meaning "grant nothing", so only
             // a non-blank value is checked -- and it is checked against the
@@ -1625,13 +1625,13 @@ class LDAPManagement extends FOGPage
             foreach ($roleFields as $field => $settingKey) {
                 $roleId = trim((string)filter_input(INPUT_POST, $field));
                 if ('' !== $roleId && !in_array($roleId, $validRoles, true)) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A selected role no longer exists')
                     );
                 }
                 if (!self::setSetting($settingKey, $roleId)) {
                     $serverFault = true;
-                    throw new Exception(_('Unable to set LDAP role mapping.'));
+                    throw new \Exception(_('Unable to set LDAP role mapping.'));
                 }
             }
             $hook = 'LDAP_GLOBAL_EDIT_SUCCESS';
@@ -1642,7 +1642,7 @@ class LDAPManagement extends FOGPage
                     'title' => _('Global Settings Update Success')
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $hook = 'LDAP_GLOBAL_EDIT_FAIL';
             $code = (
                 $serverFault ?
@@ -1977,7 +1977,7 @@ class LDAPManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('LDAP Server update failed!'));
+                    throw new \Exception(_('LDAP Server update failed!'));
                 }
             }
         );

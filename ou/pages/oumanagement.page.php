@@ -155,7 +155,7 @@ class OUManagement extends FOGPage
                 $exists = self::getClass('OUManager')
                     ->exists($ou);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('An ou already exists with this name!')
                     );
                 }
@@ -165,7 +165,7 @@ class OUManagement extends FOGPage
                     ->set('ou', $oudn);
                 if (!$OU->save()) {
                     $serverFault = false;
-                    throw new Exception(_('Add ou failed!'));
+                    throw new \Exception(_('Add ou failed!'));
                 }
                 return $OU;
             }
@@ -300,7 +300,7 @@ class OUManagement extends FOGPage
         if ($ou != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('An OU already exists with this name!')
             );
         }
@@ -391,7 +391,7 @@ class OUManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('OU update failed!'));
+                    throw new \Exception(_('OU update failed!'));
                 }
             }
         );

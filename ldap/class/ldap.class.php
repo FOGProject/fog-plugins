@@ -440,12 +440,12 @@ class LDAP extends FOGController
             return;
         }
         if ('/' !== $caCert[0]) {
-            throw new Exception(
+            throw new \Exception(
                 _('The CA certificate path must be absolute')
             );
         }
         if (strlen($caCert) > 255) {
-            throw new Exception(
+            throw new \Exception(
                 _('The CA certificate path is too long (255 characters max)')
             );
         }
@@ -480,7 +480,7 @@ class LDAP extends FOGController
             return;
         }
         if (!in_array($verify, self::TLS_VERIFY_LEVELS, true)) {
-            throw new Exception(
+            throw new \Exception(
                 sprintf(
                     /* translators: %s is the rejected value */
                     _('Invalid certificate verification level: %s'),
@@ -515,7 +515,7 @@ class LDAP extends FOGController
             $this->get('tlsCaCert')
         );
         if (false === $supported) {
-            throw new Exception(
+            throw new \Exception(
                 _(
                     'This directory does not advertise support for nested '
                     . 'group chaining, so the chain strategy would match '
@@ -629,7 +629,7 @@ class LDAP extends FOGController
         $func = $function;
         $function = 'ldap_'.$func;
         if (!function_exists($function)) {
-            throw new Exception(
+            throw new \Exception(
                 sprintf(
                     '%s %s',
                     _('Function does not exist'),
@@ -661,9 +661,9 @@ class LDAP extends FOGController
         if (self::$_ldapconn) {
             try {
                 return @ldap_unbind(self::$_ldapconn);
-            } catch (TypeError $e) {
+            } catch (\TypeError $e) {
                 error_log(print_r($e, 1));
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 error_log(print_r($e, 1));
             } finally {
                 // Clear the handle whatever happened, so the guard above
@@ -699,7 +699,7 @@ class LDAP extends FOGController
         $ports = explode(',', self::getSetting('FOG_PLUGIN_LDAP_PORTS'));
         $address = $this->get('address');
         if (!in_array($port, $ports)) {
-            throw new Exception(_('Port is not valid ldap/ldaps port'));
+            throw new \Exception(_('Port is not valid ldap/ldaps port'));
         }
         $sock = @pfsockopen(
             $address,
@@ -1613,7 +1613,7 @@ class LDAP extends FOGController
                 )
                 ->fetch('', 'fetch_all')
                 ->get();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log(
                 sprintf(
                     '%s %s() %s: %s',

@@ -275,7 +275,7 @@ class AddOUHost extends Hook
                     'title' => _('Host OU Update Success')
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
                 HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :

@@ -103,7 +103,7 @@ abstract class NtfyExtends extends Event
                     $title,
                     _(self::$message)
                 );
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 error_log(
                     sprintf(
                         'FOG ntfy: push to %s failed: %s',

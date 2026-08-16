@@ -137,12 +137,12 @@ class CaponeManagement extends FOGPage
                 $os = $image->getOS();
                 $osID = $os->get('id');
                 if (!$image->isValid()) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('Please select a valid image')
                     );
                 }
                 if (!$os->isValid()) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('The image associated does not have a valid OS!')
                     );
                 }
@@ -152,7 +152,7 @@ class CaponeManagement extends FOGPage
                     ->set('key', $key);
                 if (!$Capone->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add capone failed!'));
+                    throw new \Exception(_('Add capone failed!'));
                 }
                 return $Capone;
             }
@@ -266,12 +266,12 @@ class CaponeManagement extends FOGPage
         $osID = $os->get('id');
 
         if (!$image->isValid()) {
-            throw new Exception(
+            throw new \Exception(
                 _('Please select a valid image')
             );
         }
         if (!$os->isValid()) {
-            throw new Exception(
+            throw new \Exception(
                 _('The image associated does not have a valid OS!')
             );
         }
@@ -432,15 +432,15 @@ class CaponeManagement extends FOGPage
         $serverFault = false;
         try {
             if (!$dmifield) {
-                throw new Exception(_('A dmi field must be set!'));
+                throw new \Exception(_('A dmi field must be set!'));
             }
             if (!self::setSetting('FOG_PLUGIN_CAPONE_DMI', $dmifield)) {
                 $serverFault = true;
-                throw new Exception(_('Unable to set dmi field'));
+                throw new \Exception(_('Unable to set dmi field'));
             }
             if (!self::setSetting('FOG_PLUGIN_CAPONE_SHUTDOWN', $action)) {
                 $serverFault = true;
-                throw new Exception(_('Unable to set action field'));
+                throw new \Exception(_('Unable to set action field'));
             }
             $hook = 'CAPONE_GLOBAL_EDIT_SUCCESS';
             $code = HTTPResponseCodes::HTTP_ACCEPTED;
@@ -450,7 +450,7 @@ class CaponeManagement extends FOGPage
                     'title' => _('Global Settings Update Success')
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $hook = 'CAPONE_GLOBAL_EDIT_FAIL';
             $code = (
                 $serverFault ?
@@ -495,7 +495,7 @@ class CaponeManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Capone update failed!'));
+                    throw new \Exception(_('Capone update failed!'));
                 }
             }
         );

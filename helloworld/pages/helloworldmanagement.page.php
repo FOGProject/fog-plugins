@@ -148,12 +148,12 @@ class HelloWorldManagement extends FOGPage
                     filter_input(INPUT_POST, 'description')
                 );
                 if (empty($name)) {
-                    throw new Exception(_('Please enter a name'));
+                    throw new \Exception(_('Please enter a name'));
                 }
                 $exists = self::getClass('HelloWorldManager')
                     ->exists($name);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('An entry already exists with this name!')
                     );
                 }
@@ -162,7 +162,7 @@ class HelloWorldManagement extends FOGPage
                     ->set('description', $description);
                 if (!$HelloWorld->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add Hello World failed!'));
+                    throw new \Exception(_('Add Hello World failed!'));
                 }
                 return $HelloWorld;
             }
@@ -273,14 +273,14 @@ class HelloWorldManagement extends FOGPage
         );
 
         if (empty($name)) {
-            throw new Exception(_('Please enter a name'));
+            throw new \Exception(_('Please enter a name'));
         }
         $exists = self::getClass('HelloWorldManager')
             ->exists($name);
         if ($name != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('An entry already exists with this name!')
             );
         }
@@ -328,7 +328,7 @@ class HelloWorldManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Hello World update failed!'));
+                    throw new \Exception(_('Hello World update failed!'));
                 }
             }
         );

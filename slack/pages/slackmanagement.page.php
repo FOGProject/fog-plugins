@@ -140,7 +140,7 @@ class SlackManagement extends FOGPage
                 $usertype = preg_match('/^[@]/', $user);
                 $channeltype = preg_match('/^[#]/', $user);
                 if (!$usertype && !$channeltype) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('Please start user/channel with @/# respectively')
                     );
                 }
@@ -148,7 +148,7 @@ class SlackManagement extends FOGPage
                     ->set('token', $token)
                     ->set('name', $user);
                 if (!$Slack->verifyToken()) {
-                    throw new Exception(_('Invalid token passed'));
+                    throw new \Exception(_('Invalid token passed'));
                 }
                 $user = preg_replace('/^[#@]/', '', $user);
                 if ($usertype) {
@@ -157,7 +157,7 @@ class SlackManagement extends FOGPage
                         $Slack->getUsers()
                     );
                     if ($search === false) {
-                        throw new Exception(_('User not found'));
+                        throw new \Exception(_('User not found'));
                     }
                 }
                 if ($channeltype) {
@@ -166,7 +166,7 @@ class SlackManagement extends FOGPage
                         $Slack->getChannels()
                     );
                     if ($search === false) {
-                        throw new Exception(_('Channel not found'));
+                        throw new \Exception(_('Channel not found'));
                     }
                 }
                 $exists = self::getClass('SlackManager')
@@ -174,13 +174,13 @@ class SlackManagement extends FOGPage
                 $exists2 = self::getClass('SlackManager')
                     ->exists($usersend);
                 if ($exists || $exists2) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('Account already linked')
                     );
                 }
                 if (!$Slack->save()) {
                     $serverFault = true;
-                    throw new Exception(
+                    throw new \Exception(
                         _('Add slack account failed!')
                     );
                 }

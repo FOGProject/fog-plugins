@@ -107,14 +107,14 @@ class CaponeTasking extends FOGBase
                         );
                         unset($Capone);
                     }
-                    throw new Exception(
+                    throw new \Exception(
                         (
                             ob_get_contents() ?
                             ob_get_clean() :
                             base64_encode('')
                         )
                     );
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     echo $e->getMessage();
                 }
         }

@@ -255,7 +255,7 @@ class TasktypeeditManagement extends FOGPage
                 $exists = self::getClass('TaskTypeManager')
                     ->exists($tasktype);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A task type already exists with this name!')
                     );
                 }
@@ -271,7 +271,7 @@ class TasktypeeditManagement extends FOGPage
                     ->set('access', $access);
                 if (!$TaskType->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add task type failed!'));
+                    throw new \Exception(_('Add task type failed!'));
                 }
                 return $TaskType;
             }
@@ -524,7 +524,7 @@ class TasktypeeditManagement extends FOGPage
         if ($tasktype != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A task type already exists with this name!')
             );
         }
@@ -579,7 +579,7 @@ class TasktypeeditManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Task type update failed!'));
+                    throw new \Exception(_('Task type update failed!'));
                 }
             }
         );

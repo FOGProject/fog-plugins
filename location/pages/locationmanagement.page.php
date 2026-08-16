@@ -195,12 +195,12 @@ class LocationManagement extends FOGPage
                 $exists = self::getClass('LocationManager')
                     ->exists($location);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A location already exists with this name!')
                     );
                 }
                 if (!$storagegroup && !$storagenode) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A storage group must be selected.')
                     );
                 }
@@ -216,7 +216,7 @@ class LocationManagement extends FOGPage
                     ->set('protocol', $storagenodeprotocol);
                 if (!$Location->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add location failed!'));
+                    throw new \Exception(_('Add location failed!'));
                 }
                 return $Location;
             }
@@ -400,12 +400,12 @@ class LocationManagement extends FOGPage
         if ($location != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A location already exists with this name!')
             );
         }
         if (!$storagegroup && !$storagenode) {
-            throw new Exception(
+            throw new \Exception(
                 _('A storage group must be selected.')
             );
         }
@@ -510,7 +510,7 @@ class LocationManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Location update failed!'));
+                    throw new \Exception(_('Location update failed!'));
                 }
             }
         );

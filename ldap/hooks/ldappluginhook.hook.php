@@ -328,7 +328,7 @@ class LDAPPluginHook extends Hook
                 ->query($sql, [], $binds)
                 ->fetch('', 'fetch_all')
                 ->get();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log(
                 sprintf(
                     '%s %s() %s: %s',
@@ -382,7 +382,7 @@ class LDAPPluginHook extends Hook
                 )
                 ->fetch('', 'fetch_all')
                 ->get();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log(
                 sprintf(
                     '%s %s() %s: %s',
@@ -466,7 +466,7 @@ class LDAPPluginHook extends Hook
                     );
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log(
                 sprintf(
                     '%s %s() %s: %s',

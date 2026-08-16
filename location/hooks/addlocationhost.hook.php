@@ -274,7 +274,7 @@ class AddLocationHost extends Hook
                     'title' => _('Host Location Update Success')
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
                 HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :

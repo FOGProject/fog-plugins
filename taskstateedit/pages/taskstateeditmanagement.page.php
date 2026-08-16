@@ -163,7 +163,7 @@ class TaskstateeditManagement extends FOGPage
                 $exists = self::getClass('TaskStateManager')
                     ->exists($taskstate);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A task state already exists with this name!')
                     );
                 }
@@ -173,7 +173,7 @@ class TaskstateeditManagement extends FOGPage
                     ->set('icon', $iconval);
                 if (!$TaskState->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add task state failed!'));
+                    throw new \Exception(_('Add task state failed!'));
                 }
                 return $TaskState;
             }
@@ -325,7 +325,7 @@ class TaskstateeditManagement extends FOGPage
         if ($taskstate != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A task state already exists with this name!')
             );
         }
@@ -374,7 +374,7 @@ class TaskstateeditManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Task state update failed!'));
+                    throw new \Exception(_('Task state update failed!'));
                 }
             }
         );
