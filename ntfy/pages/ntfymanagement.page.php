@@ -159,14 +159,14 @@ class NtfyManagement extends FOGPage
                 );
                 $credentials = (string)filter_input(INPUT_POST, 'credentials');
                 if (!$serverURL || !$topicEndpoint) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A server URL and topic endpoint are required')
                     );
                 }
                 $existing = self::getClass('NtfyManager')
                     ->exists($topicEndpoint, 0, 'topicEndpoint');
                 if ($existing) {
-                    throw new Exception(_('Topic already linked'));
+                    throw new \Exception(_('Topic already linked'));
                 }
                 $Ntfy = self::getClass('Ntfy')
                     ->set('serverURL', $serverURL)
@@ -174,7 +174,7 @@ class NtfyManagement extends FOGPage
                     ->set('credentials', $credentials);
                 if (!$Ntfy->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add ntfy topic failed!'));
+                    throw new \Exception(_('Add ntfy topic failed!'));
                 }
                 self::getClass(
                     'NtfyHandler',

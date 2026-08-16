@@ -19,6 +19,6 @@
  * @license  https://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class SlackException extends Exception
+class SlackException extends \Exception
 {
 }

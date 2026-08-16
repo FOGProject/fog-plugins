@@ -121,7 +121,7 @@ class PushbulletManagement extends FOGPage
                 $exists = self::getClass('PushbulletManager')
                     ->exists($token, '', 'token');
                 if ($exists) {
-                    throw new Exception(_('Account already linked'));
+                    throw new \Exception(_('Account already linked'));
                 }
                 $userInfo = self::getClass(
                     'PushbulletHandler',
@@ -133,7 +133,7 @@ class PushbulletManagement extends FOGPage
                     ->set('email', $userInfo->email);
                 if (!$Pushbullet->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add pushbullet account failed!'));
+                    throw new \Exception(_('Add pushbullet account failed!'));
                 }
                 $userInfo->pushNote(
                     '',

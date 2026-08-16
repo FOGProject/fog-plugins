@@ -157,7 +157,7 @@ class WOLBroadcastManagement extends FOGPage
                 $exists = self::getClass('WOLBroadcastManager')
                     ->exists($wolbroadcast);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A broadcast already exists with this name!')
                     );
                 }
@@ -167,7 +167,7 @@ class WOLBroadcastManagement extends FOGPage
                     ->set('broadcast', $broadcast);
                 if (!$WOLBroadcast->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add broadcast failed!'));
+                    throw new \Exception(_('Add broadcast failed!'));
                 }
                 return $WOLBroadcast;
             }
@@ -306,7 +306,7 @@ class WOLBroadcastManagement extends FOGPage
         if ($wolbroadcast != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A broadcast already exists with this name!')
             );
         }
@@ -356,7 +356,7 @@ class WOLBroadcastManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Broadcast update failed!'));
+                    throw new \Exception(_('Broadcast update failed!'));
                 }
             }
         );

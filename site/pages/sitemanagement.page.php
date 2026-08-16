@@ -140,7 +140,7 @@ class SiteManagement extends FOGPage
                 $exists = self::getClass('SiteManager')
                     ->exists($site);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A site already exists with this name!')
                     );
                 }
@@ -149,7 +149,7 @@ class SiteManagement extends FOGPage
                     ->set('description', $description);
                 if (!$Site->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add site failed!'));
+                    throw new \Exception(_('Add site failed!'));
                 }
                 return $Site;
             }
@@ -264,7 +264,7 @@ class SiteManagement extends FOGPage
         if ($site != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(_('A site already exists with this name!'));
+            throw new \Exception(_('A site already exists with this name!'));
         }
 
         $this->obj
@@ -452,7 +452,7 @@ class SiteManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Site update failed!'));
+                    throw new \Exception(_('Site update failed!'));
                 }
             }
         );

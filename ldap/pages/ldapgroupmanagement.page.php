@@ -152,7 +152,7 @@ class LDAPGroupManagement extends FOGPage
                 );
                 $serverID = (int)filter_input(INPUT_POST, 'serverID');
                 if ('' === $name) {
-                    throw new Exception(_('A group name is required!'));
+                    throw new \Exception(_('A group name is required!'));
                 }
                 /**
                  * Validated against the servers that exist rather than
@@ -160,10 +160,10 @@ class LDAPGroupManagement extends FOGPage
                  * that was deleted between render and submit.
                  */
                 if (!array_key_exists($serverID, self::_serverChoices())) {
-                    throw new Exception(_('Please select an LDAP server!'));
+                    throw new \Exception(_('Please select an LDAP server!'));
                 }
                 if (self::_groupExists($serverID, $name)) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('That group is already defined for this server!')
                     );
                 }
@@ -172,7 +172,7 @@ class LDAPGroupManagement extends FOGPage
                     ->set('serverID', $serverID);
                 if (!$LDAPGroup->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add LDAP group failed!'));
+                    throw new \Exception(_('Add LDAP group failed!'));
                 }
                 return $LDAPGroup;
             }
@@ -315,13 +315,13 @@ class LDAPGroupManagement extends FOGPage
         );
         $serverID = (int)filter_input(INPUT_POST, 'serverID');
         if ('' === $name) {
-            throw new Exception(_('A group name is required!'));
+            throw new \Exception(_('A group name is required!'));
         }
         if (!array_key_exists($serverID, self::_serverChoices())) {
-            throw new Exception(_('Please select an LDAP server!'));
+            throw new \Exception(_('Please select an LDAP server!'));
         }
         if (self::_groupExists($serverID, $name, (int)$this->obj->get('id'))) {
-            throw new Exception(
+            throw new \Exception(
                 _('That group is already defined for this server!')
             );
         }
@@ -453,7 +453,7 @@ class LDAPGroupManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('LDAP Group update failed!'));
+                    throw new \Exception(_('LDAP Group update failed!'));
                 }
                 Authorization::resetCache();
             }

@@ -228,7 +228,7 @@ class PushbulletHandler extends Pushbullet
         );
         $data['file_url'] = $response->file_url;
         if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
-            $response->data->file = new CURLFile($fullFilePath);
+            $response->data->file = new \CURLFile($fullFilePath);
         } else {
             $response->data->file = '@' . $fullFilePath;
         }

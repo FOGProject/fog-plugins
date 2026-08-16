@@ -443,7 +443,7 @@ class LDAPManager extends FOGManagerController
                 ->query('SELECT COUNT(`lgID`) AS `cnt` FROM `LDAPGroups`')
                 ->fetch('', 'fetch_all')
                 ->get();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return 0;
         }
         if (!is_array($rows) || empty($rows)) {
@@ -465,7 +465,7 @@ class LDAPManager extends FOGManagerController
                 ->query('SHOW TABLES LIKE :table', [], ['table' => $table])
                 ->fetch('', 'fetch_all')
                 ->get();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
         return is_array($rows) && !empty($rows);
@@ -682,7 +682,7 @@ class LDAPManager extends FOGManagerController
                 [],
                 ['source' => LDAPPluginHook::AUTH_SOURCE]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log(
                 sprintf(
                     '%s %s() %s: %s',

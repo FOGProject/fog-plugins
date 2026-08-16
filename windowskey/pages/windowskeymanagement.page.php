@@ -154,7 +154,7 @@ class WindowsKeyManagement extends FOGPage
                 $exists = self::getClass('WindowsKeyManager')
                     ->exists($windowskey);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A Windows Key already exists with this name!')
                     );
                 }
@@ -168,7 +168,7 @@ class WindowsKeyManagement extends FOGPage
                     && self::getClass('WindowsKeyManager')
                         ->exists($key, 0, 'key')
                 ) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A Windows Key already exists with this product key!')
                     );
                 }
@@ -178,7 +178,7 @@ class WindowsKeyManagement extends FOGPage
                     ->set('key', $key);
                 if (!$WindowsKey->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add windows key failed!'));
+                    throw new \Exception(_('Add windows key failed!'));
                 }
                 return $WindowsKey;
             }
@@ -332,7 +332,7 @@ class WindowsKeyManagement extends FOGPage
         if ($windowskey != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A Windows Key already exists with this name!')
             );
         }
@@ -344,7 +344,7 @@ class WindowsKeyManagement extends FOGPage
             && self::getClass('WindowsKeyManager')
                 ->exists($key, $this->obj->get('id'), 'key')
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A Windows Key already exists with this product key!')
             );
         }
@@ -504,7 +504,7 @@ class WindowsKeyManagement extends FOGPage
 
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Windows Key update failed!'));
+                    throw new \Exception(_('Windows Key update failed!'));
                 }
             }
         );

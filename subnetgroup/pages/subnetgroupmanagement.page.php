@@ -176,24 +176,24 @@ class SubnetGroupManagement extends FOGPage
                 $exists = self::getClass('SubnetGroupManager')
                     ->exists($subnetgroup);
                 if ($exists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A subnet group already exists with this name!')
                     );
                 }
                 if (!$group) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A group must be selected.')
                     );
                 }
                 $gexists = self::getClass('SubnetGroupManager')
                     ->exists($group, '', 'groupID');
                 if ($gexists) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('A subnet group is already using this group.')
                     );
                 }
                 if (!count($subnetsFound[0] ?: []) > 0) {
-                    throw new Exception(
+                    throw new \Exception(
                         _('Please enter a valid CIDR subnet.')
                         . ' '
                         . _('Can be a comma seperated list.')
@@ -207,7 +207,7 @@ class SubnetGroupManagement extends FOGPage
                     ->set('subnets', $subnets);
                 if (!$SubnetGroup->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Add subnet group failed!'));
+                    throw new \Exception(_('Add subnet group failed!'));
                 }
                 return $SubnetGroup;
             }
@@ -358,12 +358,12 @@ class SubnetGroupManagement extends FOGPage
         if ($subnetgroup != $this->obj->get('name')
             && $exists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A subnet group already exists with this name!')
             );
         }
         if (!$group) {
-            throw new Exception(
+            throw new \Exception(
                 _('A group must be selected.')
             );
         }
@@ -372,12 +372,12 @@ class SubnetGroupManagement extends FOGPage
         if ($group != $this->obj->get('groupID')
             && $gexists
         ) {
-            throw new Exception(
+            throw new \Exception(
                 _('A subnet group is already using this group.')
             );
         }
         if (!preg_match($subnetsMatch, $subnets)) {
-            throw new Exception(
+            throw new \Exception(
                 _('Please enter a valid CIDR subnet.')
                 . ' '
                 . _('Can be a comma seperated list.')
@@ -432,7 +432,7 @@ class SubnetGroupManagement extends FOGPage
                 }
                 if (!$this->obj->save()) {
                     $serverFault = true;
-                    throw new Exception(_('Subnet Group update failed!'));
+                    throw new \Exception(_('Subnet Group update failed!'));
                 }
             }
         );
