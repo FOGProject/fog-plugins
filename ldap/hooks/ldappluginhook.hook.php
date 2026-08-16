@@ -160,10 +160,7 @@ class LDAPPluginHook extends Hook
         /**
          * Create our new user (initially at least)
          */
-        Route::listem('ldap');
-        $items = json_decode(
-            Route::getData()
-        );
+        $items = Route::getList('ldap');
         /**
          * Authenticate against every configured LDAP server and union what
          * each one grants. Every server is asked, because a user can be
@@ -185,7 +182,7 @@ class LDAPPluginHook extends Hook
         $groupIds = [];
         $displayName = '';
         $ldapAPI = 0;
-        foreach ($items->data as $ldap) {
+        foreach ($items as $ldap) {
             $LDAP = self::getClass('LDAP', $ldap->id);
             $matched = $LDAP->authLDAP($user, $pass);
             if (false === $matched) {

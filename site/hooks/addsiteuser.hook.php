@@ -90,12 +90,9 @@ class AddSiteUser extends Hook
      */
     public function userSite($obj)
     {
-        Route::listem('siteuserassociation');
-        $items = json_decode(
-            Route::getData()
-        );
+        $items = Route::getList('siteuserassociation');
         $site = 0;
-        foreach ((array)$items->data as &$item) {
+        foreach ($items as &$item) {
             if ($item->userID == $obj->get('id')) {
                 $site = $item->siteID;
                 unset($item);

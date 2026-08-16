@@ -91,17 +91,14 @@ class LocationChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        Route::listem(
+        $LocationAssocs = Route::getList(
             'locationassociation',
             ['hostID' => $arguments['Host']->get('id')]
-        );
-        $LocationAssocs = json_decode(
-            Route::getData()
         );
         $Task = $arguments['Host']->get('task');
         $TaskType = $arguments['TaskType'] ?? null;
         $method = false;
-        foreach ($LocationAssocs->data as &$LocationAssoc) {
+        foreach ($LocationAssocs as &$LocationAssoc) {
             $Location = self::getClass('Location', $LocationAssoc->locationID);
             if (!$Location->isValid()) {
                 continue;
@@ -154,14 +151,11 @@ class LocationChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        Route::listem(
+        $LocationAssocs = Route::getList(
             'locationassociation',
             ['hostID' => $arguments['Host']->get('id')]
         );
-        $LocationAssocs = json_decode(
-            Route::getData()
-        );
-        foreach ($LocationAssocs->data as &$LocationAssoc) {
+        foreach ($LocationAssocs as &$LocationAssoc) {
             $StorageGroup = self::getClass('Location', $LocationAssoc->locationID)
                 ->getStorageGroup();
             // Inverted since it was written: this skipped the groups it
@@ -189,14 +183,11 @@ class LocationChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        Route::listem(
+        $LocationAssocs = Route::getList(
             'locationassociation',
             ['hostID' => $arguments['Host']->get('id')]
         );
-        $LocationAssocs = json_decode(
-            Route::getData()
-        );
-        foreach ($LocationAssocs->data as &$LocationAssoc) {
+        foreach ($LocationAssocs as &$LocationAssoc) {
             $Location = self::getClass('Location', $LocationAssoc->locationID);
             if (!$Location->get('tftp')) {
                 continue;
@@ -252,18 +243,16 @@ class LocationChangeItems extends Hook
                 )
             )
         );
-        Route::listem(
+        $StorageNodes = Route::getList(
             'storagenode',
             ['id' => $storagenodeIDs]
         );
-        $StorageNodes = json_decode(
-            Route::getData()
-        );
         $arguments['StorageNodes'] = [];
-        foreach ($StorageNodes->data as $ind => $StorageNode) {
-            Route::indiv('storagenode', $StorageNode->id);
-            $StorageNode = json_decode(Route::getData());
-            if (!$StorageNode->online) {
+        foreach ($StorageNodes as $ind => $StorageNode) {
+            // getItem(), not indiv(): a node deleted between the list and the
+            // fetch used to end the response here rather than be skipped.
+            $StorageNode = Route::getItem('storagenode', $StorageNode->id);
+            if (!$StorageNode || !$StorageNode->online) {
                 continue;
             }
             if (!self::isLocalNode($StorageNode)) {

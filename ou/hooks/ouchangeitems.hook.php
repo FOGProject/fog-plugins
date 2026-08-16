@@ -76,19 +76,16 @@ class OUChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        Route::listem(
+        $OUAssocs = Route::getList(
             'ouassociation',
             ['hostID' => $arguments['Host']->get('id')]
-        );
-        $OUAssocs = json_decode(
-            Route::getData()
         );
         // listem() returns the paginated envelope, so the rows are under
         // ->data. Iterating the envelope itself walked its scalar counters
         // instead: every client check-in warned "Attempt to read property
         // ouID on int" and ADOU was never set. LocationChangeItems, which is
         // the same shape, has always had this right.
-        foreach ($OUAssocs->data as $OUAssoc) {
+        foreach ($OUAssocs as $OUAssoc) {
             // getClass() rather than Route::indiv(): indiv() answers a missing
             // row with sendResponse(404), and that exits. An ouassociation
             // left behind by a deleted OU would end the whole check-in with a

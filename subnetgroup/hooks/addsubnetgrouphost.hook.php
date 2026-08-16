@@ -98,9 +98,8 @@ class AddSubnetGroupHost extends Hook
         }
 
         // Now list our subnet groups.
-        Route::listem('subnetgroup');
-        $SNGroups = json_decode(Route::getData());
-        foreach ($SNGroups->data as &$SNGroup) {
+        $SNGroups = Route::getList('subnetgroup');
+        foreach ($SNGroups as &$SNGroup) {
             if (in_array($SNGroup->groupID, $Host->get('groups'))) {
                 $Host->removeGroup($SNGroup->groupID)->save();
             }

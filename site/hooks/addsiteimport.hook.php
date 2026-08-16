@@ -82,9 +82,7 @@ class AddSiteImport extends Hook
         if (count($ids) < 1) {
             return;
         }
-        Route::listem('Site', false, true);
-        $sites = json_decode(Route::getData());
-        $sites = isset($sites->data) ? $sites->data : [];
+        $sites = Route::getList('Site');
         $siteNames = [];
         foreach ($sites as $s) {
             if (isset($s->id)) {
@@ -92,9 +90,7 @@ class AddSiteImport extends Hook
                     ? (string)$s->name : '';
             }
         }
-        Route::listem('SiteHostAssociation', ['hostID' => $ids], true);
-        $rows = json_decode(Route::getData());
-        $rows = isset($rows->data) ? $rows->data : [];
+        $rows = Route::getList('SiteHostAssociation', ['hostID' => $ids]);
         $byHost = [];
         foreach ($rows as $r) {
             $hid = isset($r->hostID) ? (string)$r->hostID : '';

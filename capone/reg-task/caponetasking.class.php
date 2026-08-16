@@ -62,14 +62,11 @@ class CaponeTasking extends FOGBase
                 try {
                     $strSetup = "%s|%s|%s|%s|%s|%s|%s";
                     ob_start();
-                    Route::listem(
+                    $capones = Route::getList(
                         'capone',
                         ['key' => $key]
                     );
-                    $capones = json_decode(
-                        Route::getData()
-                    );
-                    foreach ($capones->data as &$Capone) {
+                    foreach ($capones as &$Capone) {
                         $Image = new Image($Capone->imageID);
                         $OS = $Image->getOS();
                         $StorageNode = $Image
