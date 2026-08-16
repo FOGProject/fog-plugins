@@ -99,7 +99,7 @@ class HelloWorldHeartbeat extends PluginTask
         // result for getData() to encode. getCount() is the wrapper that
         // hands back an int.
         $total = Route::getCount('helloworld');
-        $this->log(
+        $this->logLine(
             sprintf(
                 '%s: %d',
                 _('Hello World entries'),
