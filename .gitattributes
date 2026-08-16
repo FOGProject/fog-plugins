@@ -4,3 +4,4 @@ README.md      export-ignore
 LICENSE        export-ignore
 .gitattributes export-ignore
 make-release.sh export-ignore
+tests/         export-ignore
