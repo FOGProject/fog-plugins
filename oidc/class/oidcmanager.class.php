@@ -173,6 +173,26 @@ class OIDCManager extends FOGManagerController
             function () {
                 return self::getClass('OIDCIdentityManager')->install();
             },
+            // 2 - the group claim values an admin maps.
+            function () {
+                return self::getClass('OIDCGroupManager')->install();
+            },
+            // 3 - what a group grants: roles.
+            function () {
+                return self::getClass('OIDCGroupRoleAssociationManager')
+                    ->install();
+            },
+            // 4 - what a group grants: user groups.
+            function () {
+                return self::getClass('OIDCGroupUserGroupAssociationManager')
+                    ->install();
+            },
+            // 5 - the record of what this plugin granted each user, which is
+            // what lets a later sign in take a grant back without touching
+            // anything an admin assigned by hand.
+            function () {
+                return self::getClass('OIDCUserGrantManager')->install();
+            },
         ];
     }
     /**
@@ -189,8 +209,9 @@ class OIDCManager extends FOGManagerController
      * Uninstalls the plugin.
      *
      * Drops the providers table (the rows carry client secrets, so there is
-     * no reason to leave them behind) and the identity links with it -- a
-     * link to a provider that no longer exists is not information.
+     * no reason to leave them behind) and everything keyed to it: the
+     * identity links, the group mappings and the record of what was granted.
+     * None of them is information once the providers are gone.
      *
      * What it deliberately does NOT do, and what the LDAP plugin's
      * uninstall() does do, is delete user accounts. An OIDC-authenticated
@@ -204,6 +225,10 @@ class OIDCManager extends FOGManagerController
     public function uninstall()
     {
         self::getClass('OIDCIdentityManager')->uninstall();
+        self::getClass('OIDCGroupRoleAssociationManager')->uninstall();
+        self::getClass('OIDCGroupUserGroupAssociationManager')->uninstall();
+        self::getClass('OIDCGroupManager')->uninstall();
+        self::getClass('OIDCUserGrantManager')->uninstall();
         return parent::uninstall();
     }
 }

@@ -62,7 +62,12 @@ class AddOIDCJS extends Hook
         ]);
     }
     /**
-     * Adds the per-sub-page JS file for this node.
+     * Adds the per-sub-page JS file for the nodes this plugin owns.
+     *
+     * Through the shared Hook::injectPluginJS() rather than hand-rolled, now
+     * that there are two nodes to serve: it already knows the naming
+     * convention, folds sub=membership onto the edit file, and falls back to
+     * the list JS for a sub-page with no file of its own.
      *
      * @param mixed $arguments The arguments to modify.
      *
@@ -70,18 +75,9 @@ class AddOIDCJS extends Hook
      */
     public function injectJSFiles($arguments)
     {
-        global $node;
-        global $sub;
-        if ($node !== $this->node) {
-            return;
-        }
-        $subset = str_replace('_', '-', (string)$sub);
-        if (empty($subset)) {
-            $filepath = "../lib/plugins/{$this->node}/js/fog.{$this->node}.js";
-        } else {
-            $filepath = "../lib/plugins/{$this->node}/js/"
-                . "fog.{$this->node}.{$subset}.js";
-        }
-        $arguments['files'][] = $filepath;
+        $this->injectPluginJS($arguments, [
+            'oidc' => ['fallback' => true],
+            'oidcgroup' => ['fallback' => true],
+        ]);
     }
 }

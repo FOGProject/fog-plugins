@@ -22,6 +22,11 @@
 class AddOIDCMenuItem extends Hook
 {
     /**
+     * The second node this plugin owns: the provider groups whose
+     * associations decide what a signing-in user receives.
+     */
+    const GROUP_NODE = 'oidcgroup';
+    /**
      * The name of this hook.
      *
      * @var string
@@ -70,6 +75,16 @@ class AddOIDCMenuItem extends Hook
      */
     public function menuUpdate($arguments)
     {
+        // Provider groups are a node of their own, so they need their own
+        // Export entry. FOGPage::export() is inherited and works for any
+        // node; what the core menu builder keys off ($foglang[$refNode]) has
+        // no entry for a plugin node, so without this the page exists and is
+        // permission-gated but nothing links to it.
+        if ($arguments['node'] == self::GROUP_NODE) {
+            $arguments['menu']['export'] = self::$foglang['Export']
+                . ' ' . _('Groups');
+            return;
+        }
         if ($arguments['node'] != $this->node) {
             return;
         }
@@ -87,6 +102,11 @@ class AddOIDCMenuItem extends Hook
     {
         $arguments['hook_main'][$this->node]
             = [_('OpenID Connect'), 'fa fa-id-badge'];
+        // Groups get their own node because granting a role or a user group
+        // is an ordinary association, and the shared association tab needs
+        // the group itself to be the owning object. See OIDCGroupManagement.
+        $arguments['hook_main'][self::GROUP_NODE]
+            = [_('OpenID Connect Groups'), 'fa fa-users'];
     }
     /**
      * Adds the plugin page to the search page lists.
@@ -98,6 +118,7 @@ class AddOIDCMenuItem extends Hook
     public function addSearch($arguments)
     {
         $arguments['searchPages'][] = $this->node;
+        $arguments['searchPages'][] = self::GROUP_NODE;
     }
     /**
      * Adds the plugin page to use internalized objects.
@@ -109,6 +130,7 @@ class AddOIDCMenuItem extends Hook
     public function addPageWithObject($arguments)
     {
         $arguments['PagesWithObjects'][] = $this->node;
+        $arguments['PagesWithObjects'][] = self::GROUP_NODE;
     }
     /**
      * Registers this plugin's permission node and actions.
@@ -127,6 +149,12 @@ class AddOIDCMenuItem extends Hook
     public function permData($arguments)
     {
         $arguments['registry'][$this->node] = [
+            'view', 'create', 'edit', 'delete'
+        ];
+        // Registered separately so a role can be given the ability to manage
+        // providers without the ability to change what a provider group
+        // grants -- the latter is the one that hands out access.
+        $arguments['registry'][self::GROUP_NODE] = [
             'view', 'create', 'edit', 'delete'
         ];
     }

@@ -187,6 +187,7 @@ class OIDCFlow extends FOGBase
             $token = self::_exchange($provider, $config, $code, $flow);
             $claims = self::_verify($provider, $config, $token, $flow);
             $user = self::_resolveUser($provider, $claims);
+            self::_applyGrants($provider, $claims, $user);
 
             /*
              * An identity already in this session must not decide the new
@@ -424,9 +425,8 @@ class OIDCFlow extends FOGBase
      * Default deny, and this is the method that means it: an identity the
      * provider is happy with, that this server has no account for, is
      * refused. Holding an account at the identity provider is not the same
-     * thing as being allowed into FOG. (Creating the account instead is
-     * just-in-time provisioning; the column exists and ships off, and
-     * nothing reads it yet.)
+     * thing as being allowed into FOG. Turning on jitProvision is an admin
+     * saying otherwise for one provider, and it ships off.
      *
      * @param OIDC  $provider the provider
      * @param array $claims   the verified claims
@@ -487,16 +487,19 @@ class OIDCFlow extends FOGBase
         }
 
         if (0 === $namedId) {
-            // The message names the account on purpose: an admin reading it
-            // over somebody's shoulder needs to know which name to create,
-            // and it discloses nothing the person signing in did not just
-            // type into their own provider.
-            throw new \Exception(
-                sprintf(
-                    _('No FOG account exists for %s'),
-                    $username
-                )
-            );
+            if (!$provider->get('jitProvision')) {
+                // The message names the account on purpose: an admin reading
+                // it over somebody's shoulder needs to know which name to
+                // create, and it discloses nothing the person signing in did
+                // not just type into their own provider.
+                throw new \Exception(
+                    sprintf(
+                        _('No FOG account exists for %s'),
+                        $username
+                    )
+                );
+            }
+            return self::_provisionUser($provider, $claims, $username);
         }
 
         /*
@@ -514,6 +517,364 @@ class OIDCFlow extends FOGBase
             ->save();
 
         return $byName;
+    }
+    /**
+     * Creates the FOG account for an identity that has none.
+     *
+     * Just-in-time provisioning. The account starts with no roles and no
+     * user groups; what it ends up holding is decided a moment later by
+     * _applyGrants() from the provider's group claim, which is the only
+     * reason turning this on is not the same as handing out a blank
+     * administrator. A provider with jitProvision on and no group mappings
+     * creates accounts that can sign in and see nothing, deliberately.
+     *
+     * Unlike an account an admin created, this one IS stamped with
+     * users.uAuthSource. That column refuses local password login for the
+     * row, which is right here and wrong there: an admin-created account has
+     * a password somebody chose and break-glass depends on it still working,
+     * while this account's password is a random token nobody has ever seen.
+     * Stamping it also means the leftover row cannot become a login if this
+     * plugin is later removed.
+     *
+     * @param OIDC   $provider the provider
+     * @param array  $claims   the verified claims
+     * @param string $username the value of the configured username claim
+     *
+     * @throws Exception
+     * @return User
+     */
+    private static function _provisionUser($provider, array $claims, $username)
+    {
+        $user = self::getClass('User')
+            ->set('name', $username)
+            ->set('display', trim((string)($claims['name'] ?? '')) ?: $username)
+            ->set('authsource', OIDC::AUTH_SOURCE)
+            ->set('api', $provider->get('allowapi'))
+            // Never a password anybody could type. The identity is proven by
+            // the ID token, so uPass only has to be something no typed
+            // password can ever match.
+            ->set('password', self::getToken(64));
+        if (!$user->save()) {
+            throw new \Exception(_('The FOG account could not be created'));
+        }
+        // After the save: the link needs the id, which does not exist until
+        // then.
+        self::getClass('OIDCIdentity')
+            ->set('name', $username)
+            ->set('providerId', $provider->get('id'))
+            ->set('subject', (string)$claims['sub'])
+            ->set('userId', $user->get('id'))
+            ->save();
+        return $user;
+    }
+    /**
+     * Applies what the provider's group claim grants this user.
+     *
+     * @param OIDC  $provider the provider
+     * @param array $claims   the verified claims
+     * @param User  $user     the account being signed in
+     *
+     * @return void
+     */
+    private static function _applyGrants($provider, array $claims, $user)
+    {
+        $targets = self::_targetsForGroups(
+            (int)$provider->get('id'),
+            self::_claimGroups($provider, $claims)
+        );
+        self::_syncTargets($user, $targets['roles'], $targets['usergroups']);
+        $user->save();
+        self::_recordGrants($user, $targets['roles'], $targets['usergroups']);
+        // The permission cache is per-request and was populated before the
+        // roles changed. This request goes on to establish the session, so
+        // anything it asks about permissions has to see what was just
+        // written, not what the user held on the way in.
+        Authorization::resetCache();
+    }
+    /**
+     * The group values this token carries.
+     *
+     * A scalar claim is treated as ONE value, not split. Splitting would
+     * have to guess a delimiter, and every candidate is legal inside a group
+     * name -- a Keycloak group path is free text and an Entra ID display
+     * name can contain a space or a comma. Guessing wrong invents a value
+     * that could match a different mapping, which is the one failure mode
+     * worth ruling out on a code path that hands out roles.
+     *
+     * @param OIDC  $provider the provider
+     * @param array $claims   the verified claims
+     *
+     * @return array
+     */
+    private static function _claimGroups($provider, array $claims)
+    {
+        $claimName = trim((string)$provider->get('groupClaim'));
+        if ('' === $claimName || !isset($claims[$claimName])) {
+            return [];
+        }
+        $values = $claims[$claimName];
+        if (!is_array($values)) {
+            $values = [$values];
+        }
+        $out = [];
+        foreach ($values as $value) {
+            // A nested object in the claim is not a group name; a provider
+            // sending one has not been configured for this.
+            if (!is_scalar($value)) {
+                continue;
+            }
+            $value = trim((string)$value);
+            if ('' !== $value) {
+                $out[] = $value;
+            }
+        }
+        return array_values(array_unique($out));
+    }
+    /**
+     * The roles and user groups a set of claim values grants.
+     *
+     * One query per target kind, joining the group table to its association
+     * table, rather than one query per value.
+     *
+     * Raw bound SQL rather than Route::getIds() on purpose: _buildSql()
+     * turns '*' and '+' in a scalar filter value into a SQL LIKE wildcard,
+     * and a group claim value is an opaque provider string that may contain
+     * either. A value of '*' would otherwise match every mapping this
+     * provider has.
+     *
+     * @param int   $providerId the provider the values came from
+     * @param array $groups     the claim values
+     *
+     * @return array ['roles' => [...], 'usergroups' => [...]]
+     */
+    private static function _targetsForGroups($providerId, array $groups)
+    {
+        $out = [
+            'roles' => [],
+            'usergroups' => []
+        ];
+        if (empty($groups)) {
+            return $out;
+        }
+        $names = [];
+        $binds = ['provider' => (int)$providerId];
+        foreach ($groups as $index => $group) {
+            $key = 'g' . $index;
+            $names[] = ':' . $key;
+            $binds[$key] = $group;
+        }
+        $in = implode(',', $names);
+        $queries = [
+            'roles' => 'SELECT `ograRoleID` AS `target` '
+                . 'FROM `oidcGroupRoleAssoc` '
+                . 'INNER JOIN `OIDCGroups` ON `ogID` = `ograGroupID` '
+                . 'WHERE `ogProviderID` = :provider '
+                . 'AND `ogName` IN (' . $in . ')',
+            'usergroups' => 'SELECT `ogugUserGroupID` AS `target` '
+                . 'FROM `oidcGroupUserGroupAssoc` '
+                . 'INNER JOIN `OIDCGroups` ON `ogID` = `ogugGroupID` '
+                . 'WHERE `ogProviderID` = :provider '
+                . 'AND `ogName` IN (' . $in . ')'
+        ];
+        foreach ($queries as $kind => $sql) {
+            $out[$kind] = self::_targetIds($sql, $binds);
+        }
+        return $out;
+    }
+    /**
+     * Runs a target-id query and returns the ids it produced.
+     *
+     * @param string $sql   the query to run
+     * @param array  $binds the bound values
+     *
+     * @return array
+     */
+    private static function _targetIds($sql, array $binds)
+    {
+        try {
+            $rows = self::$DB
+                ->query($sql, [], $binds)
+                ->fetch('', 'fetch_all')
+                ->get();
+        } catch (\Exception $e) {
+            error_log(
+                'FOG OIDC: could not read the group mappings -- '
+                . $e->getMessage()
+            );
+            return [];
+        }
+        /*
+         * PDODB reports a failed query as false rather than throwing
+         * (throwOnQueryError is off), and (array)false is [false], not [].
+         */
+        if (!is_array($rows)) {
+            return [];
+        }
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = trim((string)($row['target'] ?? ''));
+            if ('' !== $id && '0' !== $id) {
+                $ids[] = $id;
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+    /**
+     * What this plugin previously granted one user.
+     *
+     * @param int $userId the user being signed in
+     *
+     * @return array ['roles' => [...], 'usergroups' => [...]]
+     */
+    private static function _priorGrants($userId)
+    {
+        $out = [
+            'roles' => [],
+            'usergroups' => []
+        ];
+        if ((int)$userId < 1) {
+            return $out;
+        }
+        try {
+            $rows = self::$DB
+                ->query(
+                    'SELECT `ougTargetType`, `ougTargetID` '
+                    . 'FROM `oidcUserGrant` WHERE `ougUserID` = :user',
+                    [],
+                    ['user' => (int)$userId]
+                )
+                ->fetch('', 'fetch_all')
+                ->get();
+        } catch (\Exception $e) {
+            error_log(
+                'FOG OIDC: could not read the recorded grants -- '
+                . $e->getMessage()
+            );
+            return $out;
+        }
+        if (!is_array($rows)) {
+            return $out;
+        }
+        foreach ($rows as $row) {
+            $id = trim((string)($row['ougTargetID'] ?? ''));
+            if ('' === $id || '0' === $id) {
+                continue;
+            }
+            $kind = (
+                OIDCUserGrant::TARGET_USERGROUP
+                === (string)($row['ougTargetType'] ?? '')
+                ? 'usergroups'
+                : 'roles'
+            );
+            $out[$kind][] = $id;
+        }
+        $out['roles'] = array_values(array_unique($out['roles']));
+        $out['usergroups'] = array_values(array_unique($out['usergroups']));
+        return $out;
+    }
+    /**
+     * Replaces the record of what this plugin granted one user.
+     *
+     * Written after the save, because a just-provisioned user has no id
+     * until then. Delete-then-insert rather than a diff: the set is tiny,
+     * and rewriting it wholesale means the record cannot drift out of step
+     * with what was actually applied.
+     *
+     * @param User  $user     the user that was just saved
+     * @param array $roleIds  the roles this sign-in granted
+     * @param array $groupIds the user groups this sign-in granted
+     *
+     * @return void
+     */
+    private static function _recordGrants($user, array $roleIds, array $groupIds)
+    {
+        $userId = (int)$user->get('id');
+        if ($userId < 1) {
+            return;
+        }
+        try {
+            self::$DB->query(
+                'DELETE FROM `oidcUserGrant` WHERE `ougUserID` = :user',
+                [],
+                ['user' => $userId]
+            );
+            $targets = [
+                OIDCUserGrant::TARGET_ROLE => $roleIds,
+                OIDCUserGrant::TARGET_USERGROUP => $groupIds
+            ];
+            foreach ($targets as $type => $ids) {
+                foreach (array_unique($ids) as $id) {
+                    if ((int)$id < 1) {
+                        continue;
+                    }
+                    self::$DB->query(
+                        'INSERT IGNORE INTO `oidcUserGrant` '
+                        . '(`ougUserID`, `ougTargetType`, `ougTargetID`) '
+                        . 'VALUES (:user, :type, :target)',
+                        [],
+                        [
+                            'user' => $userId,
+                            'type' => $type,
+                            'target' => (int)$id
+                        ]
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            error_log(
+                'FOG OIDC: could not record the granted targets -- '
+                . $e->getMessage()
+            );
+        }
+    }
+    /**
+     * Makes the provider authoritative over this plugin's own grants.
+     *
+     * What the provider says is recomputed on each sign in, so removing
+     * somebody from a group downgrades them the next time they arrive.
+     * Anything an admin attached by hand is left alone -- without that
+     * carve-out the sync would silently revoke deliberate grants, and an
+     * admin would have no way to give a provider-authenticated user anything
+     * extra.
+     *
+     * The managed set is the union of what this plugin previously recorded
+     * for this user and what the provider grants now. Reading it from the
+     * record rather than from the mapping tables is what makes removing a
+     * mapping actually revoke: a target with no mappings left is still in
+     * the record, so it is still this plugin's to take away. See
+     * OIDCUserGrant for why the two obvious alternatives are both wrong.
+     *
+     * Reading get('roles') and get('usergroups') here is also what arms the
+     * sync: assocSetter() no-ops on an association that was never loaded or
+     * set, so both reads are load-bearing, not just informational.
+     *
+     * @param User  $user     the user being signed in
+     * @param array $roleIds  the role ids this sign-in earns
+     * @param array $groupIds the user group ids this sign-in earns
+     *
+     * @return void
+     */
+    private static function _syncTargets($user, array $roleIds, array $groupIds)
+    {
+        $prior = self::_priorGrants((int)$user->get('id'));
+        $managedRoles = array_merge(
+            $prior['roles'],
+            array_map('strval', $roleIds)
+        );
+        $managedGroups = array_merge(
+            $prior['usergroups'],
+            array_map('strval', $groupIds)
+        );
+
+        $current = array_map('strval', (array)$user->get('roles'));
+        $roles = array_diff($current, $managedRoles);
+        $roles = array_merge($roles, array_map('strval', $roleIds));
+        $user->set('roles', array_values(array_unique($roles)));
+
+        $current = array_map('strval', (array)$user->get('usergroups'));
+        $groups = array_diff($current, $managedGroups);
+        $groups = array_merge($groups, array_map('strval', $groupIds));
+        $user->set('usergroups', array_values(array_unique($groups)));
     }
     /**
      * Fetches and decodes a JSON document from the provider.
