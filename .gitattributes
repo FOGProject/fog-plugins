@@ -5,3 +5,4 @@ LICENSE        export-ignore
 .gitattributes export-ignore
 make-release.sh export-ignore
 tests/         export-ignore
+.github/       export-ignore
