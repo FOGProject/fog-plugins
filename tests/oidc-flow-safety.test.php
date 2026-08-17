@@ -246,11 +246,12 @@ if (null === $discover) {
 }
 
 /*
- * 5. Default deny, and no just-in-time provisioning yet.
+ * 5. Default deny, and provisioning only where an admin asked for it.
  *
- * The flow must never create a user. The column that will one day allow it
- * exists and defaults off; until something implements it, an account has to
- * be created by an admin.
+ * An identity with no FOG account is refused unless the provider carries
+ * jitProvision, which ships off. The gate is the point: without it the flow
+ * creates an account for anybody the provider will authenticate, and the
+ * provider's population is not this server's.
  */
 $resolve = methodBody($flowSrc, '_resolveUser');
 if (null === $resolve) {
@@ -269,12 +270,71 @@ if (null === $resolve) {
             . ' not the same thing as being allowed into FOG'
         );
     }
-    if (false !== strpos($flat, "getClass('User')->set('name',\$username)->set")) {
+    $gateAt = strpos($flat, "if(!\$provider->get('jitProvision'))");
+    $denyAt = strpos($flat, 'NoFOGaccountexistsfor');
+    $makeAt = strpos($flat, '_provisionUser(');
+    if (false === $gateAt) {
         fail(
-            'OIDCFlow::_resolveUser() appears to create a user; just-in-time'
-            . ' provisioning ships off and nothing reads the column yet'
+            'OIDCFlow::_resolveUser() no longer gates provisioning on the'
+            . " provider's jitProvision column; an account would be created"
+            . ' for anybody the provider will authenticate'
+        );
+    } elseif (false === $denyAt || $denyAt < $gateAt) {
+        fail(
+            'OIDCFlow::_resolveUser() refuses the identity before consulting'
+            . ' jitProvision, or no longer refuses inside the gate'
+        );
+    } elseif (false === $makeAt || $makeAt < $denyAt) {
+        fail(
+            'OIDCFlow::_resolveUser() provisions before the refusal branch;'
+            . ' the refusal has to be what happens when the column is off'
         );
     }
+}
+
+/*
+ * 5b. A provisioned account is stamped, an admin-created one is not.
+ *
+ * users.uAuthSource refuses local password login for the row it is on. On an
+ * account this flow created that is right -- its password is a random token
+ * nobody has seen, and the stamp stops the leftover row becoming a login if
+ * the plugin goes away. On an account an admin created it would take away
+ * the password login that break-glass depends on.
+ */
+$provision = methodBody($flowSrc, '_provisionUser');
+if (null === $provision) {
+    fail('OIDCFlow::_provisionUser() is missing');
+} else {
+    $flat = preg_replace('#\s+#', '', $provision);
+    if (false === strpos($flat, "set('authsource',OIDC::AUTH_SOURCE)")) {
+        fail(
+            'OIDCFlow::_provisionUser() no longer stamps users.uAuthSource;'
+            . ' the created row would accept a local password'
+        );
+    }
+    if (false === strpos($flat, "set('password',self::getToken(")) {
+        fail(
+            'OIDCFlow::_provisionUser() no longer sets an unguessable'
+            . ' password on the created account'
+        );
+    }
+    // What a provisioned account holds is decided by _applyGrants() from the
+    // group claim a moment later, not handed out here.
+    if (false !== strpos($flat, "set('roles'")
+        || false !== strpos($flat, "set('usergroups'")
+    ) {
+        fail(
+            'OIDCFlow::_provisionUser() assigns roles directly; what a'
+            . ' provisioned account holds must come from the group claim'
+        );
+    }
+}
+if (false !== strpos((string)$resolve, "set('authsource'")) {
+    fail(
+        'OIDCFlow::_resolveUser() stamps users.uAuthSource on an account it'
+        . ' did not create; that removes local password login from an'
+        . ' account an admin made, which is the opposite of break-glass'
+    );
 }
 $flatFlow = preg_replace('#\s+#', '', $flowSrc);
 /*
@@ -392,6 +452,193 @@ foreach ($cases as $setting => $want) {
                 var_export($gotUri, true),
                 var_export($want[0], true),
                 var_export($want[1], true)
+            )
+        );
+    }
+}
+
+/*
+ * 9. Claim to role mapping, and the record that makes revocation work.
+ */
+$targets = methodBody($flowSrc, '_targetsForGroups');
+if (null === $targets) {
+    fail('OIDCFlow::_targetsForGroups() is missing');
+} else {
+    if (false !== strpos($targets, 'Route::getIds')) {
+        fail(
+            'OIDCFlow::_targetsForGroups() looks group values up through'
+            . " Route::getIds(); '*' and '+' in a filter value become SQL"
+            . " LIKE wildcards, so a claim value of '*' would collect every"
+            . " mapping this provider has"
+        );
+    }
+    if (false === strpos($targets, "':' . \$key")
+        || false === strpos($targets, ':provider')
+    ) {
+        fail(
+            'OIDCFlow::_targetsForGroups() no longer binds the provider and'
+            . ' every group value as parameters'
+        );
+    }
+    if (false === strpos($targets, 'ogProviderID')) {
+        fail(
+            'OIDCFlow::_targetsForGroups() no longer scopes the lookup to'
+            . ' the provider; a group name only means something relative to'
+            . ' the directory that published it'
+        );
+    }
+    /*
+     * Both queries -- roles and user groups -- have to restrict on the claim
+     * values. A query that binds them and then does not use them returns
+     * every mapping the provider has, which is every role any of its groups
+     * grants, to anybody it will authenticate.
+     */
+    $flat = preg_replace('#\s+#', '', $targets);
+    if (2 !== substr_count($flat, 'IN(\'.$in.\')')) {
+        fail(
+            'OIDCFlow::_targetsForGroups() has a query that does not restrict'
+            . " on the claim values; it would return every one of the"
+            . " provider's mappings"
+        );
+    }
+}
+
+/*
+ * A scalar group claim is one value. Splitting it would have to guess a
+ * delimiter, and every candidate is legal inside a group name -- guessing
+ * wrong invents a value that can match a mapping nobody wrote.
+ */
+$claimGroups = methodBody($flowSrc, '_claimGroups');
+if (null === $claimGroups) {
+    fail('OIDCFlow::_claimGroups() is missing');
+} elseif (preg_match('#\b(explode|preg_split|str_getcsv)\s*\(#', $claimGroups)) {
+    fail(
+        'OIDCFlow::_claimGroups() splits a scalar group claim; the delimiter'
+        . ' would be a guess, and a wrong split invents a group value that'
+        . ' can match a mapping nobody wrote'
+    );
+}
+
+/*
+ * The managed set comes from the RECORD, not from the mapping tables.
+ * Deriving it from the mappings has a hole an admin hits immediately:
+ * remove the last mapping to a role and the role stops being a mapping
+ * target, so it drops out of the managed set and everyone already holding
+ * it keeps it forever. Removing a mapping reads as "revoke this".
+ */
+$sync = methodBody($flowSrc, '_syncTargets');
+if (null === $sync) {
+    fail('OIDCFlow::_syncTargets() is missing');
+} else {
+    $flat = preg_replace('#\s+#', '', $sync);
+    if (false === strpos($flat, '_priorGrants(')) {
+        fail(
+            'OIDCFlow::_syncTargets() no longer reads the recorded grants;'
+            . ' deriving the managed set from the mapping tables means'
+            . ' deleting a mapping never revokes what it granted'
+        );
+    }
+    if (false === strpos($flat, 'array_diff($current,$managedRoles)')
+        || false === strpos($flat, 'array_diff($current,$managedGroups)')
+    ) {
+        fail(
+            'OIDCFlow::_syncTargets() no longer leaves unmanaged grants'
+            . ' alone; an admin would have no way to give a'
+            . ' provider-authenticated user anything extra'
+        );
+    }
+}
+
+/*
+ * The record is written AFTER the save, because a just-provisioned user has
+ * no id before it -- and recording nothing for a new user means their first
+ * sign-in grants roles this plugin then cannot take back.
+ */
+$apply = methodBody($flowSrc, '_applyGrants');
+if (null === $apply) {
+    fail('OIDCFlow::_applyGrants() is missing');
+} else {
+    $flat = preg_replace('#\s+#', '', $apply);
+    $saveAt = strpos($flat, '$user->save()');
+    $recordAt = strpos($flat, '_recordGrants(');
+    if (false === $saveAt || false === $recordAt) {
+        fail('OIDCFlow::_applyGrants() no longer saves and records');
+    } elseif ($recordAt < $saveAt) {
+        fail(
+            'OIDCFlow::_applyGrants() records the grants before the save; a'
+            . ' just-provisioned user has no id until then, so the record'
+            . ' would be written against user 0'
+        );
+    }
+}
+$flatCallback = preg_replace('#\s+#', '', (string)$callback);
+$grantAt = strpos($flatCallback, '_applyGrants(');
+$sessionAt = strpos($flatCallback, 'establishSession(');
+if (false === $grantAt) {
+    fail(
+        'OIDCFlow::callback() never applies the group claim; a sign-in would'
+        . ' keep whatever roles the account happened to hold'
+    );
+} elseif (false === $sessionAt || $grantAt > $sessionAt) {
+    fail(
+        'OIDCFlow::callback() establishes the session before applying the'
+        . ' grants, so the first request after sign-in sees the old roles'
+    );
+}
+
+/*
+ * 10. The two tables whose indexes decide whether a write destroys anything.
+ *
+ * Run for real against the Schema stub, which records what it was asked for.
+ */
+require $root . '/oidc/class/oidcgroupmanager.class.php';
+require $root . '/oidc/class/oidcusergrantmanager.class.php';
+
+$indexCases = [
+    // class => [table, expected unique index, why]
+    'OIDCGroupManager' => [
+        'OIDCGroups',
+        [['ogProviderID', 'ogName']],
+        'one mapping per (provider, group value). The key covers every'
+        . ' non-id column, so the ON DUPLICATE KEY UPDATE half of a save'
+        . ' can only rewrite what it matched on -- which is why a unique'
+        . ' index is safe here and is deliberately absent from'
+        . ' OIDCProviders'
+    ],
+    'OIDCUserGrantManager' => [
+        'oidcUserGrant',
+        [['ougUserID', 'ougTargetType', 'ougTargetID']],
+        'the sync rewrites a user\'s grants with plain INSERT IGNORE after'
+        . ' clearing them, and a double sign-in must not record the same'
+        . ' grant twice'
+    ],
+];
+foreach ($indexCases as $class => $want) {
+    Schema::$lastCall = [];
+    $manager = new $class();
+    $manager->createSql();
+    $args = Schema::$lastCall;
+    if (($args[0] ?? null) !== $want[0]) {
+        fail(
+            sprintf(
+                '%s::createSql() builds table %s, expected %s',
+                $class,
+                var_export($args[0] ?? null, true),
+                var_export($want[0], true)
+            )
+        );
+        continue;
+    }
+    // Schema::createTable($table, $ifNotExists, $cols, $types, $notNulls,
+    // $defaults, $indexes, ...) -- the index list is argument seven.
+    if (($args[6] ?? null) !== $want[1]) {
+        fail(
+            sprintf(
+                '%s::createSql() declares unique index %s, expected %s: %s',
+                $class,
+                var_export($args[6] ?? null, true),
+                var_export($want[1], true),
+                $want[2]
             )
         );
     }

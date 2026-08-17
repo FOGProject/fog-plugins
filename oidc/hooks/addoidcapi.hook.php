@@ -56,7 +56,8 @@ class AddOIDCAPI extends Hook
         $this->registerInstalled([
             ['API_VALID_CLASSES', 'injectAPIElements'],
             ['API_SENSITIVE_FIELDS', 'declareSensitiveFields'],
-            ['OIDC_EXPORT_ITEMS', 'stripClientSecret']
+            ['OIDC_EXPORT_ITEMS', 'stripClientSecret'],
+            ['CUSTOMIZE_DT_COLUMNS', 'customizeDT']
         ]);
     }
     /**
@@ -107,7 +108,37 @@ class AddOIDCAPI extends Hook
         );
     }
     /**
-     * Injects this plugin's class into the API class list.
+     * Adds the owning provider column to the provider group list.
+     *
+     * The list JSON is built from the table's own columns, so a group row
+     * carries ogProviderID and no provider name. Route only knows how to
+     * turn a handful of core id columns into a link, and ogProviderID is not
+     * one of them -- without this the datatable asks for a column the payload
+     * never had and every visit to the list opens a DataTables warning alert.
+     *
+     * Done through this hook rather than by adding a case to Route so a
+     * plugin concern stays in the plugin. A 'providerID' case in core would
+     * also be a global claim on a very generic column name.
+     *
+     * @param mixed $arguments The arguments to modify.
+     *
+     * @return void
+     */
+    public function customizeDT($arguments)
+    {
+        if ($arguments['classname'] != 'oidcgroup') {
+            return;
+        }
+        $arguments['columns'][] = [
+            'db' => 'ogProviderID',
+            'dt' => 'oidcprovider',
+            'formatter' => function ($d, $row) {
+                return OIDCGroup::providerLinkCell($d);
+            }
+        ];
+    }
+    /**
+     * Injects this plugin's classes into the API class list.
      *
      * @param mixed $arguments The arguments to modify.
      *
@@ -122,7 +153,14 @@ class AddOIDCAPI extends Hook
             // link over the API as well as watch it in the list -- and so
             // DELETEMASS_API can name it as a removeItems target, which is
             // how a deleted user's links are cleared.
-            'oidcidentity'
+            'oidcidentity',
+            'oidcgroup',
+            'oidcgrouproleassociation',
+            'oidcgroupusergroupassociation',
+            // The record of what this plugin granted. Listed for the same
+            // DELETEMASS_API reason: a deleted role or user group has to be
+            // able to name it as a removeItems target.
+            'oidcusergrant'
         );
     }
 }
