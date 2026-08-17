@@ -297,6 +297,29 @@ if (false === strpos($page, 'SECRET_UNCHANGED !== $secret')) {
     );
 }
 
+/*
+ * clientId must stay declared as a string.
+ *
+ * FOGController::save() reads any key ending in "id" as an integer foreign
+ * key unless the model opts out, and clientId is required -- so dropping the
+ * opt-out does not degrade anything, it makes creating a provider impossible,
+ * reported as "Required database field is empty: clientId" about a field the
+ * admin filled in. That is a whole feature off, so it is pinned here rather
+ * than left to be rediscovered. Needs fogproject#1153.
+ */
+$declared = [];
+if (property_exists('OIDC', 'databaseFieldsNotInt')) {
+    $notInt = new \ReflectionProperty('OIDC', 'databaseFieldsNotInt');
+    $notInt->setAccessible(true);
+    $declared = array_map('strtolower', (array)$notInt->getValue(new OIDC()));
+}
+if (!in_array('clientid', $declared, true)) {
+    fail(
+        'OIDC does not declare clientId in $databaseFieldsNotInt, so '
+        . 'save() will reject every provider whose client id is not a number'
+    );
+}
+
 if (count($fails) > 0) {
     fwrite(STDERR, 'FAIL: ' . count($fails) . " problem(s):\n");
     foreach ($fails as $f) {

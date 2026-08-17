@@ -102,6 +102,20 @@ class OIDC extends FOGController
         'clientId'
     ];
     /**
+     * clientId ends in "id" without being a foreign key.
+     *
+     * FOGController::save() reads a key ending in "id" as an integer id
+     * unless the model says otherwise. A client id is a string the provider
+     * chooses -- "fog-web", or a GUID on Entra -- so without this every
+     * create failed with "Required database field is empty: clientId" about
+     * a field that was filled in. Needs fogproject#1153.
+     *
+     * @var array
+     */
+    protected $databaseFieldsNotInt = [
+        'clientId'
+    ];
+    /**
      * Validate before storing.
      *
      * Every rule here is enforced in the model rather than on the management
