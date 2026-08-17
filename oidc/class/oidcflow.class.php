@@ -1,0 +1,667 @@
+<?php
+/**
+ * The OpenID Connect authorization code flow.
+ *
+ * PHP version 7.4+
+ *
+ * @category OIDCFlow
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+/**
+ * The OpenID Connect authorization code flow.
+ *
+ * Two entry points, both reached as plugin API routes under /ext/ and both
+ * declared public, because the whole point is that they are used by somebody
+ * who has no session yet:
+ *
+ *   start()     mint the one-time values, send the browser to the provider
+ *   callback()  take the code back, prove the ID token, sign the user in
+ *
+ * Authorization code flow with PKCE. The implicit and hybrid flows are not
+ * offered: they put a token in a URL, which puts it in the browser history,
+ * the Referer header and every proxy log between here and there.
+ *
+ * @category OIDCFlow
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+class OIDCFlow extends FOGBase
+{
+    /**
+     * Where the one-time flow values live between the two requests.
+     *
+     * @var string
+     */
+    const SESSION_KEY = 'FOG_OIDC_FLOW';
+    /**
+     * How long a started flow stays usable, in seconds.
+     *
+     * Long enough to type a password and answer an MFA prompt at the
+     * provider, short enough that an abandoned flow does not leave a usable
+     * state value sitting in a session for the rest of the day.
+     *
+     * @var int
+     */
+    const FLOW_TTL = 600;
+    /**
+     * Seconds of clock skew tolerated when checking token times.
+     *
+     * @var int
+     */
+    const CLOCK_SKEW = 60;
+    /**
+     * Seconds to wait on the provider, per request.
+     *
+     * Explicit because FOG_URL_BASE_TIMEOUT defaults to a day, which is a
+     * reasonable ceiling for pulling a kernel off GitHub and an unreasonable
+     * one for a login: a provider that stops answering would hold the
+     * request, and its php-fpm worker, until something else gave up.
+     *
+     * @var int
+     */
+    const HTTP_TIMEOUT = 15;
+    /**
+     * The largest response this flow will try to parse, in bytes.
+     *
+     * A discovery document or a key set is a few kilobytes; anything wildly
+     * larger is not one, and json_decode on it is wasted work. Deliberately
+     * NOT described as a download limit -- curl has already read the body by
+     * the time this is checked, and imposing a real transfer cap through
+     * FOGURLRequests would mean reaching past its interface. The timeout is
+     * what bounds a hostile provider here.
+     *
+     * @var int
+     */
+    const MAX_RESPONSE = 262144;
+    /**
+     * Send the browser to the provider.
+     *
+     * @return void
+     */
+    public static function start()
+    {
+        self::_session();
+        try {
+            $provider = self::_enabledProvider(
+                (int)filter_input(INPUT_GET, 'provider', FILTER_VALIDATE_INT)
+            );
+            $config = self::_discover($provider);
+
+            // Fetching closed the session (FOGURLRequests releases the lock
+            // so a called FOG endpoint can read it), so reopen before
+            // writing. Everything below has to survive to the callback.
+            self::_session();
+            $verifier = self::_randomString();
+            $flow = [
+                'provider' => (int)$provider->get('id'),
+                'state' => self::_randomString(),
+                'nonce' => self::_randomString(),
+                'verifier' => $verifier,
+                'created' => time()
+            ];
+            $_SESSION[self::SESSION_KEY] = $flow;
+
+            $query = [
+                'response_type' => 'code',
+                'client_id' => $provider->get('clientId'),
+                'redirect_uri' => OIDC::redirectUri(),
+                'scope' => $provider->get('scopes'),
+                'state' => $flow['state'],
+                'nonce' => $flow['nonce'],
+                // PKCE. The provider will not exchange the code without the
+                // verifier, so a code intercepted on its way back through the
+                // browser is not enough on its own.
+                'code_challenge' => self::_b64url(
+                    hash('sha256', $verifier, true)
+                ),
+                'code_challenge_method' => 'S256'
+            ];
+            self::_redirect(
+                $config['authorization_endpoint']
+                . (false === strpos($config['authorization_endpoint'], '?')
+                    ? '?'
+                    : '&')
+                . http_build_query($query)
+            );
+        } catch (\Exception $e) {
+            self::_fail($e->getMessage());
+        }
+    }
+    /**
+     * Take the authorization code back and sign the user in.
+     *
+     * @return void
+     */
+    public static function callback()
+    {
+        self::_session();
+        /*
+         * Read and CLEAR before anything else can fail. The state and the
+         * verifier are single use; leaving them in the session after a
+         * failure would let the same authorization code be presented again.
+         */
+        $flow = $_SESSION[self::SESSION_KEY] ?? null;
+        unset($_SESSION[self::SESSION_KEY]);
+        session_write_close();
+
+        try {
+            if (!is_array($flow) || empty($flow['state'])) {
+                throw new \Exception(
+                    _('No sign-in was in progress; please start again')
+                );
+            }
+            if (time() - (int)$flow['created'] > self::FLOW_TTL) {
+                throw new \Exception(
+                    _('The sign-in took too long; please start again')
+                );
+            }
+            $error = trim((string)filter_input(INPUT_GET, 'error'));
+            if ('' !== $error) {
+                // The provider's own words, which are the useful ones --
+                // 'access_denied' means somebody pressed cancel.
+                throw new \Exception(
+                    sprintf(
+                        _('The identity provider refused the sign-in (%s)'),
+                        $error
+                    )
+                );
+            }
+            $state = (string)filter_input(INPUT_GET, 'state');
+            if (!hash_equals((string)$flow['state'], $state)) {
+                // Constant time, and the message says nothing about which
+                // half was wrong.
+                throw new \Exception(_('The sign-in could not be verified'));
+            }
+            $code = (string)filter_input(INPUT_GET, 'code');
+            if ('' === $code) {
+                throw new \Exception(_('The identity provider sent no code'));
+            }
+
+            $provider = self::_enabledProvider((int)$flow['provider']);
+            $config = self::_discover($provider);
+            $token = self::_exchange($provider, $config, $code, $flow);
+            $claims = self::_verify($provider, $config, $token, $flow);
+            $user = self::_resolveUser($provider, $claims);
+
+            /*
+             * An identity already in this session must not decide the new
+             * one. User::establishSession() prefers the boot-time $FOGUser
+             * whenever it is valid, so somebody already signed in as one
+             * account who completes a sign-in as another would silently keep
+             * the first -- the account they end up in would not be the one
+             * the identity provider just vouched for. Reachable easily
+             * enough: a second tab, or a bookmarked start URL.
+             *
+             * Both halves have to go. Emptying $_SESSION alone leaves the
+             * static, which was populated from it at boot and is what
+             * establishSession() actually reads.
+             */
+            self::_session();
+            $_SESSION = [];
+            self::$FOGUser = self::getClass('User', 0);
+
+            // Provenance, not decoration: an audit has to be able to tell
+            // this session from a password one, and the break-glass rules
+            // count sessions by how they were made.
+            $user->establishSession(OIDC::AUTH_SOURCE);
+            self::_redirect(
+                OIDC::webrootBase() . 'management/index.php'
+            );
+        } catch (\Exception $e) {
+            self::_fail($e->getMessage());
+        }
+    }
+    /**
+     * Starts (or resumes) the session this flow needs.
+     *
+     * A route under /ext/ gets no session of its own: api/index.php does not
+     * declare FOG_WANTS_SESSION, and a visitor who has not signed in yet
+     * carries no cookie, so core's session gate correctly declines to make
+     * one. That gate exists to stop BROWSER-LESS callers -- iPXE, the fog
+     * client -- minting sessions they can never present back. This handler
+     * is mid-redirect in a real browser, which is exactly the case the gate
+     * is not about, so it asks for one explicitly.
+     *
+     * @return void
+     */
+    private static function _session()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
+    /**
+     * Loads a provider and refuses one that is not usable.
+     *
+     * @param int $id the provider id
+     *
+     * @throws Exception
+     * @return OIDC
+     */
+    private static function _enabledProvider($id)
+    {
+        $provider = self::getClass('OIDC', (int)$id);
+        if (!$provider->isValid()) {
+            throw new \Exception(_('Unknown identity provider'));
+        }
+        if (!$provider->get('enabled')) {
+            // Checked on the callback as well as the start, so disabling a
+            // provider ends flows already in progress rather than only
+            // stopping new ones.
+            throw new \Exception(
+                _('That identity provider is not enabled')
+            );
+        }
+        return $provider;
+    }
+    /**
+     * Reads the provider's discovery document.
+     *
+     * Fetched per sign-in rather than cached. A cache would save two
+     * requests and introduce the failure it is famous for: the provider
+     * rotates its signing keys, the cached key set no longer contains the
+     * one in use, and every login fails until the entry expires. Two extra
+     * round trips at sign-in time is the cheaper side of that trade, and
+     * this is not a hot path.
+     *
+     * @param OIDC $provider the provider
+     *
+     * @throws Exception
+     * @return array the discovery document
+     */
+    private static function _discover($provider)
+    {
+        $issuer = (string)$provider->get('issuer');
+        $config = self::_getJson(
+            $issuer . '/.well-known/openid-configuration'
+        );
+        /*
+         * The document's own issuer must be the one we asked. This is the
+         * check that stops a redirect (FOGURLRequests follows up to five)
+         * from silently handing us somebody else's configuration -- the
+         * endpoints below all come out of this document, so without it the
+         * document decides where the client secret gets posted.
+         */
+        if (($config['issuer'] ?? null) !== $issuer) {
+            throw new \Exception(
+                _('The provider returned a configuration for a different issuer')
+            );
+        }
+        foreach (['authorization_endpoint', 'token_endpoint', 'jwks_uri'] as $key) {
+            $value = (string)($config[$key] ?? '');
+            if (0 !== stripos($value, 'https://')) {
+                throw new \Exception(
+                    sprintf(
+                        _('The provider published no https %s'),
+                        str_replace('_', ' ', $key)
+                    )
+                );
+            }
+        }
+        return $config;
+    }
+    /**
+     * Trades the authorization code for tokens.
+     *
+     * @param OIDC   $provider the provider
+     * @param array  $config   its discovery document
+     * @param string $code     the authorization code
+     * @param array  $flow     the stored flow values
+     *
+     * @throws Exception
+     * @return array the token response
+     */
+    private static function _exchange($provider, array $config, $code, array $flow)
+    {
+        $body = self::_post(
+            $config['token_endpoint'],
+            http_build_query(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                    'redirect_uri' => OIDC::redirectUri(),
+                    'client_id' => $provider->get('clientId'),
+                    'client_secret' => $provider->get('clientSecret'),
+                    'code_verifier' => $flow['verifier']
+                ]
+            )
+        );
+        $token = json_decode($body, true);
+        if (!is_array($token)) {
+            throw new \Exception(
+                _('The identity provider sent an unreadable token response')
+            );
+        }
+        if (empty($token['id_token'])) {
+            throw new \Exception(
+                sprintf(
+                    _('The identity provider returned no ID token (%s)'),
+                    (string)($token['error'] ?? _('no reason given'))
+                )
+            );
+        }
+        return $token;
+    }
+    /**
+     * Proves the ID token and returns its claims.
+     *
+     * The signature check is firebase/php-jwt's; everything after it is the
+     * part a library cannot do for you, because it depends on who we think
+     * we are talking to.
+     *
+     * @param OIDC  $provider the provider
+     * @param array $config   its discovery document
+     * @param array $token    the token response
+     * @param array $flow     the stored flow values
+     *
+     * @throws Exception
+     * @return array the ID token claims
+     */
+    private static function _verify($provider, array $config, array $token, array $flow)
+    {
+        $keys = \Firebase\JWT\JWK::parseKeySet(
+            self::_getJson($config['jwks_uri'])
+        );
+        \Firebase\JWT\JWT::$leeway = self::CLOCK_SKEW;
+        try {
+            $claims = (array)json_decode(
+                json_encode(
+                    \Firebase\JWT\JWT::decode($token['id_token'], $keys)
+                ),
+                true
+            );
+        } catch (\Exception $e) {
+            // Deliberately not passed through: a signature failure, an
+            // expired token and an unknown key are the same answer to the
+            // person in front of the browser, and the detail belongs in the
+            // log.
+            error_log('FOG OIDC: ID token rejected -- ' . $e->getMessage());
+            throw new \Exception(_('The ID token could not be verified'));
+        }
+        if (($claims['iss'] ?? null) !== (string)$provider->get('issuer')) {
+            throw new \Exception(_('The ID token names a different issuer'));
+        }
+        /*
+         * aud is a string or an array of strings, and a token issued to
+         * somebody else is a token that says nothing about who may sign in
+         * here.
+         */
+        $aud = $claims['aud'] ?? [];
+        if (!in_array(
+            (string)$provider->get('clientId'),
+            array_map('strval', (array)$aud),
+            true
+        )) {
+            throw new \Exception(_('The ID token was issued to someone else'));
+        }
+        // azp identifies the party the token was issued FOR when aud has
+        // more than one value; if it is present it has to be us.
+        if (isset($claims['azp'])
+            && (string)$claims['azp'] !== (string)$provider->get('clientId')
+        ) {
+            throw new \Exception(_('The ID token was issued to someone else'));
+        }
+        if (!isset($claims['nonce'])
+            || !hash_equals((string)$flow['nonce'], (string)$claims['nonce'])
+        ) {
+            // Without this a token captured from an earlier sign-in can be
+            // replayed into a new one.
+            throw new \Exception(_('The ID token could not be verified'));
+        }
+        if ('' === trim((string)($claims['sub'] ?? ''))) {
+            throw new \Exception(_('The ID token carries no subject'));
+        }
+        return $claims;
+    }
+    /**
+     * Turns verified claims into the FOG user they identify.
+     *
+     * Default deny, and this is the method that means it: an identity the
+     * provider is happy with, that this server has no account for, is
+     * refused. Holding an account at the identity provider is not the same
+     * thing as being allowed into FOG. (Creating the account instead is
+     * just-in-time provisioning; the column exists and ships off, and
+     * nothing reads it yet.)
+     *
+     * @param OIDC  $provider the provider
+     * @param array $claims   the verified claims
+     *
+     * @throws Exception
+     * @return User
+     */
+    private static function _resolveUser($provider, array $claims)
+    {
+        $subject = (string)$claims['sub'];
+        $claimName = (string)$provider->get('userClaim');
+        $username = trim((string)($claims[$claimName] ?? ''));
+        if ('' === $username) {
+            throw new \Exception(
+                sprintf(
+                    _('The identity provider sent no %s claim'),
+                    $claimName
+                )
+            );
+        }
+
+        $linkedId = OIDCIdentity::userIdFor($provider->get('id'), $subject);
+        $byName = self::getClass('User')
+            ->set('name', $username)
+            ->load('name');
+        $namedId = $byName->isValid() ? (int)$byName->get('id') : 0;
+
+        if ($linkedId > 0) {
+            /*
+             * Second and later sign-ins. The recorded subject wins, because
+             * the username claim is reassignable: a directory that reissues
+             * a departed person's username would otherwise hand their FOG
+             * account to a new starter. A disagreement is refused rather
+             * than resolved -- both readings are somebody signing into an
+             * account that may not be theirs.
+             */
+            if ($namedId > 0 && $namedId !== $linkedId) {
+                error_log(
+                    sprintf(
+                        'FOG OIDC: subject linked to user %d but claim "%s"'
+                        . ' names user %d; refusing.',
+                        $linkedId,
+                        $username,
+                        $namedId
+                    )
+                );
+                throw new \Exception(
+                    _('This identity is linked to a different FOG account')
+                );
+            }
+            $user = self::getClass('User', $linkedId);
+            if (!$user->isValid()) {
+                throw new \Exception(
+                    _('The FOG account for this identity no longer exists')
+                );
+            }
+            return $user;
+        }
+
+        if (0 === $namedId) {
+            // The message names the account on purpose: an admin reading it
+            // over somebody's shoulder needs to know which name to create,
+            // and it discloses nothing the person signing in did not just
+            // type into their own provider.
+            throw new \Exception(
+                sprintf(
+                    _('No FOG account exists for %s'),
+                    $username
+                )
+            );
+        }
+
+        /*
+         * First sign-in for an account that already existed. Record the
+         * subject now so every later sign-in is decided by it. The account
+         * is NOT stamped with uAuthSource: that column makes an account
+         * unable to use a local password, and taking password login away
+         * from an account an admin created is the opposite of break-glass.
+         */
+        self::getClass('OIDCIdentity')
+            ->set('name', $username)
+            ->set('providerId', $provider->get('id'))
+            ->set('subject', $subject)
+            ->set('userId', $namedId)
+            ->save();
+
+        return $byName;
+    }
+    /**
+     * Fetches and decodes a JSON document from the provider.
+     *
+     * @param string $url the URL to read
+     *
+     * @throws Exception
+     * @return array
+     */
+    private static function _getJson($url)
+    {
+        $data = json_decode(self::_http($url, 'GET', null), true);
+        if (!is_array($data)) {
+            throw new \Exception(
+                _('The identity provider sent an unreadable response')
+            );
+        }
+        return $data;
+    }
+    /**
+     * Posts a form-encoded body to the provider.
+     *
+     * @param string $url  the URL to post to
+     * @param string $body the already-encoded body
+     *
+     * @throws Exception
+     * @return string
+     */
+    private static function _post($url, $body)
+    {
+        return self::_http($url, 'POST', $body);
+    }
+    /**
+     * One request to the provider.
+     *
+     * FOGURLRequests rather than a private curl call, now that it verifies
+     * certificates by default and exempts only hosts this install owns -- an
+     * identity provider is never one of those, so this traffic is verified
+     * without the plugin having to ask. It also keeps the proxy settings, the
+     * timeouts and the redirect handling in one place.
+     *
+     * A fresh instance, not the shared one: process() writes the timeout
+     * onto the object it is called on, and the timeout wanted here is much
+     * shorter than the one the rest of FOG wants.
+     *
+     * @param string      $url    the URL
+     * @param string      $method GET or POST
+     * @param string|null $body   the encoded body for a POST
+     *
+     * @throws Exception
+     * @return string
+     */
+    private static function _http($url, $method, $body)
+    {
+        $requests = self::getClass('FOGURLRequests');
+        $status = 0;
+        $response = $requests->process(
+            $url,
+            $method,
+            $body,
+            false,
+            false,
+            function ($output, $info) use (&$status) {
+                $status = (int)$info;
+            },
+            false,
+            self::HTTP_TIMEOUT,
+            ['Accept: application/json']
+        );
+        $response = (string)array_shift($response);
+        if ($status < 200 || $status > 299) {
+            error_log(
+                sprintf(
+                    'FOG OIDC: %s %s answered %d',
+                    $method,
+                    $url,
+                    $status
+                )
+            );
+            throw new \Exception(
+                _('The identity provider could not be reached')
+            );
+        }
+        if (strlen($response) > self::MAX_RESPONSE) {
+            throw new \Exception(
+                _('The identity provider sent an unreasonably large response')
+            );
+        }
+        return $response;
+    }
+    /**
+     * A URL-safe random value for state, nonce and the PKCE verifier.
+     *
+     * 32 bytes from the CSPRNG. All three are unguessability, not secrecy:
+     * a state somebody can predict is a CSRF hole, and a verifier somebody
+     * can predict is PKCE not being there.
+     *
+     * @return string
+     */
+    private static function _randomString()
+    {
+        return self::_b64url(random_bytes(32));
+    }
+    /**
+     * base64url, per RFC 7636.
+     *
+     * @param string $raw the bytes
+     *
+     * @return string
+     */
+    private static function _b64url($raw)
+    {
+        return rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
+    }
+    /**
+     * Sends the browser somewhere and stops.
+     *
+     * @param string $url where to go
+     *
+     * @return void
+     */
+    private static function _redirect($url)
+    {
+        // The buffer commons/base.inc.php opened holds nothing this response
+        // wants; a redirect with a body attached is only a chance for
+        // something to render instead of following it.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Location: ' . $url, true, 302);
+        exit;
+    }
+    /**
+     * Abandons the sign-in and says why on the login page.
+     *
+     * The message goes through the flash queue rather than being printed
+     * here, so the person lands back on the login form with the explanation
+     * attached -- an error page at /ext/oidc/callback is a dead end with no
+     * way back.
+     *
+     * @param string $message what went wrong
+     *
+     * @return void
+     */
+    private static function _fail($message)
+    {
+        self::_session();
+        self::setMessage($message, _('Sign-in failed'), 'error');
+        self::_redirect(OIDC::webrootBase() . 'management/index.php');
+    }
+}

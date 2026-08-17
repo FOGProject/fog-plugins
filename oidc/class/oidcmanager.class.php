@@ -169,6 +169,10 @@ class OIDCManager extends FOGManagerController
         return [
             // 0 - create the providers table.
             $this->createSql(),
+            // 1 - the provider-subject to FOG-user links.
+            function () {
+                return self::getClass('OIDCIdentityManager')->install();
+            },
         ];
     }
     /**
@@ -181,13 +185,25 @@ class OIDCManager extends FOGManagerController
         $res = Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
-    // uninstall() is deliberately NOT overridden. The inherited one drops
-    // this table, which is what should happen -- the rows carry client
-    // secrets and there is no reason to leave them behind.
-    //
-    // What it must not do, and what the LDAP plugin's uninstall() does do, is
-    // delete user accounts. An OIDC-authenticated account is an ordinary FOG
-    // user an admin created and gave roles to; removing the way somebody
-    // signs in is not a reason to delete them. They fall back to local
-    // password login, which is exactly the break-glass position.
+    /**
+     * Uninstalls the plugin.
+     *
+     * Drops the providers table (the rows carry client secrets, so there is
+     * no reason to leave them behind) and the identity links with it -- a
+     * link to a provider that no longer exists is not information.
+     *
+     * What it deliberately does NOT do, and what the LDAP plugin's
+     * uninstall() does do, is delete user accounts. An OIDC-authenticated
+     * account is an ordinary FOG user an admin created and gave roles to;
+     * removing the way somebody signs in is not a reason to delete them.
+     * They fall back to local password login, which is exactly the
+     * break-glass position.
+     *
+     * @return bool
+     */
+    public function uninstall()
+    {
+        self::getClass('OIDCIdentityManager')->uninstall();
+        return parent::uninstall();
+    }
 }
