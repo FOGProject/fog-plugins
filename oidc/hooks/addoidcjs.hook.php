@@ -75,9 +75,13 @@ class AddOIDCJS extends Hook
      */
     public function injectJSFiles($arguments)
     {
+        // role/usergroup carry the injected Provider Groups association tab,
+        // so they need this plugin's JS on a page that is not its own node.
         $this->injectPluginJS($arguments, [
             'oidc' => ['fallback' => true],
             'oidcgroup' => ['fallback' => true],
+            'role' => ['secondary' => true],
+            'usergroup' => ['secondary' => true],
         ]);
     }
 }
