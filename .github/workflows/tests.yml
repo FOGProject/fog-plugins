@@ -1,0 +1,22 @@
+name: Tests
+
+# A pull_request trigger can only fire from the repository the PR is opened
+# against, so this stub has to live here even though the runner lives in
+# FOGProject/fog-workflows. It is deliberately six lines: all of the logic is
+# in the reusable workflow, so fixing the runner does not mean editing this
+# file.
+#
+# The sibling of fogproject's own .github/workflows/tests.yml, pointing at a
+# different reusable -- that one installs efitools for a shell test this
+# repository does not have.
+#
+# Not a push trigger, and not because of caution: the runaway that put ~30
+# commits on fogproject's dev-branch in 20 minutes happened because the
+# triggered workflow pushed a commit back. This one only reads.
+
+on:
+  pull_request:
+
+jobs:
+  suite:
+    uses: FOGProject/fog-workflows/.github/workflows/fog-plugins-tests.yml@main
