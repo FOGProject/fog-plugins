@@ -117,7 +117,12 @@ class AddOIDCAPI extends Hook
     {
         array_push(
             $arguments['validClasses'],
-            $this->node
+            $this->node,
+            // The identity links. Exposed so an admin can see and remove a
+            // link over the API as well as watch it in the list -- and so
+            // DELETEMASS_API can name it as a removeItems target, which is
+            // how a deleted user's links are cleared.
+            'oidcidentity'
         );
     }
 }

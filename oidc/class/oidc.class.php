@@ -257,7 +257,32 @@ class OIDC extends FOGController
     public static function redirectUri()
     {
         $host = trim((string)self::getSetting('FOG_WEB_HOST'), '/');
-        $root = FOGPage::webrootPath();
-        return sprintf('https://%s/%s%s', $host, $root, self::CALLBACK_PATH);
+        return sprintf(
+            'https://%s%s',
+            $host,
+            rtrim(self::webrootBase(), '/') . self::CALLBACK_PATH
+        );
+    }
+    /**
+     * The configured webroot, with a leading and a trailing slash.
+     *
+     * Derived exactly the way Route's constructor derives its router base
+     * (GH-529), and NOT via FOGPage::webrootPath(), which is the obvious
+     * choice and is wrong here: webrootPath() answers 'fog' when the setting
+     * is empty, while the router anchors its paths at '' -- so on an install
+     * served from the document root every URL this plugin built would point
+     * one directory too deep, and the callback registered at the provider
+     * would never be reached.
+     *
+     * Read from the setting rather than from Route::webrootbase(), because
+     * that value is only filled in once a Route has been constructed and the
+     * login page is rendered without one.
+     *
+     * @return string
+     */
+    public static function webrootBase()
+    {
+        $root = trim((string)self::getSetting('FOG_WEB_ROOT'), '/');
+        return '/' . ('' === $root ? '' : $root . '/');
     }
 }
