@@ -39,6 +39,17 @@ class OIDCFlow extends FOGBase
      */
     const SESSION_KEY = 'FOG_OIDC_FLOW';
     /**
+     * Where the material for RP-initiated logout is kept (#15).
+     *
+     * Separate from SESSION_KEY because it has the opposite lifetime: the
+     * flow values are single use and deleted the moment the callback reads
+     * them, while this has to survive for as long as the session it belongs
+     * to -- it is read at logout, which may be days later.
+     *
+     * @var string
+     */
+    const LOGOUT_KEY = 'FOG_OIDC_LOGOUT';
+    /**
      * How long a started flow stays usable, in seconds.
      *
      * Long enough to type a password and answer an MFA prompt at the
@@ -224,12 +235,120 @@ class OIDCFlow extends FOGBase
             // this session from a password one, and the break-glass rules
             // count sessions by how they were made.
             $user->establishSession(OIDC::AUTH_SOURCE);
+
+            /*
+             * After establishSession(), not before: the wipe above empties
+             * $_SESSION wholesale, so anything written earlier in this
+             * request would be thrown away with the identity it was
+             * guarding against.
+             */
+            self::_rememberLogout($provider, $config, $token);
+
             self::_redirect(
                 OIDC::webrootBase() . 'management/index.php'
             );
         } catch (\Exception $e) {
             self::_fail($e->getMessage());
         }
+    }
+    /**
+     * Stores what RP-initiated logout will need, if it is wanted.
+     *
+     * Recorded now rather than fetched at logout, and that is the whole
+     * design. Discovery is a network request; putting one on the sign-out
+     * path means a provider that has gone away turns "log out" into a page
+     * that hangs and then fails, at the exact moment somebody is trying to
+     * leave. Everything needed is already in hand here.
+     *
+     * The ID token is kept because id_token_hint is what tells the provider
+     * WHICH session to end, and it is the only thing that lets it skip the
+     * "are you sure you want to sign out?" interstitial. It is a token this
+     * session already holds the fruits of; the session file is not a weaker
+     * place to keep it than the authenticated session itself.
+     *
+     * @param OIDC  $provider the provider signed in with
+     * @param array $config   its discovery document
+     * @param array $token    the token response
+     *
+     * @return void
+     */
+    private static function _rememberLogout($provider, array $config, array $token)
+    {
+        if ('1' !== (string)$provider->get('singleLogout')) {
+            return;
+        }
+        $endpoint = (string)($config['end_session_endpoint'] ?? '');
+        if (0 !== stripos($endpoint, 'https://')) {
+            /*
+             * An admin turned this on and it cannot work -- the provider
+             * publishes no end_session_endpoint, or publishes a plaintext
+             * one. Logging out will silently just be a FOG logout, which is
+             * indistinguishable from the setting being off, so say so
+             * somewhere an admin can find it. Not a thrown exception: the
+             * sign-in itself succeeded and refusing it here would turn a
+             * logout limitation into a login failure.
+             */
+            error_log(
+                sprintf(
+                    'FOG OIDC: provider %d has single logout enabled but'
+                    . ' published no https end_session_endpoint; signing out'
+                    . ' of FOG will not end the provider session',
+                    (int)$provider->get('id')
+                )
+            );
+            return;
+        }
+        $_SESSION[self::LOGOUT_KEY] = [
+            'provider' => (int)$provider->get('id'),
+            'endpoint' => $endpoint,
+            'idToken' => (string)$token['id_token']
+        ];
+    }
+    /**
+     * The provider logout URL for this session, or '' for none.
+     *
+     * Called from the USER_LOGGING_OUT listener, which core fires BEFORE it
+     * destroys the session -- so the values stored at callback time are
+     * still readable here, and this is the last moment they are.
+     *
+     * The provider row is re-read rather than trusted from the session. An
+     * admin who turns single logout off means it from that moment, not from
+     * the next time everybody happens to sign in; and a provider that has
+     * since been deleted or disabled must not have a URL built from a row
+     * that no longer says anything.
+     *
+     * @return string
+     */
+    public static function logoutUrl()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return '';
+        }
+        $stored = $_SESSION[self::LOGOUT_KEY] ?? null;
+        // Single use. A second call must not produce a second redirect, and
+        // the session is about to be destroyed anyway.
+        unset($_SESSION[self::LOGOUT_KEY]);
+        if (!is_array($stored) || empty($stored['endpoint'])) {
+            return '';
+        }
+        $provider = self::getClass('OIDC', (int)($stored['provider'] ?? 0));
+        if (!$provider->isValid()
+            || '1' !== (string)$provider->get('enabled')
+            || '1' !== (string)$provider->get('singleLogout')
+        ) {
+            return '';
+        }
+        $query = [
+            'id_token_hint' => (string)$stored['idToken'],
+            'post_logout_redirect_uri' => OIDC::postLogoutUri(),
+            // Sent alongside id_token_hint because some providers key the
+            // post-logout redirect allow-list on the client rather than on
+            // the token, and it is ignored by the ones that do not.
+            'client_id' => (string)$provider->get('clientId')
+        ];
+        return $stored['endpoint']
+            . (false === strpos($stored['endpoint'], '?') ? '?' : '&')
+            . http_build_query($query);
     }
     /**
      * Starts (or resumes) the session this flow needs.

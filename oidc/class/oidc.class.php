@@ -89,6 +89,11 @@ class OIDC extends FOGController
         // column in OIDCManager::createSql().
         'jitProvision' => 'opJITProvision',
         'allowapi' => 'opAllowAPI',
+        // Signing out of FOG also ends the session at the provider (#15).
+        // Off by default: it is only the right answer where FOG is the only
+        // application behind that provider. See the note on the column in
+        // OIDCManager::createSql().
+        'singleLogout' => 'opSingleLogout',
         'icon' => 'opIcon'
     ];
     /**
@@ -270,11 +275,52 @@ class OIDC extends FOGController
      */
     public static function redirectUri()
     {
+        return self::absoluteUrl(self::CALLBACK_PATH);
+    }
+    /**
+     * Where a provider sends the browser after ending its own session.
+     *
+     * management/login.php rather than management/index.php, and the
+     * difference is the whole point: index.php is the page an install with
+     * forced redirect on (#17) bounces straight back to the provider. A
+     * signed-out user landing there would be silently signed back in by the
+     * SSO session that was just ended -- or, if it really was ended, sent
+     * around the loop again. login.php always renders FOG's own form
+     * (fogproject#1175).
+     *
+     * This URL has to be registered at the provider as a post-logout
+     * redirect URI, the same way the callback does. Providers that follow
+     * the spec refuse an unregistered one and show their own error page
+     * instead of coming back, so the management page prints it next to the
+     * setting rather than leaving an admin to work out why logout ends
+     * somewhere unexpected.
+     *
+     * @return string
+     */
+    public static function postLogoutUri()
+    {
+        return self::absoluteUrl('management/login.php');
+    }
+    /**
+     * An absolute https URL for a path inside this FOG install.
+     *
+     * Built from FOG_WEB_HOST and FOG_WEB_ROOT rather than from the request
+     * for the reason spelled out on redirectUri(): these values are
+     * registered at a provider ahead of time and compared byte for byte, so
+     * they cannot be whatever the browser last claimed the server was
+     * called.
+     *
+     * @param string $path a path relative to the webroot
+     *
+     * @return string
+     */
+    public static function absoluteUrl($path)
+    {
         $host = trim((string)self::getSetting('FOG_WEB_HOST'), '/');
         return sprintf(
             'https://%s%s',
             $host,
-            rtrim(self::webrootBase(), '/') . self::CALLBACK_PATH
+            rtrim(self::webrootBase(), '/') . '/' . ltrim((string)$path, '/')
         );
     }
     /**
