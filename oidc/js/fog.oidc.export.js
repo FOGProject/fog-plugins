@@ -22,6 +22,7 @@
         {data: 'jitProvision', visible: false},
         {data: 'allowapi', visible: false},
         {data: 'singleLogout', visible: false},
+        {data: 'autoRedirect', visible: false},
         {data: 'icon', visible: false}
     ]);
 })(jQuery);

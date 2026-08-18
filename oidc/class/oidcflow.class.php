@@ -305,6 +305,79 @@ class OIDCFlow extends FOGBase
         ];
     }
     /**
+     * The one provider the login page must redirect to, or 0 for none.
+     *
+     * Shared by the login-page listener and the logout listener, because
+     * both have to know the same thing: whether landing on
+     * management/index.php would bounce the visitor straight to a provider.
+     *
+     * TWO providers flagged is refused rather than resolved. The login page
+     * cannot redirect to both, and silently picking one -- lowest id, first
+     * row, whatever -- hides a misconfiguration on the single page an admin
+     * is least able to debug, while sending everybody to a provider half of
+     * them may not have an account at. Refusing renders FOG's own form,
+     * which is a working login for everyone and visibly not what was asked
+     * for.
+     *
+     * The complaint goes to the error log and NOT to the page. This runs
+     * for an anonymous visitor, and "this server has two misconfigured
+     * identity providers" is not something to tell one.
+     *
+     * @return int the provider id, or 0
+     */
+    public static function forcedProvider()
+    {
+        $ids = (array)Route::getIds(
+            'oidc',
+            ['enabled' => [1], 'autoRedirect' => [1]]
+        );
+        if (count($ids) < 1) {
+            return 0;
+        }
+        if (count($ids) > 1) {
+            error_log(
+                sprintf(
+                    'FOG OIDC: providers %s all have automatic redirect'
+                    . ' enabled; the login page cannot redirect to more than'
+                    . ' one, so it is showing the local form instead',
+                    implode(', ', array_map('intval', $ids))
+                )
+            );
+            return 0;
+        }
+        return (int)reset($ids);
+    }
+    /**
+     * Where the login page should send an anonymous visitor, or ''.
+     *
+     * Consumed by core's LOGIN_PAGE_REDIRECT seam (fogproject#1175), which
+     * fires only for a visitor who is NOT signed in and only on the form
+     * render -- so this can neither bounce a working session nor interrupt
+     * the callback coming back from the provider.
+     *
+     * The row is re-read and re-checked rather than trusted from the id,
+     * for the same reason _enabledProvider() re-checks at the start of every
+     * flow: a provider disabled a moment ago must not still be receiving
+     * people.
+     *
+     * @return string
+     */
+    public static function loginRedirectUrl()
+    {
+        $id = self::forcedProvider();
+        if ($id < 1) {
+            return '';
+        }
+        $provider = self::getClass('OIDC', $id);
+        if (!$provider->isValid()
+            || '1' !== (string)$provider->get('enabled')
+            || '1' !== (string)$provider->get('autoRedirect')
+        ) {
+            return '';
+        }
+        return OIDC::startUrl($id);
+    }
+    /**
      * The provider logout URL for this session, or '' for none.
      *
      * Called from the USER_LOGGING_OUT listener, which core fires BEFORE it
@@ -1224,6 +1297,15 @@ class OIDCFlow extends FOGBase
     {
         self::_session();
         self::setMessage($message, _('Sign-in failed'), 'error');
-        self::_redirect(OIDC::webrootBase() . 'management/index.php');
+        /*
+         * login.php, not index.php. On an install with automatic redirect
+         * on (#17), index.php sends the visitor straight back to the
+         * provider that just refused them -- which is an infinite redirect
+         * for a provider that is down, and an unreadable flash message even
+         * when it is not, because nothing renders between the two hops.
+         * login.php always renders FOG's own form (fogproject#1175), so the
+         * explanation is attached to a page that stays put.
+         */
+        self::_redirect(OIDC::webrootBase() . 'management/login.php');
     }
 }

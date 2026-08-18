@@ -94,6 +94,10 @@ class OIDC extends FOGController
         // application behind that provider. See the note on the column in
         // OIDCManager::createSql().
         'singleLogout' => 'opSingleLogout',
+        // Send the login page straight to this provider instead of showing
+        // FOG's own form (#17). Off by default; see the note on the column
+        // in OIDCManager::createSql() for why this one in particular.
+        'autoRedirect' => 'opAutoRedirect',
         'icon' => 'opIcon'
     ];
     /**
@@ -300,6 +304,24 @@ class OIDC extends FOGController
     public static function postLogoutUri()
     {
         return self::absoluteUrl('management/login.php');
+    }
+    /**
+     * The URL that begins a sign-in with one provider.
+     *
+     * Absolute, because core's LOGIN_PAGE_REDIRECT seam refuses anything
+     * that is not an absolute http(s) URL -- what a hook left in a variable
+     * is not a good enough answer for a Location header. The login-page
+     * button uses a relative form of the same path and does not need this.
+     *
+     * @param int $id the provider id
+     *
+     * @return string
+     */
+    public static function startUrl($id)
+    {
+        return self::absoluteUrl(
+            sprintf('ext/oidc/start?provider=%d', (int)$id)
+        );
     }
     /**
      * An absolute https URL for a path inside this FOG install.

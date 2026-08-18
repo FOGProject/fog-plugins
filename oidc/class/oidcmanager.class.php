@@ -53,6 +53,7 @@ class OIDCManager extends FOGManagerController
                 'opJITProvision',
                 'opAllowAPI',
                 'opSingleLogout',
+                'opAutoRedirect',
                 'opIcon'
             ],
             [
@@ -71,9 +72,11 @@ class OIDCManager extends FOGManagerController
                 "ENUM('0', '1')",
                 "ENUM('0', '1')",
                 "ENUM('0', '1')",
+                "ENUM('0', '1')",
                 'VARCHAR(255)'
             ],
             [
+                false,
                 false,
                 false,
                 false,
@@ -133,6 +136,14 @@ class OIDCManager extends FOGManagerController
                 // session because somebody left FOG is a surprise that
                 // reaches applications FOG has nothing to do with.
                 "'0'",
+                // Sending everyone straight to this provider ships off, and
+                // it is the most dangerous switch in this plugin: an
+                // unconditional redirect to a provider that is unreachable,
+                // whose certificate expired, or whose issuer was mistyped
+                // takes the login form away from every administrator at
+                // once. management/login.php (fogproject#1175) is the way
+                // back, and the management page names it next to the box.
+                "'0'",
                 "'fa fa-id-badge'"
             ],
             [
@@ -142,6 +153,7 @@ class OIDCManager extends FOGManagerController
                 // use" into a silent overwrite of the first one rather than
                 // an error. Uniqueness is enforced by the page and by the
                 // model instead, where it can report itself.
+                false,
                 false,
                 false,
                 false,
@@ -215,6 +227,14 @@ class OIDCManager extends FOGManagerController
             // install created fresh from createSql() -- which already has
             // the column -- runs this harmlessly too.
             "ALTER TABLE `OIDCProviders` ADD COLUMN `opSingleLogout` "
+            . "ENUM('0', '1') NOT NULL DEFAULT '0'",
+            // 7 - send the login page straight to this provider (#17).
+            // Appended for the same reason as step 6, and defaulting off for
+            // a sharper one: an install that upgraded into this switched ON
+            // would find its login form replaced by a redirect nobody asked
+            // for, and the only URL that still shows the form is one nobody
+            // has been told about yet.
+            "ALTER TABLE `OIDCProviders` ADD COLUMN `opAutoRedirect` "
             . "ENUM('0', '1') NOT NULL DEFAULT '0'",
         ];
     }
