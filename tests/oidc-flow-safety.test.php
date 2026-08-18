@@ -644,6 +644,49 @@ foreach ($indexCases as $class => $want) {
     }
 }
 
+/*
+ * N. Query parameters come from Route::queryParam(), never filter_input().
+ *
+ * Both entry points are reached by an internal rewrite to api/index.php.
+ * On nginx that rewrite handed the router an EMPTY query string, so
+ * filter_input(INPUT_GET, 'provider') returned null and start() refused a
+ * configured, enabled provider as "Unknown identity provider"; callback()
+ * would have lost state, code and error the same way. fogproject#1163
+ * fixes the vhost, but only for a server that re-runs the installer, and
+ * Route::queryParam() is what recovers the value from REQUEST_URI on every
+ * server that does not.
+ */
+$flowCode = '';
+foreach (token_get_all($flowSrc) as $tok) {
+    // Comments stripped first: this file's own docblock names the wrong
+    // call so a reader knows what not to write, and a gate that reads its
+    // own documentation as a violation is a gate nobody can document.
+    if (is_array($tok)
+        && ($tok[0] === T_COMMENT || $tok[0] === T_DOC_COMMENT)
+    ) {
+        continue;
+    }
+    $flowCode .= is_array($tok) ? $tok[1] : $tok;
+}
+if (false !== strpos($flowCode, 'filter_input(INPUT_GET')) {
+    fail(
+        'OIDCFlow reads a query parameter with filter_input(INPUT_GET, ...),'
+        . ' which is empty on a routed request behind an nginx vhost that'
+        . ' predates fogproject#1163 -- use Route::queryParam()'
+    );
+}
+foreach (['provider', 'error', 'state', 'code'] as $param) {
+    if (false === strpos($flowCode, "Route::queryParam('" . $param . "')")) {
+        fail(
+            sprintf(
+                'OIDCFlow no longer reads the %s query parameter through'
+                . ' Route::queryParam()',
+                $param
+            )
+        );
+    }
+}
+
 if (count($fails) > 0) {
     fwrite(STDERR, 'FAIL: ' . count($fails) . " problem(s):\n");
     foreach ($fails as $f) {

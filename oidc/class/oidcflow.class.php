@@ -81,6 +81,17 @@ class OIDCFlow extends FOGBase
     /**
      * Send the browser to the provider.
      *
+     * Every query parameter here and in callback() is read through
+     * Route::queryParam(), never filter_input(INPUT_GET). A route under
+     * /ext/ is reached by an internal rewrite to api/index.php, and on
+     * nginx that rewrite used to hand the router an EMPTY query string --
+     * so ?provider=3 arrived as nothing and a configured, enabled provider
+     * was refused as "Unknown identity provider". fogproject#1163 gives the
+     * installer's vhost $is_args$args, but a server that has not re-run the
+     * installer keeps the old one, and queryParam() is what recovers the
+     * value from REQUEST_URI on those. Apache carries QSA and never had the
+     * problem; this code cannot tell which it is running under.
+     *
      * @return void
      */
     public static function start()
@@ -88,7 +99,10 @@ class OIDCFlow extends FOGBase
         self::_session();
         try {
             $provider = self::_enabledProvider(
-                (int)filter_input(INPUT_GET, 'provider', FILTER_VALIDATE_INT)
+                (int)filter_var(
+                    (string)Route::queryParam('provider'),
+                    FILTER_VALIDATE_INT
+                )
             );
             $config = self::_discover($provider);
 
@@ -160,7 +174,7 @@ class OIDCFlow extends FOGBase
                     _('The sign-in took too long; please start again')
                 );
             }
-            $error = trim((string)filter_input(INPUT_GET, 'error'));
+            $error = trim((string)Route::queryParam('error'));
             if ('' !== $error) {
                 // The provider's own words, which are the useful ones --
                 // 'access_denied' means somebody pressed cancel.
@@ -171,13 +185,13 @@ class OIDCFlow extends FOGBase
                     )
                 );
             }
-            $state = (string)filter_input(INPUT_GET, 'state');
+            $state = (string)Route::queryParam('state');
             if (!hash_equals((string)$flow['state'], $state)) {
                 // Constant time, and the message says nothing about which
                 // half was wrong.
                 throw new \Exception(_('The sign-in could not be verified'));
             }
-            $code = (string)filter_input(INPUT_GET, 'code');
+            $code = (string)Route::queryParam('code');
             if ('' === $code) {
                 throw new \Exception(_('The identity provider sent no code'));
             }
