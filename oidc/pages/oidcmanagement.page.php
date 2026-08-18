@@ -274,7 +274,8 @@ class OIDCManagement extends FOGPage
                     ->set('icon', trim((string)filter_input(INPUT_POST, 'icon')))
                     ->set('enabled', '0')
                     ->set('jitProvision', '0')
-                    ->set('allowapi', '0');
+                    ->set('allowapi', '0')
+                    ->set('singleLogout', '0');
                 if (!$OIDC->save()) {
                     $serverFault = true;
                     throw new \Exception(_('Add provider failed!'));
@@ -470,6 +471,53 @@ class OIDCManagement extends FOGPage
                 -1,
                 -1,
                 $checked('allowapi')
+            ),
+            self::makeLabel(
+                $this->_labelClass,
+                'singleLogout',
+                _('Single Logout')
+                . '<br/>('
+                . _('signing out of FOG also signs out of this provider')
+                . ')'
+            ) => self::makeInput(
+                '',
+                'singleLogout',
+                '',
+                'checkbox',
+                'singleLogout',
+                '',
+                false,
+                false,
+                -1,
+                -1,
+                $checked('singleLogout')
+            ),
+            // Read-only, and shown for the same reason the redirect URI is:
+            // a provider that follows the spec refuses a post-logout
+            // redirect it has not been told about, and then logout ends on
+            // the provider's error page instead of back at FOG. That looks
+            // like this plugin is broken, and the fix is a value an admin
+            // has to copy from somewhere.
+            self::makeLabel(
+                $this->_labelClass,
+                'postLogoutUri',
+                _('Post-Logout Redirect URI')
+                . '<br/>('
+                . _('register this too, if you enable single logout')
+                . ')'
+            ) => self::makeInput(
+                'form-control',
+                'postLogoutUri',
+                '',
+                'text',
+                'postLogoutUri',
+                OIDC::postLogoutUri(),
+                false,
+                false,
+                -1,
+                -1,
+                '',
+                true
             )
         ];
 
@@ -550,7 +598,11 @@ class OIDCManagement extends FOGPage
                 'jitProvision',
                 isset($_POST['jitProvision']) ? '1' : '0'
             )
-            ->set('allowapi', isset($_POST['allowapi']) ? '1' : '0');
+            ->set('allowapi', isset($_POST['allowapi']) ? '1' : '0')
+            ->set(
+                'singleLogout',
+                isset($_POST['singleLogout']) ? '1' : '0'
+            );
 
         // The secret is only written when the admin actually typed one. An
         // empty field and the placeholder both mean "unchanged"; without

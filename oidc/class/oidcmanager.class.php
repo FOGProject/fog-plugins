@@ -52,6 +52,7 @@ class OIDCManager extends FOGManagerController
                 'opEnabled',
                 'opJITProvision',
                 'opAllowAPI',
+                'opSingleLogout',
                 'opIcon'
             ],
             [
@@ -69,9 +70,11 @@ class OIDCManager extends FOGManagerController
                 "ENUM('0', '1')",
                 "ENUM('0', '1')",
                 "ENUM('0', '1')",
+                "ENUM('0', '1')",
                 'VARCHAR(255)'
             ],
             [
+                false,
                 false,
                 false,
                 false,
@@ -122,6 +125,14 @@ class OIDCManager extends FOGManagerController
                 // being allowed into FOG.
                 "'0'",
                 "'0'",
+                // Signing out of FOG also signing the user out of the
+                // provider is off by default, and that is not timidity: it
+                // is only right when FOG is the only thing behind that
+                // provider. Where an install shares an identity provider
+                // with a mail client and a ticket system, ending the SSO
+                // session because somebody left FOG is a surprise that
+                // reaches applications FOG has nothing to do with.
+                "'0'",
                 "'fa fa-id-badge'"
             ],
             [
@@ -131,6 +142,7 @@ class OIDCManager extends FOGManagerController
                 // use" into a silent overwrite of the first one rather than
                 // an error. Uniqueness is enforced by the page and by the
                 // model instead, where it can report itself.
+                false,
                 false,
                 false,
                 false,
@@ -193,6 +205,17 @@ class OIDCManager extends FOGManagerController
             function () {
                 return self::getClass('OIDCUserGrantManager')->install();
             },
+            // 6 - RP-initiated logout, per provider (#15). Appended rather
+            // than folded into step 0, because installdb() SKIPS the first
+            // pSchema steps instead of replaying them: an install that has
+            // already passed step 0 would never see an edit to it, and would
+            // carry a providers table without this column forever.
+            //
+            // applyUpdates() tolerates 1060 (duplicate column), so an
+            // install created fresh from createSql() -- which already has
+            // the column -- runs this harmlessly too.
+            "ALTER TABLE `OIDCProviders` ADD COLUMN `opSingleLogout` "
+            . "ENUM('0', '1') NOT NULL DEFAULT '0'",
         ];
     }
     /**
