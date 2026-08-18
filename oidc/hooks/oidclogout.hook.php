@@ -84,6 +84,22 @@ class OIDCLogout extends Hook
     public function providerLogout($arguments)
     {
         $url = OIDCFlow::logoutUrl();
+        if ('' === $url && OIDCFlow::forcedProvider() > 0) {
+            /*
+             * No provider logout to do, but this install sends its login
+             * page straight to a provider (#17) -- so core's default
+             * landing spot, management/index.php, would bounce the person
+             * who just signed out back to a provider whose SSO session is
+             * still alive, and sign them silently back in. "Log out" that
+             * leaves you logged in is worse than no logout at all.
+             *
+             * management/login.php is the one page that cannot do that.
+             * It does not end the provider session -- only single logout
+             * does -- but it leaves somebody looking at a form instead of
+             * back where they started.
+             */
+            $url = OIDC::postLogoutUri();
+        }
         if ('' === $url) {
             return;
         }

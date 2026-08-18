@@ -275,7 +275,8 @@ class OIDCManagement extends FOGPage
                     ->set('enabled', '0')
                     ->set('jitProvision', '0')
                     ->set('allowapi', '0')
-                    ->set('singleLogout', '0');
+                    ->set('singleLogout', '0')
+                    ->set('autoRedirect', '0');
                 if (!$OIDC->save()) {
                     $serverFault = true;
                     throw new \Exception(_('Add provider failed!'));
@@ -500,6 +501,34 @@ class OIDCManagement extends FOGPage
             // has to copy from somewhere.
             self::makeLabel(
                 $this->_labelClass,
+                'autoRedirect',
+                _('Redirect Login To This Provider')
+                . '<br/>('
+                . sprintf(
+                    // The escape hatch is named right here, on purpose. An
+                    // admin who ticks this without knowing about login.php
+                    // has one bad certificate between themselves and being
+                    // locked out of their own server -- and the URL is not
+                    // something they could guess at that point.
+                    _('the local login form stays available at %s'),
+                    '<code>' . Initiator::e(OIDC::postLogoutUri()) . '</code>'
+                )
+                . ')'
+            ) => self::makeInput(
+                '',
+                'autoRedirect',
+                '',
+                'checkbox',
+                'autoRedirect',
+                '',
+                false,
+                false,
+                -1,
+                -1,
+                $checked('autoRedirect')
+            ),
+            self::makeLabel(
+                $this->_labelClass,
                 'postLogoutUri',
                 _('Post-Logout Redirect URI')
                 . '<br/>('
@@ -602,6 +631,10 @@ class OIDCManagement extends FOGPage
             ->set(
                 'singleLogout',
                 isset($_POST['singleLogout']) ? '1' : '0'
+            )
+            ->set(
+                'autoRedirect',
+                isset($_POST['autoRedirect']) ? '1' : '0'
             );
 
         // The secret is only written when the admin actually typed one. An
