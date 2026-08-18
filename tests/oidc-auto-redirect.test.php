@@ -308,7 +308,7 @@ if ('' === $logoutListener) {
     bad('OIDCLogout::providerLogout() is missing');
 } else {
     if (false !== strpos($logoutListener, 'OIDCFlow::forcedProvider()')
-        && false !== strpos($logoutListener, 'OIDC::postLogoutUri()')
+        && false !== strpos($logoutListener, 'OIDC::localLoginUrl()')
     ) {
         ok('logging out of a forced-redirect install lands on the form');
     } else {
@@ -355,7 +355,7 @@ $label = (false === $labelAt || false === $inputAt)
     : substr($page, $labelAt, $inputAt - $labelAt);
 if ('' === $label) {
     bad('could not find the autoRedirect field on the management page');
-} elseif (false !== strpos($label, 'OIDC::postLogoutUri()')) {
+} elseif (false !== strpos($label, 'OIDC::localLoginUrl()')) {
     ok('the management page prints the local login URL beside the setting');
 } else {
     bad('the autoRedirect label no longer names the local login URL; the'

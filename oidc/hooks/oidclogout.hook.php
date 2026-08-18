@@ -97,8 +97,13 @@ class OIDCLogout extends Hook
              * It does not end the provider session -- only single logout
              * does -- but it leaves somebody looking at a form instead of
              * back where they started.
+             *
+             * Deliberately NOT postLogoutUri(), which is the ordinary login
+             * page: that is the right landing when single logout HAS run,
+             * because the provider will then ask who you are instead of
+             * waving you through. Here it has not.
              */
-            $url = OIDC::postLogoutUri();
+            $url = OIDC::localLoginUrl();
         }
         if ('' === $url) {
             return;
