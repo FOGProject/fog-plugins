@@ -497,6 +497,7 @@ class OIDCFlow extends FOGBase
                     _('The FOG account for this identity no longer exists')
                 );
             }
+            self::_refreshProfile($provider, $claims, $user);
             return $user;
         }
 
@@ -530,7 +531,74 @@ class OIDCFlow extends FOGBase
             ->set('userId', $namedId)
             ->save();
 
+        self::_refreshProfile($provider, $claims, $byName);
+
         return $byName;
+    }
+    /**
+     * Brings the FOG row back in line with the provider, on every sign-in.
+     *
+     * The display name used to be written once, by _provisionUser(), and
+     * never again: renaming somebody in the directory left FOG showing the
+     * name they had on the day they first signed in, forever, with nothing
+     * an admin could do about it short of editing the row by hand. That is
+     * not what a directory-backed account means -- the provider is supposed
+     * to be the source of truth for who this is, and a value copied once is
+     * a value that starts drifting immediately.
+     *
+     * The LDAP plugin already does this (ldappluginhook.hook.php sets name,
+     * display, api and authsource on every login, new row or not), so this
+     * is the OIDC plugin catching up to the behaviour beside it rather than
+     * a new idea.
+     *
+     * Deliberately NOT refreshed here:
+     *
+     * - uName. The username is what oidcIdentity is keyed against for
+     *   accounts that predate their link, and renaming a FOG account out
+     *   from under its history, tasks and audit rows is a migration, not a
+     *   login side effect. A provider-side rename keeps working because the
+     *   binding is the subject, not the name.
+     * - uAuthSource. Stamping it here would take local password login away
+     *   from an account an admin created, which is the opposite of
+     *   break-glass. _provisionUser() stamps rows this plugin made; those
+     *   are the only ones that get it.
+     *
+     * uAllowAPI IS re-asserted, and that is a real behaviour choice: the
+     * provider's setting wins over a FOG-side edit at the next sign-in. It
+     * matches LDAP, and it means "can these accounts use the API" is
+     * answered in one place instead of drifting per user.
+     *
+     * Saves only when something actually changed, so an unchanged sign-in
+     * costs no write and leaves no history row.
+     *
+     * @param OIDC  $provider the provider
+     * @param array $claims   the verified claims
+     * @param User  $user     the account being signed in
+     *
+     * @return void
+     */
+    private static function _refreshProfile($provider, array $claims, $user)
+    {
+        $display = trim((string)($claims['name'] ?? ''));
+        if ('' === $display) {
+            // No name claim at all -- Google omits it on some scopes. Leave
+            // whatever is there rather than blanking a good value.
+            $display = (string)$user->get('display');
+        }
+        $api = (string)$provider->get('allowapi');
+
+        $changed = false;
+        if ($display !== (string)$user->get('display')) {
+            $user->set('display', $display);
+            $changed = true;
+        }
+        if ($api !== (string)$user->get('api')) {
+            $user->set('api', $api);
+            $changed = true;
+        }
+        if ($changed) {
+            $user->save();
+        }
     }
     /**
      * Creates the FOG account for an identity that has none.
