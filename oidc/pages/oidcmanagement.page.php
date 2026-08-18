@@ -511,7 +511,7 @@ class OIDCManagement extends FOGPage
                     // locked out of their own server -- and the URL is not
                     // something they could guess at that point.
                     _('the local login form stays available at %s'),
-                    '<code>' . Initiator::e(OIDC::postLogoutUri()) . '</code>'
+                    '<code>' . Initiator::e(OIDC::localLoginUrl()) . '</code>'
                 )
                 . ')'
             ) => self::makeInput(

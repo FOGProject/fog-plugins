@@ -279,16 +279,20 @@ if ('' === $logoutUrl) {
             . ' which session to end and prompts instead');
     }
     /*
-     * login.php, not index.php. This is property 5 and it is the one that
-     * only bites once #17 exists -- at which point index.php is exactly the
-     * page that redirects back to the provider.
+     * The key as well as the value. Asserting only that postLogoutUri() is
+     * mentioned passes when it is bound to some other parameter name, and
+     * the provider then ends its session and leaves the person on its own
+     * page -- a logout that worked and looks broken.
      */
-    if (false !== strpos($logoutUrl, 'OIDC::postLogoutUri()')) {
-        ok('it returns the browser to the local login page');
+    if (false !== strpos(
+        $logoutUrl,
+        "'post_logout_redirect_uri'=>OIDC::postLogoutUri(),"
+    )) {
+        ok('it returns the browser to FOG\'s login page');
     } else {
-        bad('logoutUrl() no longer uses OIDC::postLogoutUri(); returning to'
-            . ' index.php on a forced-redirect install signs the user'
-            . ' straight back in or loops');
+        bad('logoutUrl() no longer sends a post_logout_redirect_uri built'
+            . ' by OIDC::postLogoutUri(); the person ends the journey on'
+            . ' the provider\'s own page with no way back to FOG');
     }
     /*
      * Single use. Left in place, a second pass through logout would build
@@ -316,17 +320,45 @@ if ('' === $logoutUrl) {
     }
 }
 
-if (false !== strpos($model, 'publicstaticfunctionpostLogoutUri()')) {
-    ok('OIDC::postLogoutUri() is defined');
-} else {
-    bad('OIDC::postLogoutUri() is missing');
-}
+/*
+ * The two landings are different pages and the difference is the whole
+ * point, so pin both.
+ *
+ * postLogoutUri() -> the ORDINARY login page. Single logout has just run,
+ * so a forced-redirect install sending the browser back to the provider is
+ * correct: the provider now has no session and asks who you are, which is
+ * how you sign out and back in as somebody else. Pointing this at
+ * login.php instead strands the person on the break-glass page after a
+ * perfectly successful logout.
+ *
+ * localLoginUrl() -> the page no provider setting can redirect away from,
+ * used by _fail() and by the single-logout-off fallback, where bouncing to
+ * the provider really would loop or silently sign the person back in.
+ */
 $postLogout = methodBody($model, 'publicstaticfunctionpostLogoutUri()');
-if (false !== strpos($postLogout, "'management/login.php'")) {
-    ok('postLogoutUri() names management/login.php');
+if ('' === $postLogout) {
+    bad('OIDC::postLogoutUri() is missing');
+} elseif (false !== strpos($postLogout, "'management/index.php'")) {
+    ok('postLogoutUri() names the ordinary login page');
 } else {
-    bad('postLogoutUri() no longer points at management/login.php, the one'
+    bad('postLogoutUri() no longer points at management/index.php; after a'
+        . ' successful single logout the person is stranded on whatever it'
+        . ' does name instead of being able to sign in again');
+}
+
+$localLogin = methodBody($model, 'publicstaticfunctionlocalLoginUrl()');
+if ('' === $localLogin) {
+    bad('OIDC::localLoginUrl() is missing');
+} elseif (false !== strpos($localLogin, "'management/login.php'")) {
+    ok('localLoginUrl() names management/login.php');
+} else {
+    bad('localLoginUrl() no longer points at management/login.php, the one'
         . ' page a forced-redirect install cannot bounce to the provider');
+}
+if ($postLogout === $localLogin && '' !== $postLogout) {
+    bad('postLogoutUri() and localLoginUrl() return the same thing; they'
+        . ' answer different questions and collapsing them re-creates'
+        . ' whichever bug the other one was avoiding');
 }
 
 /*

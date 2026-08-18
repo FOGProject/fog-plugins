@@ -284,13 +284,19 @@ class OIDC extends FOGController
     /**
      * Where a provider sends the browser after ending its own session.
      *
-     * management/login.php rather than management/index.php, and the
-     * difference is the whole point: index.php is the page an install with
-     * forced redirect on (#17) bounces straight back to the provider. A
-     * signed-out user landing there would be silently signed back in by the
-     * SSO session that was just ended -- or, if it really was ended, sent
-     * around the loop again. login.php always renders FOG's own form
-     * (fogproject#1175).
+     * FOG's ordinary login page, which is the whole point of having ended
+     * the provider session: with forced redirect on (#17) that page sends
+     * the browser back to the provider, the provider now has no session,
+     * and it asks who you are. Signing out and then signing in as somebody
+     * else is one continuous journey rather than a dead end.
+     *
+     * There is no loop here BECAUSE single logout ran. That is the
+     * distinction against the two places that do point at login.php:
+     *
+     *   OIDCFlow::_fail()               -- the provider refused, so
+     *                                      bouncing back to it is a loop
+     *   OIDCLogout, single logout off   -- the SSO session is still alive,
+     *                                      so index.php signs you back in
      *
      * This URL has to be registered at the provider as a post-logout
      * redirect URI, the same way the callback does. Providers that follow
@@ -302,6 +308,25 @@ class OIDC extends FOGController
      * @return string
      */
     public static function postLogoutUri()
+    {
+        return self::absoluteUrl('management/index.php');
+    }
+    /**
+     * The login page no provider setting can redirect away from.
+     *
+     * fogproject#1175. Core offers the LOGIN_PAGE_REDIRECT hook only when
+     * FOG_LOCAL_LOGIN is undefined, and management/login.php defines it --
+     * so on that URL this plugin is never asked where to send anybody, and
+     * a provider that is unreachable or misconfigured cannot take the page
+     * down with it.
+     *
+     * Used for the two landings that must NOT bounce back to a provider,
+     * and printed beside the forced-redirect setting so the admin turning
+     * it on is told the way back before they need it.
+     *
+     * @return string
+     */
+    public static function localLoginUrl()
     {
         return self::absoluteUrl('management/login.php');
     }
