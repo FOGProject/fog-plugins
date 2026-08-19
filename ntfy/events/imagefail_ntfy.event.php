@@ -63,8 +63,25 @@ class ImageFail_Ntfy extends NtfyExtends
      */
     public function onEvent($event, $data)
     {
-        self::$message = 'This host has failed to image';
-        self::$shortdesc = 'Failed';
+        // HOST_IMAGE_FAIL had no core caller at all until fogproject#1202, so
+        // this listener has never run on any server. The reason is the part an
+        // admin can act on, so say it rather than "failed to image". Read
+        // defensively: this plugin has to keep working against a server that
+        // has not taken #1202 yet.
+        $image = (string) ($data['ImageName'] ?? '');
+        if ('' === $image) {
+            $image = _('an unnamed image');
+        }
+        $reason = (string) ($data['Reason'] ?? '');
+        if ('' === $reason) {
+            $reason = _('no reason was reported');
+        }
+        self::$shortdesc = _('Imaging Failed');
+        self::$message = sprintf(
+            _('This host failed imaging %1$s: %2$s'),
+            $image,
+            $reason
+        );
         parent::onEvent($event, $data);
     }
 }
