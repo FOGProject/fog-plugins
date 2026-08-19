@@ -44,6 +44,13 @@ class ImageFail_Slack extends Event
     /**
      * Perform action
      *
+     * HOST_IMAGE_FAIL had no core caller at all until fogproject#1202, so this
+     * listener has never run on any server. The payload carries the image and
+     * the reason FOG rejected the task, which is the part an admin can act on.
+     *
+     * Every added key is read defensively: this plugin has to keep working
+     * against a server that has not taken that change yet.
+     *
      * @param string $event the event to enact
      * @param mixed  $data  the data
      *
@@ -51,15 +58,23 @@ class ImageFail_Slack extends Event
      */
     public function onEvent($event, $data)
     {
+        $image = (string) ($data['ImageName'] ?? '');
+        if ('' === $image) {
+            $image = _('an unnamed image');
+        }
+        $reason = (string) ($data['Reason'] ?? '');
+        if ('' === $reason) {
+            $reason = _('no reason was reported');
+        }
         $Slacks = Route::getList('slack');
         foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,
                 'text' => sprintf(
-                    '%s: %s %s.',
-                    _('Host'),
+                    _('Host %1$s failed imaging %2$s: %3$s'),
                     $data['HostName'],
-                    _('imaging failed')
+                    $image,
+                    $reason
                 )
             ];
             self::getClass('Slack', $Slack->id)->call('chat.postMessage', $args);

@@ -67,8 +67,33 @@ class ImageComplete_PushBullet extends PushbulletExtends
      */
     public function onEvent($event, $data)
     {
-        self::$message = 'This host has finished imaging.';
-        self::$shortdesc = 'Imaging Complete';
+        // One listener, two names: HOST_IMAGE_COMPLETE is a deploy finishing
+        // and HOST_IMAGEUP_COMPLETE is a capture. Core never fired the capture
+        // name at all until fogproject#1202, so both outcomes arrived as a
+        // deploy and this message could not tell them apart.
+        //
+        // Composed here rather than left as a bare literal for the parent to
+        // translate, because the image name has to be substituted OUTSIDE _().
+        // The parent's _() then finds no entry and passes the finished string
+        // through, which is what we want. Read defensively: this plugin has to
+        // keep working against a server that has not taken #1202 yet.
+        $image = (string) ($data['ImageName'] ?? '');
+        if ('' === $image) {
+            $image = _('an unnamed image');
+        }
+        if ('HOST_IMAGEUP_COMPLETE' === $event) {
+            self::$shortdesc = _('Capture Complete');
+            self::$message = sprintf(
+                _('This host has finished capturing image %s.'),
+                $image
+            );
+        } else {
+            self::$shortdesc = _('Deploy Complete');
+            self::$message = sprintf(
+                _('This host has finished deploying image %s.'),
+                $image
+            );
+        }
         parent::onEvent($event, $data);
     }
 }

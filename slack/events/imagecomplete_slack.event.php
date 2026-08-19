@@ -47,6 +47,15 @@ class ImageComplete_Slack extends Event
     /**
      * Perform action
      *
+     * One listener, two names: HOST_IMAGE_COMPLETE is a deploy finishing and
+     * HOST_IMAGEUP_COMPLETE is a capture. Core never fired the capture name
+     * at all until fogproject#1202, so both outcomes arrived as a deploy and
+     * the message could not tell them apart. The payload now also carries the
+     * image, so the notification can say which one.
+     *
+     * Every added key is read defensively: this plugin has to keep working
+     * against a server that has not taken that change yet.
+     *
      * @param string $event the event to enact
      * @param mixed  $data  the data
      *
@@ -54,15 +63,23 @@ class ImageComplete_Slack extends Event
      */
     public function onEvent($event, $data)
     {
+        $image = (string) ($data['ImageName'] ?? '');
+        if ('' === $image) {
+            $image = _('an unnamed image');
+        }
+        $format = (
+            'HOST_IMAGEUP_COMPLETE' === $event ?
+            _('Host %1$s finished capturing image %2$s.') :
+            _('Host %1$s finished deploying image %2$s.')
+        );
         $Slacks = Route::getList('slack');
         foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,
                 'text' => sprintf(
-                    '%s: %s %s.',
-                    _('Host'),
+                    $format,
                     $data['HostName'],
-                    _('completed imaging')
+                    $image
                 )
             ];
             self::getClass('Slack', $Slack->id)->call('chat.postMessage', $args);
