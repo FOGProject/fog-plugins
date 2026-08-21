@@ -55,8 +55,33 @@ class AddCaponeAPI extends Hook
         parent::__construct();
         $this->registerInstalled([
             ['API_VALID_CLASSES', 'injectAPIElements'],
+            ['API_SENSITIVE_FIELDS', 'declareSensitiveFields'],
             ['CUSTOMIZE_DT_COLUMNS', 'customizeDT'],
         ]);
+    }
+    /**
+     * Declares capone.key as NOT a credential.
+     *
+     * It matches Redaction::CREDENTIAL_PATTERN on the bare word "key" and is
+     * nothing of the sort: the edit form calls it "Key to match", and it is
+     * the DMI string capone compares against to pick an image. The
+     * unauthenticated capone endpoint posts it in the clear on every lookup,
+     * so treating it as secret would protect a value the protocol publishes
+     * anyway -- while blanking the one column that says which rule an audit
+     * row changed.
+     *
+     * The 'exempt' bucket exists so a plugin can make this call about its own
+     * model. Core must not: the bundled plugins are a fetched artifact (ADR
+     * 0009), and a core entry naming a plugin class fails on any tree that
+     * has not fetched them, which includes a fresh clone and CI.
+     *
+     * @param mixed $arguments The tier maps to modify.
+     *
+     * @return void
+     */
+    public function declareSensitiveFields($arguments)
+    {
+        $arguments['exempt'][$this->node][] = 'key';
     }
     /**
      * Customize our new columns.
