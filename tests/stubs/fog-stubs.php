@@ -93,6 +93,23 @@ class FOGController
  */
 class FOGManagerController
 {
+    /**
+     * Passes a createTable() call straight through.
+     *
+     * The real one (GH-1245) fills a default into every NOT NULL column that
+     * has none, leaving the primary key, anything the model declares
+     * required, and anything whose name ends in ID. It only ADDS -- a default
+     * the caller passed explicitly always wins -- so a pass-through here
+     * cannot mask an assertion about a default a manager sets deliberately,
+     * which is what these tests check. Reimplementing the rule in the stub
+     * would only give it somewhere to drift from.
+     *
+     * @return string
+     */
+    public function createTableSql(...$args)
+    {
+        return Schema::createTable(...$args);
+    }
 }
 
 /**

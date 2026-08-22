@@ -38,7 +38,7 @@ class SubnetGroupManager extends FOGManagerController
      */
     public function createSql()
     {
-        return Schema::createTable(
+        return $this->createTableSql(
             $this->tablename,
             true,
             [

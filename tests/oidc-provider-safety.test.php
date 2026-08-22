@@ -223,7 +223,7 @@ if ('preferred_username' !== $saved->get('userClaim')) {
 (new OIDCManager())->createSql();
 $call = Schema::$lastCall;
 if (count($call) < 7) {
-    fail('OIDCManager::createSql() did not call Schema::createTable()');
+    fail('OIDCManager::createSql() did not reach Schema::createTable()');
 } else {
     list(, , $cols, , , $defaults, $uniques) = $call;
     $defaultFor = array_combine($cols, $defaults);
