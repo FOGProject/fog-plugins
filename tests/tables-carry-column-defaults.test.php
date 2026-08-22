@@ -64,6 +64,45 @@ function tcStrip($file)
 }
 
 /**
+ * Lifts one method's body out of a class file by matching braces.
+ *
+ * A fixed-length slice does not work: install() is often two lines, so any
+ * window wide enough to hold a real body runs past the closing brace into the
+ * uninstall() that usually follows -- and then every plugin looks like it
+ * drops its own table. Twenty-one false positives on the first run.
+ *
+ * @param string $src  the source, comments already stripped
+ * @param string $name the method name
+ *
+ * @return string
+ */
+function tcMethodBody($src, $name)
+{
+    $at = strpos($src, 'function ' . $name . '(');
+    if (false === $at) {
+        return '';
+    }
+    $open = strpos($src, '{', $at);
+    if (false === $open) {
+        return '';
+    }
+    $depth = 0;
+    for ($i = $open, $n = strlen($src); $i < $n; $i++) {
+        if ($src[$i] === '{') {
+            $depth++;
+        }
+        if ($src[$i] === '}') {
+            $depth--;
+            if ($depth === 0) {
+                return substr($src, $open, $i - $open + 1);
+            }
+        }
+    }
+
+    return '';
+}
+
+/**
  * Records a check.
  *
  * @param bool   $ok      whether it passed
@@ -121,6 +160,50 @@ foreach ($managers as $path) {
         false !== strpos($src, 'createTableSql('),
         sprintf(
             '%s builds a table without going through createTableSql()',
+            $short
+        )
+    );
+    // The schema() contract. Plugin::installdb() uses it when it is there and
+    // falls back to calling install() when it is not -- and that fallback is
+    // where the destructive pattern lived: install() dropping the table and
+    // rebuilding it, throwing away the user's rows on every reinstall.
+    // wolbroadcast was the last plugin on that path.
+    tcCheck(
+        false !== strpos($src, 'function createSql('),
+        sprintf(
+            '%s builds its table outside a createSql() method, so there is '
+            . 'no step 0 for schema() to hand Schema::applyUpdates()',
+            $short
+        )
+    );
+    // Only the plugin's OWN manager needs schema(). Plugin::installdb()
+    // resolves exactly one class -- <PluginName>Manager -- and a secondary
+    // manager (an association table, a sub-table) is reached as a STEP inside
+    // that one's schema(), by design. Requiring schema() of every manager
+    // flags eleven files that are correct.
+    $plugin = basename(dirname(dirname($path)));
+    $isOwnManager = strtolower(basename($path))
+        === strtolower($plugin) . 'manager.class.php';
+    if ($isOwnManager) {
+        tcCheck(
+            false !== strpos($src, 'function schema('),
+            sprintf(
+                '%s is its plugin\'s own manager and has no schema(), so '
+                . 'Plugin::installdb() falls back to calling install() and '
+                . 'the plugin gets no migration tracking at all -- pSchema '
+                . 'stays at 0 and an added step never lands.',
+                $short
+            )
+        );
+    }
+    $install = tcMethodBody($src, 'install');
+    tcCheck(
+        false === strpos($install, 'uninstall('),
+        sprintf(
+            '%s drops its own table on install(). uninstall() is a DROP, so '
+            . 'reinstalling the plugin -- or repairing it after a failed '
+            . 'install -- throws away every row the user entered. Use the '
+            . 'non-destructive schema() contract instead.',
             $short
         )
     );

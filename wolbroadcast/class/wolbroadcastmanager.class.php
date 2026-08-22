@@ -28,14 +28,15 @@ class WolbroadcastManager extends FOGManagerController
      */
     public $tablename = 'wolbroadcast';
     /**
-     * Perform the database and plugin installation
+     * Returns the CREATE TABLE (IF NOT EXISTS) statement for this table.
      *
-     * @return bool
+     * Non-destructive and safe to re-run. Used as a step in schema().
+     *
+     * @return string
      */
-    public function install()
+    public function createSql()
     {
-        $this->uninstall();
-        $sql = $this->createTableSql(
+        return $this->createTableSql(
             $this->tablename,
             true,
             [
@@ -62,12 +63,43 @@ class WolbroadcastManager extends FOGManagerController
                 false,
                 false
             ],
-            ['wbID'],
+            [
+                'wbID'
+            ],
             'InnoDB',
             'utf8',
             'wbID',
             'wbID'
         );
-        return self::$DB->query($sql);
+    }
+    /**
+     * The plugin's ordered, append-only schema migration list. Append new
+     * steps (e.g. "ALTER TABLE `wolbroadcast` ADD COLUMN ...") to the END.
+     *
+     * @return array
+     */
+    public function schema()
+    {
+        return [
+            // 0
+            $this->createSql(),
+        ];
+    }
+    /**
+     * Installs the database non-destructively (create-if-absent + apply any
+     * pending additive steps). Does not drop existing data.
+     *
+     * This used to call uninstall() first, which DROPS the table -- so
+     * reinstalling the plugin, or repairing it after a failed install, threw
+     * away every broadcast address the user had entered. It was the last
+     * plugin here still doing that; the rest moved to the schema() contract,
+     * and this brings it in line.
+     *
+     * @return bool
+     */
+    public function install()
+    {
+        $res = Schema::applyUpdates($this->schema(), 0);
+        return $res['error'] === null;
     }
 }
