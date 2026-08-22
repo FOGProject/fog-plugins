@@ -65,7 +65,7 @@ class NtfyManager extends FOGManagerController
         $keys = [
             'nID'
         ];
-        return Schema::createTable(
+        return $this->createTableSql(
             $this->tablename,
             true,
             $fields,
