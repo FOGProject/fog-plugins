@@ -15,7 +15,7 @@
             },
             {
                 render: function(data, type, row) {
-                    return '<i class="fa fa-'
+                    return '<i class="fas fa-'
                         + data
                         + '"></i>';
                 },
