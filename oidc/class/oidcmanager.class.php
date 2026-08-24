@@ -144,7 +144,7 @@ class OIDCManager extends FOGManagerController
                 // once. management/login.php (fogproject#1175) is the way
                 // back, and the management page names it next to the box.
                 "'0'",
-                "'fa fa-id-badge'"
+                "'far fa-id-badge'"
             ],
             [
                 // No UNIQUE index on opName. FOGController::save() issues an

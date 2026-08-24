@@ -88,7 +88,7 @@ class AddSubnetGroupMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('Subnet Groups'), 'fa fa-wifi'];
+            = [_('Subnet Groups'), 'fas fa-network-wired'];
     }
     /**
      * Adds the subnet group page to search elements.

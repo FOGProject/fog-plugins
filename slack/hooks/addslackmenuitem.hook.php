@@ -70,7 +70,7 @@ class AddSlackMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('Slack Accounts'), 'fa fa-slack'];
+            = [_('Slack Accounts'), 'fab fa-slack'];
     }
     /**
      * Adds the location page to search elements.

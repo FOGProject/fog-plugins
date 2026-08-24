@@ -88,7 +88,7 @@ class AddTaskstateeditMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('Task States'), 'fa fa-hourglass-start'];
+            = [_('Task States'), 'fas fa-traffic-light'];
     }
     /**
      * Adds search element.

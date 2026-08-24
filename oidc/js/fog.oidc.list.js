@@ -26,9 +26,9 @@
             {
                 render: function(data, type, row) {
                     var on = '<span class="badge bg-success">'
-                        + '<i class="fa fa-check-circle"></i></span>';
+                        + '<i class="fas fa-circle-check"></i></span>';
                     var off = '<span class="badge bg-secondary">'
-                        + '<i class="fa fa-times-circle"></i></span>';
+                        + '<i class="fas fa-circle-xmark"></i></span>';
                     return row.enabled > 0 ? on : off;
                 },
                 targets: 2

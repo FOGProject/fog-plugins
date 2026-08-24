@@ -172,10 +172,10 @@ class OIDCManagement extends FOGPage
             => self::makeInput(
                 'form-control oidcicon-input',
                 'icon',
-                'fa fa-id-badge',
+                'far fa-id-badge',
                 'text',
                 'icon',
-                $icon ?: 'fa fa-id-badge'
+                $icon ?: 'far fa-id-badge'
             ),
             self::makeLabel(
                 $this->_labelClass,
@@ -399,7 +399,7 @@ class OIDCManagement extends FOGPage
             => self::makeInput(
                 'form-control oidcicon-input',
                 'icon',
-                'fa fa-id-badge',
+                'far fa-id-badge',
                 'text',
                 'icon',
                 $get('icon')

@@ -22,7 +22,7 @@
 $fog_plugin = [];
 $fog_plugin['name'] = 'capone';
 $fog_plugin['description'] = 'Capone is an automation plugin for fog.';
-$fog_plugin['menuicon'] = 'fa fa-magic fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-wand-magic-sparkles fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott';

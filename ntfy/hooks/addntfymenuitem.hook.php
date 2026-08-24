@@ -72,7 +72,7 @@ class AddNtfyMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('ntfy Accounts'), 'fa fa-comment'];
+            = [_('ntfy Accounts'), 'fas fa-tower-broadcast'];
     }
     /**
      * Adds the ntfy page to objects elements.

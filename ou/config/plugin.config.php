@@ -25,7 +25,7 @@ $fog_plugin['description'] = _(
     'OU is a plugin that allows you to predefine OU\'s and associate '
     . 'with hosts.'
 );
-$fog_plugin['menuicon'] = 'fa fa-bullseye fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-sitemap fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott';

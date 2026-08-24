@@ -24,7 +24,7 @@ $fog_plugin['name'] = 'tasktypeedit';
 $fog_plugin['description'] = _(
     'Allows editing/creating of Task Types fog currently has.'
 );
-$fog_plugin['menuicon'] = 'fa fa-th-list fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-tags fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott';

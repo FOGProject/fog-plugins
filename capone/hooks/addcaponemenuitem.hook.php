@@ -87,7 +87,7 @@ class AddCaponeMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('Capone'), 'fa fa-magic'];
+            = [_('Capone'), 'fas fa-wand-magic-sparkles'];
     }
     /**
      * Adds the capone page to search elements.

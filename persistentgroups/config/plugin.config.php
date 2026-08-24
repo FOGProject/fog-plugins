@@ -22,7 +22,7 @@
 $fog_plugin = [];
 $fog_plugin['name'] = 'persistentgroups';
 $fog_plugin['description'] = 'Enable persistent groups.';
-$fog_plugin['menuicon'] = 'fa fa-id-card fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-layer-group fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott';

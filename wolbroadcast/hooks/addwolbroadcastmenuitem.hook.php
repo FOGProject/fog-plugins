@@ -86,7 +86,7 @@ class AddWOLBroadcastMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('WOL Broadcasts'), 'fa fa-plug'];
+            = [_('WOL Broadcasts'), 'fas fa-power-off'];
     }
     /**
      * Adds the wol page to search elements.
