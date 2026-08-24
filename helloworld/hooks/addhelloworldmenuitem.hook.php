@@ -75,7 +75,7 @@ class AddHelloWorldMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('Hello World'), 'fas fa-cube'];
+            = [_('Hello World'), 'fas fa-flask'];
     }
     /**
      * Registers the page as searchable.

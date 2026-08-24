@@ -88,7 +88,7 @@ class AddOUMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('OUs'), 'fas fa-sitemap'];
+            = [_('OUs'), 'fas fa-folder-tree'];
     }
     /**
      * Adds the ou page to search elements.

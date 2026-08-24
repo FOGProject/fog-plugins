@@ -27,7 +27,7 @@ $fog_plugin['description'] = 'Skeleton example plugin demonstrating the FOG '
     . 'plugin structure (config, model, manager, page, hooks, JS).';
 // A font-awesome class ("fa ...") is rendered as an icon; anything else is
 // treated as an <img> src.
-$fog_plugin['menuicon'] = 'fas fa-cube fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-flask fa-fw';
 // Your plugin's own version. Shown in Plugin Management and written to
 // plugins.pVersion, so "which build is installed here" has an answer. Nothing
 // compares it to anything -- it is yours to number as you like.
