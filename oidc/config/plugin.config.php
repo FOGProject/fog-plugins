@@ -26,7 +26,7 @@ $fog_plugin['description'] = 'Sign in to FOG with an OpenID Connect identity '
     . 'plugin nothing types a password into FOG: the browser is redirected '
     . 'to the provider and comes back with a signed token. Local password '
     . 'login always remains available.';
-$fog_plugin['menuicon'] = 'fa fa-id-badge fa-fw';
+$fog_plugin['menuicon'] = 'far fa-id-badge fa-fw';
 $fog_plugin['version'] = '1.6.0';
 // The extension points this plugin is built on -- plugin API routes, the
 // login-page provider hook, and establishSession() provenance -- landed

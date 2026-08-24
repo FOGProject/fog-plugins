@@ -25,7 +25,7 @@ $fog_plugin = [];
 $fog_plugin['name'] = 'subnetgroup';
 $fog_plugin['description'] = 'Associates host groups with IP subnets'
     . ' in order to automatically assign hosts according to their IP address';
-$fog_plugin['menuicon'] = 'fa fa-wifi fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-network-wired fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott, sctt';

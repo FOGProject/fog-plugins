@@ -32,7 +32,7 @@ $fog_plugin['description'] = sprintf(
     _('sites with clients moving back and forth'),
     _('between different sites')
 );
-$fog_plugin['menuicon'] = 'fa fa-globe fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-location-dot fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott, Lee Rowlett';

@@ -88,7 +88,7 @@ class AddLocationMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('Locations'), 'fa fa-globe'];
+            = [_('Locations'), 'fas fa-location-dot'];
         // Existence check goes through the cached settings reader, not a raw
         // Setting->load(). This hook only ever needs to know whether the row
         // has been seeded yet, but it fired on every main-menu build -- which

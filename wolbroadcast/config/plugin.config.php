@@ -24,7 +24,7 @@ $fog_plugin['name'] = 'wolbroadcast';
 $fog_plugin['description'] = 'Allows you to create WOL across '
     . 'separate broadcast addresses. '
     . 'Should only be used if you cannot edit your network switches.';
-$fog_plugin['menuicon'] = 'fa fa-plug fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-power-off fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott';

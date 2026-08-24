@@ -24,7 +24,7 @@
 $fog_plugin = [];
 $fog_plugin['name'] = 'pushbullet';
 $fog_plugin['description'] = 'Adds pushbullet notifications.';
-$fog_plugin['menuicon'] = 'fa fa-bell fa-fw';
+$fog_plugin['menuicon'] = 'fas fa-bell fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott, Joe Schmitt';

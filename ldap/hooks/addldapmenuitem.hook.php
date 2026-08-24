@@ -108,13 +108,13 @@ class AddLDAPMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('LDAP Servers'), 'fa fa-key'];
+            = [_('LDAP Servers'), 'fas fa-address-book'];
         // Groups get their own node because granting a role or a user group
         // is an ordinary association, and the shared association tab needs
         // the group itself to be the owning object. See
         // LDAPGroupManagement.
         $arguments['hook_main'][self::GROUP_NODE]
-            = [_('LDAP Groups'), 'fa fa-users'];
+            = [_('LDAP Groups'), 'fas fa-users'];
     }
     /**
      * Adds the plugin page to the search page lists

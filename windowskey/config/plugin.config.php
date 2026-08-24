@@ -33,7 +33,7 @@ $fog_plugin['description'] = sprintf(
     _('When the plugin is removed, the assigned key will remain'),
     _('with the host')
 );
-$fog_plugin['menuicon'] = 'fa fa-windows fa-fw';
+$fog_plugin['menuicon'] = 'fab fa-windows fa-fw';
 $fog_plugin['version'] = '1.6.0';
 $fog_plugin['fog_min'] = '1.6.0';
 $fog_plugin['author'] = 'Tom Elliott';

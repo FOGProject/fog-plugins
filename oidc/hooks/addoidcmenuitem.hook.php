@@ -101,12 +101,12 @@ class AddOIDCMenuItem extends Hook
     public function menuData($arguments)
     {
         $arguments['hook_main'][$this->node]
-            = [_('OpenID Connect'), 'fa fa-id-badge'];
+            = [_('OpenID Connect'), 'far fa-id-badge'];
         // Groups get their own node because granting a role or a user group
         // is an ordinary association, and the shared association tab needs
         // the group itself to be the owning object. See OIDCGroupManagement.
         $arguments['hook_main'][self::GROUP_NODE]
-            = [_('OpenID Connect Groups'), 'fa fa-users'];
+            = [_('OpenID Connect Groups'), 'fas fa-users'];
     }
     /**
      * Adds the plugin page to the search page lists.
