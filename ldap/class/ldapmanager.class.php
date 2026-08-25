@@ -96,12 +96,12 @@ class LDAPManager extends FOGManagerController
                 'LONGTEXT',
                 'LONGTEXT',
                 'LONGTEXT',
-                "ENUM('0', '1')",
+                'TINYINT(1)',
                 'VARCHAR(255)',
-                "ENUM('0','1')",
+                'TINYINT(1)',
                 'VARCHAR(255)',
-                "ENUM('0', '1')",
-                "ENUM('0', '1')",
+                'TINYINT(1)',
+                'TINYINT(1)',
                 // Words rather than the 0/1/2 this table uses elsewhere:
                 // the value is read straight out in LDAP::authLDAP(), and a
                 // strategy name that says what it does beats a sentinel
@@ -874,6 +874,42 @@ class LDAPManager extends FOGManagerController
             // 26
             "ALTER TABLE `LDAPServers` ADD COLUMN `lsTlsCaCert` "
             . "VARCHAR(255) NOT NULL DEFAULT ''",
+            // 27 - two-state columns become tinyint(1) (fogproject ADR
+            // 0028). They were enum('0','1'), and an integer written to an
+            // ENUM is a member INDEX rather than a value: 1 selects the
+            // member '0' -- FALSE -- and 0 is the error value
+            // STRICT_TRANS_TABLES refuses. tinyint has no such trap.
+            //
+            // Appended rather than folded into the createSql() step above,
+            // for the same reason as every ALTER here: installdb() SKIPS the
+            // pSchema steps an install has already passed instead of
+            // replaying them, so an edit to an earlier step is invisible to
+            // everyone already past it. createSql() now declares these
+            // TINYINT(1) for a fresh install; this is what an existing one
+            // gets. The historical ADD COLUMN steps above still say ENUM and
+            // must stay that way -- rewriting one changes nothing for anyone
+            // who ran it, and applyUpdates() tolerates 1060 so a fresh
+            // install runs them harmlessly against columns that are already
+            // tinyint.
+            //
+            // 🔴 Schema::enumToTinyint() and not a hand-written ALTER: a
+            // direct `ALTER TABLE t MODIFY c TINYINT(1)` converts an ENUM BY
+            // INDEX, turning every '0' into 1 and every '1' into 2 -- both
+            // truthy, silently, on every upgrading server. The helper goes
+            // through VARCHAR(1) so the conversion is by label, and carries
+            // this table's nullability and defaults across (lsAllowAPI is nullable and lsUseGroupMatch has no default at all).
+            function () {
+                return Schema::enumToTinyint(
+                    [
+                        'LDAPServers' => [
+                            'lsAllowAPI',
+                            'lsDisplayNameEnabled',
+                            'lsIsLDAPs',
+                            'lsUseGroupMatch',
+                        ],
+                    ]
+                );
+            },
         ];
     }
     /**
