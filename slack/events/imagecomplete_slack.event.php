@@ -8,7 +8,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class ImageComplete_Slack extends Event
+class ImageComplete_Slack extends \FOG\Base\Event
 {
     /**
      * The name of this event
@@ -72,7 +72,7 @@ class ImageComplete_Slack extends Event
             _('Host %1$s finished capturing image %2$s.') :
             _('Host %1$s finished deploying image %2$s.')
         );
-        $Slacks = Route::getList('slack');
+        $Slacks = \FOG\Router\Route::getList('slack');
         foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,

@@ -9,7 +9,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LoginFailure_Slack extends Event
+class LoginFailure_Slack extends \FOG\Base\Event
 {
     /**
      * The name of this event
@@ -52,7 +52,7 @@ class LoginFailure_Slack extends Event
      */
     public function onEvent($event, $data)
     {
-        $Slacks = Route::getList('slack');
+        $Slacks = \FOG\Router\Route::getList('slack');
         $ip = filter_input(INPUT_SERVER, 'REMOTE_ADDR');
         foreach ($Slacks as $Slack) {
             $args = [

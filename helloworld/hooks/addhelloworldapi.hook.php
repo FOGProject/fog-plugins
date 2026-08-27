@@ -23,7 +23,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddHelloWorldAPI extends Hook
+class AddHelloWorldAPI extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.

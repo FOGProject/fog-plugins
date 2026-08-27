@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddSubnetGroupHost extends Hook
+class AddSubnetGroupHost extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -98,7 +98,7 @@ class AddSubnetGroupHost extends Hook
         }
 
         // Now list our subnet groups.
-        $SNGroups = Route::getList('subnetgroup');
+        $SNGroups = \FOG\Router\Route::getList('subnetgroup');
         foreach ($SNGroups as &$SNGroup) {
             if (in_array($SNGroup->groupID, $Host->get('groups'))) {
                 $Host->removeGroup($SNGroup->groupID)->save();

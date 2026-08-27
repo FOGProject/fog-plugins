@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddOUHost extends Hook
+class AddOUHost extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -94,7 +94,7 @@ class AddOUHost extends Hook
      */
     public function hostOU($obj)
     {
-        $items = Route::getList('ouassociation');
+        $items = \FOG\Router\Route::getList('ouassociation');
         $ou = 0;
         foreach ($items as &$item) {
             if ($item->hostID == $obj->get('id')) {
@@ -112,14 +112,14 @@ class AddOUHost extends Hook
             ->buildSelectBox($ouID, 'ou');
 
         $fields = [
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'ou',
                 _('Host OU')
             ) => $ouSelector
         ];
 
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             'ou-send',
             _('Update'),
             'btn btn-primary float-end'
@@ -129,7 +129,7 @@ class AddOUHost extends Hook
         // it, and immediately after Update so Update stays the row's rightmost
         // (primary) button with this one to its left. The modal it returns is
         // echoed after the form -- see below for why it cannot go inside.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             'host-ou',
             'ou',
             $buttons,
@@ -145,13 +145,13 @@ class AddOUHost extends Hook
                 'Host' => &$obj
             ]
         );
-        $rendered = FOGPage::formFields($fields);
+        $rendered = \FOG\Base\FOGPage::formFields($fields);
         unset($fields);
 
-        echo FOGPage::makeFormTag(
+        echo \FOG\Base\FOGPage::makeFormTag(
             '',
             'host-ou-form',
-            FOGPage::makeTabUpdateURL(
+            \FOG\Base\FOGPage::makeTabUpdateURL(
                 'host-ou',
                 $obj->get('id')
             ),
@@ -195,7 +195,7 @@ class AddOUHost extends Hook
         $insert_values = [];
         $hosts = [$obj->get('id')];
         if (count($hosts ?: [])) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'ouassociation',
                 ['hostID' => $hosts]
             );
@@ -264,7 +264,7 @@ class AddOUHost extends Hook
                 default:
                     return;
             }
-            $arguments['code'] = HTTPResponseCodes::HTTP_ACCEPTED;
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $arguments['hook'] = 'HOST_EDIT_OU_SUCCESS';
             $arguments['msg'] = json_encode(
                 [
@@ -275,8 +275,8 @@ class AddOUHost extends Hook
         } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $arguments['hook'] = 'HOST_EDIT_OU_FAIL';
             $arguments['msg'] = json_encode(
@@ -305,7 +305,7 @@ class AddOUHost extends Hook
             ->buildSelectBox($ouID, 'ou');
 
         $arguments['fields'][
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'ou',
                 _('Host OU')

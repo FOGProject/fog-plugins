@@ -23,7 +23,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLDAPMenuItem extends Hook
+class AddLDAPMenuItem extends \FOG\Base\Hook
 {
     /**
      * The second node this plugin owns: the directory groups whose

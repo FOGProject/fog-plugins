@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddTasktypeeditMenuItem extends Hook
+class AddTasktypeeditMenuItem extends \FOG\Base\Hook
 {
     /**
      * Name of the hook.

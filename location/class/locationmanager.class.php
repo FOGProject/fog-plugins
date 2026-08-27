@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LocationManager extends FOGManagerController
+class LocationManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The base table name.
@@ -153,7 +153,7 @@ class LocationManager extends FOGManagerController
             // truthy, silently, on every upgrading server. The helper goes
             // through VARCHAR(1) so the conversion is by label.
             function () {
-                return Schema::enumToTinyint(
+                return \FOG\Items\Schema::enumToTinyint(
                     [
                         $this->tablename => ['lTftpEnabled'],
                     ]
@@ -169,7 +169,7 @@ class LocationManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**
@@ -180,7 +180,7 @@ class LocationManager extends FOGManagerController
     public function uninstall()
     {
         $res = true;
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'setting',
             ['name' => 'FOG_SNAPIN_LOCATION_SEND_ENABLED']
         );
@@ -199,9 +199,9 @@ class LocationManager extends FOGManagerController
         foreach ($protocols as $short => $long) {
             printf(
                 '<option value="%s"%s>%s</option>',
-                Initiator::e($short),
+                \Initiator::e($short),
                 ($preselection === $short ? ' selected' : ''),
-                Initiator::e($long)
+                \Initiator::e($long)
             );
         }
         return '<select class="form-control" name="storagenodeprotocol" '

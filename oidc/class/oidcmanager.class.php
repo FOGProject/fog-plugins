@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCManager extends FOGManagerController
+class OIDCManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The table name.
@@ -261,7 +261,7 @@ class OIDCManager extends FOGManagerController
             // through VARCHAR(1) so the conversion is by label, and carries
             // this table's nullability and defaults across (all five are NOT NULL DEFAULT '0').
             function () {
-                return Schema::enumToTinyint(
+                return \FOG\Items\Schema::enumToTinyint(
                     [
                         'OIDCProviders' => [
                             'opAllowAPI',
@@ -282,7 +282,7 @@ class OIDCManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**

@@ -19,6 +19,6 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class PersistentGroups extends FOGController
+class PersistentGroups extends \FOG\Base\FOGController
 {
 }

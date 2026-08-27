@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddWindowsKeyMenuItem extends Hook
+class AddWindowsKeyMenuItem extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.

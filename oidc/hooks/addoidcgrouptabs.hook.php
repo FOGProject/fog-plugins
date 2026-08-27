@@ -41,7 +41,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddOIDCGroupTabs extends Hook
+class AddOIDCGroupTabs extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -132,7 +132,7 @@ class AddOIDCGroupTabs extends Hook
         // Without this, role.edit alone would be enough to rewrite what a
         // provider group grants -- a right the Provider Group page itself
         // does not hand out.
-        if (!Authorization::can(self::GROUP_NODE . '.view')) {
+        if (!\FOG\Auth\Authorization::can(self::GROUP_NODE . '.view')) {
             return;
         }
         $obj = $arguments['obj'];
@@ -169,15 +169,15 @@ class AddOIDCGroupTabs extends Hook
         $isRole = ('role' === $node);
 
         $props = ' method="post" action="'
-            . FOGPage::makeTabUpdateURL($slug, $obj->get('id'))
+            . \FOG\Base\FOGPage::makeTabUpdateURL($slug, $obj->get('id'))
             . '" ';
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             "$slug-send",
             _('Add selected'),
             'btn btn-primary float-end',
             $props
         );
-        $buttons .= FOGPage::makeButton(
+        $buttons .= \FOG\Base\FOGPage::makeButton(
             "$slug-remove",
             _('Remove selected'),
             'btn btn-danger float-start',
@@ -187,7 +187,7 @@ class AddOIDCGroupTabs extends Hook
         // A provider group that has not been registered here yet is the
         // normal case when wiring up a new role, and sending the admin to
         // the Provider Group page and back is the trip this removes.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             $slug,
             self::GROUP_NODE,
             $buttons,
@@ -238,20 +238,20 @@ class AddOIDCGroupTabs extends Hook
         echo '</div>';
         echo '</div>';
         echo '<div class="card-footer">';
-        echo FOGPage::makeModal(
+        echo \FOG\Base\FOGPage::makeModal(
             'oidcgroupDelModal',
             _('Remove Provider Group Associations'),
             _(
                 'Please confirm you would like to dissociate the selected '
                 . 'provider groups'
             ),
-            FOGPage::makeButton(
+            \FOG\Base\FOGPage::makeButton(
                 'closeoidcgroupDeleteModal',
                 _('Cancel'),
                 'btn btn-outline-secondary float-start',
                 'data-bs-dismiss="modal"'
             )
-            . FOGPage::makeButton(
+            . \FOG\Base\FOGPage::makeButton(
                 'confirmoidcgroupDeleteModal',
                 _('Remove'),
                 'btn btn-outline-secondary float-end'
@@ -292,8 +292,8 @@ class AddOIDCGroupTabs extends Hook
         // Same reasoning as the render gate: this writes an oidcgroup
         // association, so it takes oidcgroup.edit rather than riding in on
         // the role/usergroup edit permission that reached this POST.
-        if (!Authorization::can(self::GROUP_NODE . '.edit')) {
-            $arguments['code'] = HTTPResponseCodes::HTTP_FORBIDDEN;
+        if (!\FOG\Auth\Authorization::can(self::GROUP_NODE . '.edit')) {
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_FORBIDDEN;
             $arguments['msg'] = json_encode(
                 [
                     'error' => _(
@@ -346,7 +346,7 @@ class AddOIDCGroupTabs extends Hook
             $group->save();
         }
         // A change here changes who has what, and the answer is cached.
-        Authorization::resetCache();
+        \FOG\Auth\Authorization::resetCache();
 
         $arguments['msg'] = json_encode(
             [

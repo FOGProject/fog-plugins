@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class CaponeTasking extends FOGBase
+class CaponeTasking extends \FOG\Base\FOGBase
 {
     /**
      * The actions supported fog capone.
@@ -62,12 +62,12 @@ class CaponeTasking extends FOGBase
                 try {
                     $strSetup = "%s|%s|%s|%s|%s|%s|%s";
                     ob_start();
-                    $capones = Route::getList(
+                    $capones = \FOG\Router\Route::getList(
                         'capone',
                         ['key' => $key]
                     );
                     foreach ($capones as &$Capone) {
-                        $Image = new Image($Capone->imageID);
+                        $Image = new \FOG\Items\Image($Capone->imageID);
                         $OS = $Image->getOS();
                         $StorageNode = $Image
                             ->getStorageGroup()

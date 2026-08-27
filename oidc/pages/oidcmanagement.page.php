@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCManagement extends FOGPage
+class OIDCManagement extends \FOG\Base\FOGPage
 {
     /**
      * Placeholder shown in the secret field of an existing provider.
@@ -511,7 +511,7 @@ class OIDCManagement extends FOGPage
                     // locked out of their own server -- and the URL is not
                     // something they could guess at that point.
                     _('the local login form stays available at %s'),
-                    '<code>' . Initiator::e(OIDC::localLoginUrl()) . '</code>'
+                    '<code>' . \Initiator::e(OIDC::localLoginUrl()) . '</code>'
                 )
                 . ')'
             ) => self::makeInput(

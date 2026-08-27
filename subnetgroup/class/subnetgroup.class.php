@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class SubnetGroup extends FOGController
+class SubnetGroup extends \FOG\Base\FOGController
 {
     /**
      * The table name.

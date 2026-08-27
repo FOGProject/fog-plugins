@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPGroupUserGroupAssociationManager extends FOGManagerController
+class LDAPGroupUserGroupAssociationManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The base table name.

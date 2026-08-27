@@ -36,7 +36,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPGroup extends FOGController
+class LDAPGroup extends \FOG\Base\FOGController
 {
     /**
      * The table name.
@@ -101,12 +101,12 @@ class LDAPGroup extends FOGController
     public static function serverLinkCell($serverID)
     {
         if (!$serverID) {
-            return Route::EMPTY_CELL;
+            return \FOG\Router\Route::EMPTY_CELL;
         }
         $name = self::getClass('LDAP', $serverID)->get('name');
         // A group outliving its server should still list, not fatal.
         if (!$name) {
-            return Route::EMPTY_CELL;
+            return \FOG\Router\Route::EMPTY_CELL;
         }
         return self::entityLink('ldap', $serverID, $name);
     }
@@ -195,7 +195,7 @@ class LDAPGroup extends FOGController
     {
         $this->set(
             'roles',
-            (array)Route::getIds(
+            (array)\FOG\Router\Route::getIds(
                 'ldapgrouproleassociation',
                 ['ldapgroupID' => $this->get('id')],
                 'roleID'
@@ -211,7 +211,7 @@ class LDAPGroup extends FOGController
     {
         $this->set(
             'usergroups',
-            (array)Route::getIds(
+            (array)\FOG\Router\Route::getIds(
                 'ldapgroupusergroupassociation',
                 ['ldapgroupID' => $this->get('id')],
                 'usergroupID'
@@ -232,11 +232,11 @@ class LDAPGroup extends FOGController
     {
         $id = (int)$this->get('id');
         if ($id > 0) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'ldapgrouproleassociation',
                 ['ldapgroupID' => $id]
             );
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'ldapgroupusergroupassociation',
                 ['ldapgroupID' => $id]
             );

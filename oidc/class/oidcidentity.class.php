@@ -34,7 +34,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCIdentity extends FOGController
+class OIDCIdentity extends \FOG\Base\FOGController
 {
     /**
      * The identity table.

@@ -8,7 +8,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class SnapinTaskComplete_Slack extends Event
+class SnapinTaskComplete_Slack extends \FOG\Base\Event
 {
     /**
      * The name of the event
@@ -54,7 +54,7 @@ class SnapinTaskComplete_Slack extends Event
         $hostname = $data['Host']->get('name');
         $snapinname = $data['Snapin']->get('name');
         $statuscode = $data['SnapinTask']->get('return');
-        $Slacks = Route::getList('slack');
+        $Slacks = \FOG\Router\Route::getList('slack');
         foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,

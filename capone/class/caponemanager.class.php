@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class CaponeManager extends FOGManagerController
+class CaponeManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The base table name.
@@ -149,7 +149,7 @@ class CaponeManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**
@@ -159,11 +159,11 @@ class CaponeManager extends FOGManagerController
      */
     public function uninstall()
     {
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'setting',
             ['name' => 'FOG_PLUGIN_CAPONE_%']
         );
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'pxemenuoptions',
             ['name' => 'fog.capone']
         );

@@ -32,7 +32,7 @@
  * plugin, so an uninstalled location plugin winning the walk left the OU
  * plugin's AD hook unregistered with nothing to show for it.
  */
-class LocationChangeItems extends Hook
+class LocationChangeItems extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -91,7 +91,7 @@ class LocationChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        $LocationAssocs = Route::getList(
+        $LocationAssocs = \FOG\Router\Route::getList(
             'locationassociation',
             ['hostID' => $arguments['Host']->get('id')]
         );
@@ -107,7 +107,7 @@ class LocationChangeItems extends Hook
                 && ($Task->isCapture() || $Task->isMulticast())
             ) {
                 $method = 'getMasterStorageNode';
-            } elseif ($TaskType instanceof TaskType
+            } elseif ($TaskType instanceof \FOG\Items\TaskType
                 && $TaskType->isValid()
                 && ($TaskType->isCapture() || $TaskType->isMulticast())
             ) {
@@ -151,7 +151,7 @@ class LocationChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        $LocationAssocs = Route::getList(
+        $LocationAssocs = \FOG\Router\Route::getList(
             'locationassociation',
             ['hostID' => $arguments['Host']->get('id')]
         );
@@ -183,7 +183,7 @@ class LocationChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        $LocationAssocs = Route::getList(
+        $LocationAssocs = \FOG\Router\Route::getList(
             'locationassociation',
             ['hostID' => $arguments['Host']->get('id')]
         );
@@ -227,10 +227,10 @@ class LocationChangeItems extends Hook
      */
     public function alterMasters($arguments)
     {
-        if (!$arguments['FOGServiceClass'] instanceof MulticastManager) {
+        if (!$arguments['FOGServiceClass'] instanceof \FOG\Service\MulticastManager) {
             return;
         }
-        $storagenodes = Route::getIds(
+        $storagenodes = \FOG\Router\Route::getIds(
             'location',
             [],
             'storagenodeID'
@@ -243,7 +243,7 @@ class LocationChangeItems extends Hook
                 )
             )
         );
-        $StorageNodes = Route::getList(
+        $StorageNodes = \FOG\Router\Route::getList(
             'storagenode',
             ['id' => $storagenodeIDs]
         );
@@ -251,7 +251,7 @@ class LocationChangeItems extends Hook
         foreach ($StorageNodes as $ind => $StorageNode) {
             // getItem(), not indiv(): a node deleted between the list and the
             // fetch used to end the response here rather than be skipped.
-            $StorageNode = Route::getItem('storagenode', $StorageNode->id);
+            $StorageNode = \FOG\Router\Route::getItem('storagenode', $StorageNode->id);
             if (!$StorageNode || !$StorageNode->online) {
                 continue;
             }

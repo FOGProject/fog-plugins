@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddOIDCMenuItem extends Hook
+class AddOIDCMenuItem extends \FOG\Base\Hook
 {
     /**
      * The second node this plugin owns: the provider groups whose

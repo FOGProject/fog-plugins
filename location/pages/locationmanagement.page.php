@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LocationManagement extends FOGPage
+class LocationManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node this page operates on.
@@ -546,8 +546,8 @@ class LocationManagement extends FOGPage
     public function getStoragenode()
     {
         $nodeID = filter_input(INPUT_POST, 'nodeID');
-        Route::indiv('storagenode', $nodeID);
-        echo Route::getData();
+        \FOG\Router\Route::indiv('storagenode', $nodeID);
+        echo \FOG\Router\Route::getData();
         exit;
     }
     /**
@@ -558,8 +558,8 @@ class LocationManagement extends FOGPage
     public function getStoragegroup()
     {
         $groupID = filter_input(INPUT_POST, 'groupID');
-        Route::indiv('storagegroup', $groupID);
-        echo Route::getData();
+        \FOG\Router\Route::indiv('storagegroup', $groupID);
+        echo \FOG\Router\Route::getData();
         exit;
     }
 }

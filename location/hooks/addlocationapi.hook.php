@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLocationAPI extends Hook
+class AddLocationAPI extends \FOG\Base\Hook
 {
     /**
      * The name of the hook.
@@ -108,14 +108,14 @@ class AddLocationAPI extends Hook
     {
         switch ($arguments['classname']) {
             case 'location':
-                $arguments['data'] = FOGCore::fastmerge(
+                $arguments['data'] = \FOG\Base\FOGCore::fastmerge(
                     $arguments['class']->get(),
                     [
-                        'storagenode' => Route::getter(
+                        'storagenode' => \FOG\Router\Route::getter(
                             'storagenode',
                             $arguments['class']->get('storagenode')
                         ),
-                        'storagegroup' => Route::getter(
+                        'storagegroup' => \FOG\Router\Route::getter(
                             'storagegroup',
                             $arguments['class']->get('storagegroup')
                         )
@@ -123,10 +123,10 @@ class AddLocationAPI extends Hook
                 );
                 break;
             case 'locationassociation':
-                $arguments['data'] = FOGCore::fastmerge(
+                $arguments['data'] = \FOG\Base\FOGCore::fastmerge(
                     $arguments['class']->get(),
                     [
-                        'host' => Route::getter(
+                        'host' => \FOG\Router\Route::getter(
                             'host',
                             $arguments['class']->get('host')
                         ),
@@ -156,7 +156,7 @@ class AddLocationAPI extends Hook
                 if ($hostID < 1) {
                     break;
                 }
-                $locIDs = Route::getIds(
+                $locIDs = \FOG\Router\Route::getIds(
                     'locationassociation',
                     ['hostID' => $hostID],
                     'locationID'
@@ -165,12 +165,12 @@ class AddLocationAPI extends Hook
                 if ($locID < 1) {
                     break;
                 }
-                $location = Route::getClass('location', $locID);
+                $location = \FOG\Router\Route::getClass('location', $locID);
                 if (!$location->isValid()) {
                     break;
                 }
-                if (Route::wantsExpand('location')) {
-                    $arguments['pluginItems']['location'] = Route::getter(
+                if (\FOG\Router\Route::wantsExpand('location')) {
+                    $arguments['pluginItems']['location'] = \FOG\Router\Route::getter(
                         'location',
                         $location
                     );
@@ -188,31 +188,31 @@ class AddLocationAPI extends Hook
                 if ($locID < 1) {
                     break;
                 }
-                $hostIDs = Route::positiveIntIds(
-                    (array)Route::getIds(
+                $hostIDs = \FOG\Router\Route::positiveIntIds(
+                    (array)\FOG\Router\Route::getIds(
                         'locationassociation',
                         ['locationID' => $locID],
                         'hostID'
                     )
                 );
                 $arguments['pluginItems']['hostCount'] = count($hostIDs);
-                if (!Route::wantsExpand('hosts')) {
+                if (!\FOG\Router\Route::wantsExpand('hosts')) {
                     break;
                 }
                 $truncated = false;
-                if (count($hostIDs) > Route::EXPAND_MAX_ITEMS) {
-                    $hostIDs = array_slice($hostIDs, 0, Route::EXPAND_MAX_ITEMS);
+                if (count($hostIDs) > \FOG\Router\Route::EXPAND_MAX_ITEMS) {
+                    $hostIDs = array_slice($hostIDs, 0, \FOG\Router\Route::EXPAND_MAX_ITEMS);
                     $truncated = true;
                 }
                 $hosts = [];
                 foreach ($hostIDs as $hid) {
-                    $host = Route::getClass('host', $hid);
+                    $host = \FOG\Router\Route::getClass('host', $hid);
                     if (!$host->isValid()) {
                         continue;
                     }
-                    $g = Route::getter('host', $host);
+                    $g = \FOG\Router\Route::getter('host', $host);
                     if (is_array($g)) {
-                        $hosts[] = Route::stripSensitive('host', $g);
+                        $hosts[] = \FOG\Router\Route::stripSensitive('host', $g);
                     }
                 }
                 $arguments['pluginItems']['hosts'] = $hosts;

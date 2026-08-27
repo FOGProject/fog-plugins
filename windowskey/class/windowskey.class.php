@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class WindowsKey extends FOGController
+class WindowsKey extends \FOG\Base\FOGController
 {
     /**
      * The windows keys table
@@ -68,7 +68,7 @@ class WindowsKey extends FOGController
      */
     public function destroy($key = 'id')
     {
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'windowskeyassociation',
             ['windowskeyID' => $this->get('id')]
         );
@@ -123,7 +123,7 @@ class WindowsKey extends FOGController
     protected function loadImages()
     {
         $find = ['windowskeyID' => $this->get('id')];
-        $images = Route::getIds(
+        $images = \FOG\Router\Route::getIds(
             'windowskeyassociation',
             $find,
             'imageID'

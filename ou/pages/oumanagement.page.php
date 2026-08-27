@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OUManagement extends FOGPage
+class OUManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node this page operates on.

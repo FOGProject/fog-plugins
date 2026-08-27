@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class Capone extends FOGController
+class Capone extends \FOG\Base\FOGController
 {
     /**
      * The capone table

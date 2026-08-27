@@ -221,7 +221,7 @@ if ('preferred_username' !== $saved->get('userClaim')) {
 // 5. The column defaults, read out of what the manager asks Schema for.
 //    Positional, because that is how Schema::createTable() is called.
 (new OIDCManager())->createSql();
-$call = Schema::$lastCall;
+$call = \FOG\Items\Schema::$lastCall;
 if (count($call) < 7) {
     fail('OIDCManager::createSql() did not reach Schema::createTable()');
 } else {

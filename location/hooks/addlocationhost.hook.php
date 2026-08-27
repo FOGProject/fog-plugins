@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLocationHost extends Hook
+class AddLocationHost extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -94,7 +94,7 @@ class AddLocationHost extends Hook
      */
     public function hostLocation($obj)
     {
-        $items = Route::getList('locationassociation');
+        $items = \FOG\Router\Route::getList('locationassociation');
         $location = 0;
         foreach ($items as &$item) {
             if ($item->hostID == $obj->get('id')) {
@@ -112,14 +112,14 @@ class AddLocationHost extends Hook
             ->buildSelectBox($locationID, 'location');
 
         $fields = [
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'location',
                 _('Host Location')
             ) => $locationSelector
         ];
 
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             'location-send',
             _('Update'),
             'btn btn-primary float-end'
@@ -129,7 +129,7 @@ class AddLocationHost extends Hook
         // it, and immediately after Update so Update stays the row's rightmost
         // (primary) button with this one to its left. The modal it returns is
         // echoed after the form -- see below for why it cannot go inside.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             'host-location',
             'location',
             $buttons,
@@ -144,13 +144,13 @@ class AddLocationHost extends Hook
                 'Host' => &$obj
             ]
         );
-        $rendered = FOGPage::formFields($fields);
+        $rendered = \FOG\Base\FOGPage::formFields($fields);
         unset($fields);
 
-        echo FOGPage::makeFormTag(
+        echo \FOG\Base\FOGPage::makeFormTag(
             '',
             'host-location-form',
-            FOGPage::makeTabUpdateURL(
+            \FOG\Base\FOGPage::makeTabUpdateURL(
                 'host-location',
                 $obj->get('id')
             ),
@@ -194,7 +194,7 @@ class AddLocationHost extends Hook
         $insert_values = [];
         $hosts = [$obj->get('id')];
         if (count($hosts ?: [])) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'locationassociation',
                 ['hostID' => $hosts]
             );
@@ -263,7 +263,7 @@ class AddLocationHost extends Hook
                 default:
                     return;
             }
-            $arguments['code'] = HTTPResponseCodes::HTTP_ACCEPTED;
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $arguments['hook'] = 'HOST_EDIT_LOCATION_SUCCESS';
             $arguments['msg'] = json_encode(
                 [
@@ -274,8 +274,8 @@ class AddLocationHost extends Hook
         } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $arguments['hook'] = 'HOST_EDIT_LOCATION_FAIL';
             $arguments['msg'] = json_encode(
@@ -304,7 +304,7 @@ class AddLocationHost extends Hook
             ->buildSelectBox($locationID, 'location');
 
         $arguments['fields'][
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'location',
                 _('Host Location')

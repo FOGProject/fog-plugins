@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class TasktypeeditManager extends TaskTypeManager
+class TasktypeeditManager extends \FOG\Managers\TaskTypeManager
 {
     /**
      * Install the plugin, table already exists.

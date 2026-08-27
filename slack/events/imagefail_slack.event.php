@@ -8,7 +8,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class ImageFail_Slack extends Event
+class ImageFail_Slack extends \FOG\Base\Event
 {
     /**
      * The name of this event
@@ -66,7 +66,7 @@ class ImageFail_Slack extends Event
         if ('' === $reason) {
             $reason = _('no reason was reported');
         }
-        $Slacks = Route::getList('slack');
+        $Slacks = \FOG\Router\Route::getList('slack');
         foreach ($Slacks as $Slack) {
             $args = [
                 'channel' => $Slack->name,

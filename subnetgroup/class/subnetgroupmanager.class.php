@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class SubnetGroupManager extends FOGManagerController
+class SubnetGroupManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The table name.
@@ -99,7 +99,7 @@ class SubnetGroupManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
 }

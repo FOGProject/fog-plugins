@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCIdentityManager extends FOGManagerController
+class OIDCIdentityManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The table name.
@@ -102,7 +102,7 @@ class OIDCIdentityManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**

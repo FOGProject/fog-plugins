@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddOUGroup extends Hook
+class AddOUGroup extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -97,14 +97,14 @@ class AddOUGroup extends Hook
             ->buildSelectBox($ouID, 'ou');
 
         $fields = [
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'ou',
                 _('Group OU')
             ) => $ouSelector
         ];
 
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             'ou-send',
             _('Update'),
             'btn btn-primary float-end'
@@ -114,7 +114,7 @@ class AddOUGroup extends Hook
         // it, and immediately after Update so Update stays the row's rightmost
         // (primary) button with this one to its left. The modal it returns is
         // echoed after the form -- see below for why it cannot go inside.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             'group-ou',
             'ou',
             $buttons,
@@ -130,13 +130,13 @@ class AddOUGroup extends Hook
                 'Group' => &$obj
             ]
         );
-        $rendered = FOGPage::formFields($fields);
+        $rendered = \FOG\Base\FOGPage::formFields($fields);
         unset($fields);
 
-        echo FOGPage::makeFormTag(
+        echo \FOG\Base\FOGPage::makeFormTag(
             '',
             'group-ou-form',
-            FOGPage::makeTabUpdateURL(
+            \FOG\Base\FOGPage::makeTabUpdateURL(
                 'group-ou',
                 $obj->get('id')
             ),
@@ -180,7 +180,7 @@ class AddOUGroup extends Hook
         $insert_values = [];
         $hosts = $obj->get('hosts');
         if (count($hosts ?: [])) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'ouassociation',
                 ['hostID' => $hosts]
             );
@@ -223,7 +223,7 @@ class AddOUGroup extends Hook
                 default:
                     return;
             }
-            $arguments['code'] = HTTPResponseCodes::HTTP_ACCEPTED;
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $arguments['hook'] = 'GROUP_EDIT_OU_SUCCESS';
             $arguments['msg'] = json_encode(
                 [
@@ -234,8 +234,8 @@ class AddOUGroup extends Hook
         } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $arguments['hook'] = 'GROUP_EDIT_OU_FAIL';
             $arguments['msg'] = json_encode(
@@ -264,7 +264,7 @@ class AddOUGroup extends Hook
             ->buildSelectBox($ouID, 'ou');
 
         $arguments['fields'][
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'ou',
                 _('Group OU')

@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class WindowsKeyAssociation extends FOGController
+class WindowsKeyAssociation extends \FOG\Base\FOGController
 {
     /**
      * The association table.

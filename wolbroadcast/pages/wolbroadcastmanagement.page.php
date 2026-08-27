@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class WOLBroadcastManagement extends FOGPage
+class WOLBroadcastManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node this page displays with.

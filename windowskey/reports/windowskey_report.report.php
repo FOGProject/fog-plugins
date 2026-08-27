@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class WindowsKey_Report extends ReportManagement
+class WindowsKey_Report extends \FOG\ReportManagement
 {
     /**
      * The page to display.
@@ -67,9 +67,9 @@ class WindowsKey_Report extends ReportManagement
     public function getList()
     {
         header('Content-type: application/json');
-        Route::listem('windowskey');
-        http_response_code(HTTPResponseCodes::HTTP_SUCCESS);
-        echo Route::getData();
+        \FOG\Router\Route::listem('windowskey');
+        http_response_code(\FOG\Router\HTTPResponseCodes::HTTP_SUCCESS);
+        echo \FOG\Router\Route::getData();
         exit;
     }
 }
