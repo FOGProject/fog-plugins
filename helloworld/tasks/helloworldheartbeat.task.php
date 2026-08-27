@@ -43,7 +43,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class HelloWorldHeartbeat extends PluginTask
+class HelloWorldHeartbeat extends \FOG\Base\PluginTask
 {
     /**
      * Shown in the service log instead of the class name.
@@ -98,7 +98,7 @@ class HelloWorldHeartbeat extends PluginTask
         // getCount(), not count(): count() returns void and stashes the
         // result for getData() to encode. getCount() is the wrapper that
         // hands back an int.
-        $total = Route::getCount('helloworld');
+        $total = \FOG\Router\Route::getCount('helloworld');
         $this->logLine(
             sprintf(
                 '%s: %d',

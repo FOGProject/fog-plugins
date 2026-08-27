@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class RemoveSubnetGroupGroup extends Hook
+class RemoveSubnetGroupGroup extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -69,6 +69,6 @@ class RemoveSubnetGroupGroup extends Hook
     public function removeSubnetGroupGroup($arguments)
     {
         $group = ['groupID' => $arguments['Group']->get('id')];
-        Route::deletemass($this->node, $group);
+        \FOG\Router\Route::deletemass($this->node, $group);
     }
 }

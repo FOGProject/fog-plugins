@@ -30,7 +30,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCFlow extends FOGBase
+class OIDCFlow extends \FOG\Base\FOGBase
 {
     /**
      * Where the one-time flow values live between the two requests.
@@ -111,7 +111,7 @@ class OIDCFlow extends FOGBase
         try {
             $provider = self::_enabledProvider(
                 (int)filter_var(
-                    (string)Route::queryParam('provider'),
+                    (string)\FOG\Router\Route::queryParam('provider'),
                     FILTER_VALIDATE_INT
                 )
             );
@@ -185,7 +185,7 @@ class OIDCFlow extends FOGBase
                     _('The sign-in took too long; please start again')
                 );
             }
-            $error = trim((string)Route::queryParam('error'));
+            $error = trim((string)\FOG\Router\Route::queryParam('error'));
             if ('' !== $error) {
                 // The provider's own words, which are the useful ones --
                 // 'access_denied' means somebody pressed cancel.
@@ -196,13 +196,13 @@ class OIDCFlow extends FOGBase
                     )
                 );
             }
-            $state = (string)Route::queryParam('state');
+            $state = (string)\FOG\Router\Route::queryParam('state');
             if (!hash_equals((string)$flow['state'], $state)) {
                 // Constant time, and the message says nothing about which
                 // half was wrong.
                 throw new \Exception(_('The sign-in could not be verified'));
             }
-            $code = (string)Route::queryParam('code');
+            $code = (string)\FOG\Router\Route::queryParam('code');
             if ('' === $code) {
                 throw new \Exception(_('The identity provider sent no code'));
             }
@@ -327,7 +327,7 @@ class OIDCFlow extends FOGBase
      */
     public static function forcedProvider()
     {
-        $ids = (array)Route::getIds(
+        $ids = (array)\FOG\Router\Route::getIds(
             'oidc',
             ['enabled' => [1], 'autoRedirect' => [1]]
         );
@@ -863,7 +863,7 @@ class OIDCFlow extends FOGBase
         // roles changed. This request goes on to establish the session, so
         // anything it asks about permissions has to see what was just
         // written, not what the user held on the way in.
-        Authorization::resetCache();
+        \FOG\Auth\Authorization::resetCache();
     }
     /**
      * The group values this token carries.

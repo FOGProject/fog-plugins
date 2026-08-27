@@ -37,7 +37,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLDAPGroupTabs extends Hook
+class AddLDAPGroupTabs extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -118,7 +118,7 @@ class AddLDAPGroupTabs extends Hook
         // Without this, role.edit alone would be enough to rewrite what a
         // directory group grants -- a right the LDAP Group page itself
         // does not hand out.
-        if (!Authorization::can('ldapgroup.view')) {
+        if (!\FOG\Auth\Authorization::can('ldapgroup.view')) {
             return;
         }
         $obj = $arguments['obj'];
@@ -154,15 +154,15 @@ class AddLDAPGroupTabs extends Hook
         $isRole = ('role' === $node);
 
         $props = ' method="post" action="'
-            . FOGPage::makeTabUpdateURL($slug, $obj->get('id'))
+            . \FOG\Base\FOGPage::makeTabUpdateURL($slug, $obj->get('id'))
             . '" ';
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             "$slug-send",
             _('Add selected'),
             'btn btn-primary float-end',
             $props
         );
-        $buttons .= FOGPage::makeButton(
+        $buttons .= \FOG\Base\FOGPage::makeButton(
             "$slug-remove",
             _('Remove selected'),
             'btn btn-danger float-start',
@@ -172,7 +172,7 @@ class AddLDAPGroupTabs extends Hook
         // A directory group that has not been registered here yet is the
         // normal case when wiring up a new role, and sending the admin to
         // the LDAP Group page and back is the trip this removes.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             $slug,
             'ldapgroup',
             $buttons,
@@ -223,20 +223,20 @@ class AddLDAPGroupTabs extends Hook
         echo '</div>';
         echo '</div>';
         echo '<div class="card-footer">';
-        echo FOGPage::makeModal(
+        echo \FOG\Base\FOGPage::makeModal(
             'ldapgroupDelModal',
             _('Remove LDAP Group Associations'),
             _(
                 'Please confirm you would like to dissociate the selected '
                 . 'directory groups'
             ),
-            FOGPage::makeButton(
+            \FOG\Base\FOGPage::makeButton(
                 'closeldapgroupDeleteModal',
                 _('Cancel'),
                 'btn btn-outline-secondary float-start',
                 'data-bs-dismiss="modal"'
             )
-            . FOGPage::makeButton(
+            . \FOG\Base\FOGPage::makeButton(
                 'confirmldapgroupDeleteModal',
                 _('Remove'),
                 'btn btn-outline-secondary float-end'
@@ -277,8 +277,8 @@ class AddLDAPGroupTabs extends Hook
         // Same reasoning as the render gate: this writes an ldapgroup
         // association, so it takes ldapgroup.edit rather than riding in on
         // the role/usergroup edit permission that reached this POST.
-        if (!Authorization::can('ldapgroup.edit')) {
-            $arguments['code'] = HTTPResponseCodes::HTTP_FORBIDDEN;
+        if (!\FOG\Auth\Authorization::can('ldapgroup.edit')) {
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_FORBIDDEN;
             $arguments['msg'] = json_encode(
                 [
                     'error' => _(
@@ -331,7 +331,7 @@ class AddLDAPGroupTabs extends Hook
             $group->save();
         }
         // A change here changes who has what, and the answer is cached.
-        Authorization::resetCache();
+        \FOG\Auth\Authorization::resetCache();
 
         $arguments['msg'] = json_encode(
             [

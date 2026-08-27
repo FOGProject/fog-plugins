@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCGroupRoleAssociationManager extends FOGManagerController
+class OIDCGroupRoleAssociationManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The table name.

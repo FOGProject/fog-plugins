@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddWindowsKeyImage extends Hook
+class AddWindowsKeyImage extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -98,14 +98,14 @@ class AddWindowsKeyImage extends Hook
             ->buildSelectBox($keyID, 'windowskey');
 
         $fields = [
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'windowskey',
                 _('Windows Key')
             ) => $windowskeySelector
         ];
 
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             'windowskey-send',
             _('Update'),
             'btn btn-primary float-end'
@@ -115,7 +115,7 @@ class AddWindowsKeyImage extends Hook
         // it, and immediately after Update so Update stays the row's rightmost
         // (primary) button with this one to its left. The modal it returns is
         // echoed after the form -- see below for why it cannot go inside.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             'image-windowskey',
             'windowskey',
             $buttons,
@@ -131,13 +131,13 @@ class AddWindowsKeyImage extends Hook
                 'Image' => &$obj
             ]
         );
-        $rendered = FOGPage::formFields($fields);
+        $rendered = \FOG\Base\FOGPage::formFields($fields);
         unset($fields);
 
-        echo FOGPage::makeFormTag(
+        echo \FOG\Base\FOGPage::makeFormTag(
             '',
             'image-windowskey-form',
-            FOGPage::makeTabUpdateURL(
+            \FOG\Base\FOGPage::makeTabUpdateURL(
                 'image-windowskey',
                 $obj->get('id')
             ),
@@ -179,7 +179,7 @@ class AddWindowsKeyImage extends Hook
         $insert_values = [];
         $images = [$obj->get('id')];
         if (count($images ?: [])) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'windowskeyassociation',
                 ['imageID' => $images]
             );
@@ -222,7 +222,7 @@ class AddWindowsKeyImage extends Hook
                 default:
                     return;
             }
-            $arguments['code'] = HTTPResponseCodes::HTTP_ACCEPTED;
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $arguments['hook'] = 'IMAGE_EDIT_WINDOWSKEY_SUCCESS';
             $arguments['msg'] = json_encode(
                 [
@@ -233,8 +233,8 @@ class AddWindowsKeyImage extends Hook
         } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $arguments['hook'] = 'IMAGE_EDIT_WINDOWSKEY_FAIL';
             $arguments['msg'] = json_encode(
@@ -263,7 +263,7 @@ class AddWindowsKeyImage extends Hook
             ->buildSelectBox($keyID, 'windowskey');
 
         $arguments['fields'][
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'windowskey',
                 _('Image Windows Key')

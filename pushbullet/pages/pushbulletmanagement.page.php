@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class PushbulletManagement extends FOGPage
+class PushbulletManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node name

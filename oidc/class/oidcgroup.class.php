@@ -32,7 +32,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCGroup extends FOGController
+class OIDCGroup extends \FOG\Base\FOGController
 {
     /**
      * The table name.
@@ -96,12 +96,12 @@ class OIDCGroup extends FOGController
     public static function providerLinkCell($providerID)
     {
         if (!$providerID) {
-            return Route::EMPTY_CELL;
+            return \FOG\Router\Route::EMPTY_CELL;
         }
         $name = self::getClass('OIDC', $providerID)->get('name');
         // A group outliving its provider should still list, not fatal.
         if (!$name) {
-            return Route::EMPTY_CELL;
+            return \FOG\Router\Route::EMPTY_CELL;
         }
         return self::entityLink('oidc', $providerID, $name);
     }
@@ -174,7 +174,7 @@ class OIDCGroup extends FOGController
     {
         $this->set(
             'roles',
-            (array)Route::getIds(
+            (array)\FOG\Router\Route::getIds(
                 'oidcgrouproleassociation',
                 ['oidcgroupID' => $this->get('id')],
                 'roleID'
@@ -190,7 +190,7 @@ class OIDCGroup extends FOGController
     {
         $this->set(
             'usergroups',
-            (array)Route::getIds(
+            (array)\FOG\Router\Route::getIds(
                 'oidcgroupusergroupassociation',
                 ['oidcgroupID' => $this->get('id')],
                 'usergroupID'
@@ -213,11 +213,11 @@ class OIDCGroup extends FOGController
     {
         $id = (int)$this->get('id');
         if ($id > 0) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'oidcgrouproleassociation',
                 ['oidcgroupID' => $id]
             );
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'oidcgroupusergroupassociation',
                 ['oidcgroupID' => $id]
             );

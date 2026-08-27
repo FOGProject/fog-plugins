@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class Ntfy extends FOGController
+class Ntfy extends \FOG\Base\FOGController
 {
     /**
      * The ntfy table.

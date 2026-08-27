@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class TaskstateeditManager extends TaskStateManager
+class TaskstateeditManager extends \FOG\Managers\TaskStateManager
 {
     /**
      * Install the plugin, table already exists.

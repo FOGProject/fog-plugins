@@ -25,7 +25,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-abstract class NtfyExtends extends Event
+abstract class NtfyExtends extends \FOG\Base\Event
 {
     /**
      * The name
@@ -147,7 +147,7 @@ abstract class NtfyExtends extends Event
     public function onEvent($event, $data)
     {
         self::$elements = $data;
-        $Ntfys = Route::getList('ntfy');
+        $Ntfys = \FOG\Router\Route::getList('ntfy');
         // Invoke the closure stored in the static property. Calling
         // self::$eventloop($x) directly is parsed as a static method named
         // by a local variable, not as invoking the closure.

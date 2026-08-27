@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LocationAssociation extends FOGController
+class LocationAssociation extends \FOG\Base\FOGController
 {
     /**
      * The association table.

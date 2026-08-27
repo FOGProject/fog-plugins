@@ -28,7 +28,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPGroupManagement extends FOGPage
+class LDAPGroupManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node this page works on.
@@ -61,8 +61,8 @@ class LDAPGroupManagement extends FOGPage
      */
     private static function _serverChoices()
     {
-        $ids = (array)Route::getIds('ldap', [], 'id');
-        $names = (array)Route::getIds('ldap', [], 'name');
+        $ids = (array)\FOG\Router\Route::getIds('ldap', [], 'id');
+        $names = (array)\FOG\Router\Route::getIds('ldap', [], 'name');
         if (count($ids) !== count($names)) {
             return [];
         }
@@ -455,7 +455,7 @@ class LDAPGroupManagement extends FOGPage
                     $serverFault = true;
                     throw new \Exception(_('LDAP Group update failed!'));
                 }
-                Authorization::resetCache();
+                \FOG\Auth\Authorization::resetCache();
             }
         );
     }

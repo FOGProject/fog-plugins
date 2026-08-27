@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class PersistentGroupsManager extends FOGManagerController
+class PersistentGroupsManager extends \FOG\Base\FOGManagerController
 {
     /**
      * Returns the CREATE TRIGGER statement for this plugin.
@@ -124,7 +124,7 @@ class PersistentGroupsManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**

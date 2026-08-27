@@ -429,7 +429,7 @@ if (false === strpos($routeSrc, "'enabled' => [1]")) {
 require $root . '/tests/stubs/fog-stubs.php';
 require $root . '/oidc/class/oidc.class.php';
 
-FOGController::$settings = ['FOG_WEB_ROOT' => 'fog', 'FOG_WEB_HOST' => 'fog.example'];
+\FOG\Base\FOGController::$settings = ['FOG_WEB_ROOT' => 'fog', 'FOG_WEB_HOST' => 'fog.example'];
 $cases = [
     // FOG_WEB_ROOT => [webrootBase, redirectUri]
     'fog' => ['/fog/', 'https://fog.example/fog/ext/oidc/callback'],
@@ -440,7 +440,7 @@ $cases = [
     '' => ['/', 'https://fog.example/ext/oidc/callback'],
 ];
 foreach ($cases as $setting => $want) {
-    FOGController::$settings['FOG_WEB_ROOT'] = $setting;
+    \FOG\Base\FOGController::$settings['FOG_WEB_ROOT'] = $setting;
     $gotBase = OIDC::webrootBase();
     $gotUri = OIDC::redirectUri();
     if ($gotBase !== $want[0] || $gotUri !== $want[1]) {
@@ -614,10 +614,10 @@ $indexCases = [
     ],
 ];
 foreach ($indexCases as $class => $want) {
-    Schema::$lastCall = [];
+    \FOG\Items\Schema::$lastCall = [];
     $manager = new $class();
     $manager->createSql();
-    $args = Schema::$lastCall;
+    $args = \FOG\Items\Schema::$lastCall;
     if (($args[0] ?? null) !== $want[0]) {
         fail(
             sprintf(

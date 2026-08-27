@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class SubnetGroup_Report extends ReportManagement
+class SubnetGroup_Report extends \FOG\ReportManagement
 {
     /**
      * The page to display.
@@ -61,9 +61,9 @@ class SubnetGroup_Report extends ReportManagement
     public function getList()
     {
         header('Content-type: application/json');
-        Route::listem('subnetgroup');
-        http_response_code(HTTPResponseCodes::HTTP_SUCCESS);
-        echo Route::getData();
+        \FOG\Router\Route::listem('subnetgroup');
+        http_response_code(\FOG\Router\HTTPResponseCodes::HTTP_SUCCESS);
+        echo \FOG\Router\Route::getData();
         exit;
     }
 }

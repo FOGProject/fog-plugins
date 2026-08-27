@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDC extends FOGController
+class OIDC extends \FOG\Base\FOGController
 {
     /**
      * Stamped on users.uAuthSource for accounts this plugin owns, and passed

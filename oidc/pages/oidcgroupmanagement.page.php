@@ -26,7 +26,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCGroupManagement extends FOGPage
+class OIDCGroupManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node this page works on.
@@ -59,8 +59,8 @@ class OIDCGroupManagement extends FOGPage
      */
     private static function _providerChoices()
     {
-        $ids = (array)Route::getIds('oidc', [], 'id');
-        $names = (array)Route::getIds('oidc', [], 'name');
+        $ids = (array)\FOG\Router\Route::getIds('oidc', [], 'id');
+        $names = (array)\FOG\Router\Route::getIds('oidc', [], 'name');
         if (count($ids) !== count($names)) {
             return [];
         }
@@ -462,7 +462,7 @@ class OIDCGroupManagement extends FOGPage
                     $serverFault = true;
                     throw new \Exception(_('Provider group update failed!'));
                 }
-                Authorization::resetCache();
+                \FOG\Auth\Authorization::resetCache();
             }
         );
     }

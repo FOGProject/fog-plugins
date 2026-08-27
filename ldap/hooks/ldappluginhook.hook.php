@@ -23,7 +23,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPPluginHook extends Hook
+class LDAPPluginHook extends \FOG\Base\Hook
 {
     /**
      * Legacy uType sentinels. No longer written -- retained only to read
@@ -160,7 +160,7 @@ class LDAPPluginHook extends Hook
         /**
          * Create our new user (initially at least)
          */
-        $items = Route::getList('ldap');
+        $items = \FOG\Router\Route::getList('ldap');
         /**
          * Authenticate against every configured LDAP server and union what
          * each one grants. Every server is asked, because a user can be
@@ -217,7 +217,7 @@ class LDAPPluginHook extends Hook
             $groupIds = array_merge($groupIds, $targets['usergroups']);
         }
         if (!$authenticated) {
-            $arguments['user'] = new User(-1);
+            $arguments['user'] = new \FOG\Items\User(-1);
             return;
         }
         // Rows this plugin created before it stopped storing directory

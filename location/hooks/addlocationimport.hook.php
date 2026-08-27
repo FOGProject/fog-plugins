@@ -24,7 +24,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLocationImport extends Hook
+class AddLocationImport extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -83,7 +83,7 @@ class AddLocationImport extends Hook
         if (count($ids) < 1) {
             return;
         }
-        $locations = Route::getList('Location');
+        $locations = \FOG\Router\Route::getList('Location');
         $locationNames = [];
         foreach ($locations as $l) {
             if (isset($l->id)) {
@@ -91,7 +91,7 @@ class AddLocationImport extends Hook
                     ? (string)$l->name : '';
             }
         }
-        $rows = Route::getList('LocationAssociation', ['hostID' => $ids]);
+        $rows = \FOG\Router\Route::getList('LocationAssociation', ['hostID' => $ids]);
         $byHost = [];
         foreach ($rows as $r) {
             $hid = isset($r->hostID) ? (string)$r->hostID : '';
@@ -103,7 +103,7 @@ class AddLocationImport extends Hook
                 $byHost[$hid][] = $locationNames[$lid];
             }
         }
-        FOGPage::primeAssociationLabel('Host', 'location', $byHost);
+        \FOG\Base\FOGPage::primeAssociationLabel('Host', 'location', $byHost);
     }
     /**
      * Registers the "location" association type for hosts. The same entry
@@ -135,7 +135,7 @@ class AddLocationImport extends Hook
      */
     public function getLocationNames($host)
     {
-        $locationIDs = Route::getIds(
+        $locationIDs = \FOG\Router\Route::getIds(
             'locationassociation',
             ['hostID' => $host->get('id')],
             'locationID'
@@ -165,7 +165,7 @@ class AddLocationImport extends Hook
         if (empty($hostID) || count($ids) < 1) {
             return;
         }
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'locationassociation',
             ['hostID' => $hostID]
         );

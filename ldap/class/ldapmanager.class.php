@@ -23,7 +23,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPManager extends FOGManagerController
+class LDAPManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The base table name.
@@ -296,7 +296,7 @@ class LDAPManager extends FOGManagerController
      */
     private static function _defaultRoleId($name)
     {
-        $ids = Route::getIds('role', ['name' => $name], 'id');
+        $ids = \FOG\Router\Route::getIds('role', ['name' => $name], 'id');
         return (string)(array_shift($ids) ?: '');
     }
     /**
@@ -328,7 +328,7 @@ class LDAPManager extends FOGManagerController
         // throw on query errors, so stamping a column that is not there yet
         // would fail silently and leave these rows unprotected.
         $column = array_filter(
-            (array)DatabaseManager::getColumns('users', 'uAuthSource')
+            (array)\FOG\Db\DatabaseManager::getColumns('users', 'uAuthSource')
         );
         if (count($column) < 1) {
             return _(
@@ -899,7 +899,7 @@ class LDAPManager extends FOGManagerController
             // through VARCHAR(1) so the conversion is by label, and carries
             // this table's nullability and defaults across (lsAllowAPI is nullable and lsUseGroupMatch has no default at all).
             function () {
-                return Schema::enumToTinyint(
+                return \FOG\Items\Schema::enumToTinyint(
                     [
                         'LDAPServers' => [
                             'lsAllowAPI',
@@ -920,7 +920,7 @@ class LDAPManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**
@@ -937,16 +937,16 @@ class LDAPManager extends FOGManagerController
         // -- uType is a shared column anyone can write, including over the
         // API and CSV import.
         $find = ['authsource' => LDAPPluginHook::AUTH_SOURCE];
-        $userIDs = Route::getIds(
+        $userIDs = \FOG\Router\Route::getIds(
             'user',
             $find
         );
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'setting',
             ['category' => 'Plugin: LDAP']
         );
         if (count($userIDs ?: [])) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'user',
                 ['id' => $userIDs]
             );

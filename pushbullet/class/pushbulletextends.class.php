@@ -25,7 +25,7 @@
  * @license  http://opensource.org/license/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-abstract class PushbulletExtends extends Event
+abstract class PushbulletExtends extends \FOG\Base\Event
 {
     /**
      * The name of the pushbullet
@@ -109,7 +109,7 @@ abstract class PushbulletExtends extends Event
     public function onEvent($event, $data)
     {
         self::$elements = $data;
-        $Pushbullets = Route::getList('pushbullet');
+        $Pushbullets = \FOG\Router\Route::getList('pushbullet');
         // Invoke the closure stored in the static property. Calling
         // self::$eventloop($x) directly is parsed as a static method named
         // by a local variable, not as invoking the closure.

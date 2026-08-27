@@ -23,7 +23,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAP extends FOGController
+class LDAP extends \FOG\Base\FOGController
 {
     /**
      * The matching rule that makes a member= test transitive.
@@ -819,7 +819,7 @@ class LDAP extends FOGController
          * immediately if found.
          */
         $test = preg_match(
-            User::PATTERN,
+            \FOG\Items\User::PATTERN,
             $user
         );
         if (!$test) {
@@ -1115,7 +1115,7 @@ class LDAP extends FOGController
              * each group also takes its role and user group associations
              * with it -- LDAPGroup::destroy() is what knows about those.
              */
-            $groupIds = (array)Route::getIds(
+            $groupIds = (array)\FOG\Router\Route::getIds(
                 'ldapgroup',
                 ['serverID' => $id],
                 'id'
@@ -1172,7 +1172,7 @@ class LDAP extends FOGController
          * immediately if found.
          */
         $test = preg_match(
-            User::PATTERN,
+            \FOG\Items\User::PATTERN,
             $user
         );
         if (!$test) {

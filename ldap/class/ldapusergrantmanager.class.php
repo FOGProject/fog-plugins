@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPUserGrantManager extends FOGManagerController
+class LDAPUserGrantManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The base table name.

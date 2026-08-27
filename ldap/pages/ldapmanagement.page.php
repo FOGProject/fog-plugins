@@ -25,7 +25,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class LDAPManagement extends FOGPage
+class LDAPManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node that uses this page
@@ -1199,7 +1199,7 @@ class LDAPManagement extends FOGPage
         $buttons .= sprintf(
             '<a class="btn btn-secondary float-end" '
             . 'href="?node=ldapgroup&sub=add">%s</a>',
-            Initiator::e(_('Create New LDAP Group'))
+            \Initiator::e(_('Create New LDAP Group'))
         );
         $buttons .= self::makeButton(
             'general-delete',
@@ -1415,8 +1415,8 @@ class LDAPManagement extends FOGPage
         // Route::names() would emit a JSON content-type header into what is
         // an HTML fragment, so build the id => name map from ids(). Both
         // calls order by name, so the two lists line up.
-        $roleIds = Route::getIds('role', [], 'id');
-        $roleNames = Route::getIds('role', [], 'name');
+        $roleIds = \FOG\Router\Route::getIds('role', [], 'id');
+        $roleNames = \FOG\Router\Route::getIds('role', [], 'name');
         $roles = (
             count($roleIds) === count($roleNames) ?
             array_combine($roleIds, $roleNames) :
@@ -1620,7 +1620,7 @@ class LDAPManagement extends FOGPage
             // role would otherwise fail silently at login.
             $validRoles = array_map(
                 'strval',
-                (array)Route::getIds('role', [], 'id')
+                (array)\FOG\Router\Route::getIds('role', [], 'id')
             );
             foreach ($roleFields as $field => $settingKey) {
                 $roleId = trim((string)filter_input(INPUT_POST, $field));
@@ -1635,7 +1635,7 @@ class LDAPManagement extends FOGPage
                 }
             }
             $hook = 'LDAP_GLOBAL_EDIT_SUCCESS';
-            $code = HTTPResponseCodes::HTTP_ACCEPTED;
+            $code = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $msg = json_encode(
                 [
                     'msg' => _('Global settings updated!'),
@@ -1646,8 +1646,8 @@ class LDAPManagement extends FOGPage
             $hook = 'LDAP_GLOBAL_EDIT_FAIL';
             $code = (
                 $serverFault ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $msg = json_encode(
                 [
@@ -1708,7 +1708,7 @@ class LDAPManagement extends FOGPage
          */
         if (!$this->obj->get('useGroupMatch')) {
             echo '<div class="alert alert-warning">';
-            echo Initiator::e(
+            echo \Initiator::e(
                 _(
                     'Group Matching is off for this server, so directory '
                     . 'groups cannot be read and these mappings are not '
@@ -1757,20 +1757,20 @@ class LDAPManagement extends FOGPage
     {
         echo '<div class="card card-primary card-outline">';
         echo '<div class="card-header">';
-        echo '<h4 class="card-title">' . Initiator::e($title) . '</h4>';
+        echo '<h4 class="card-title">' . \Initiator::e($title) . '</h4>';
         echo '</div>';
         echo '<div class="card-body">';
         printf(
             '<table id="%s" class="display table table-bordered '
             . 'table-striped">',
-            Initiator::e($tableId)
+            \Initiator::e($tableId)
         );
         echo '<thead><tr class="header">';
         echo '<th data-column="0" scope="col">'
-            . Initiator::e(_('Directory Group'))
+            . \Initiator::e(_('Directory Group'))
             . '</th>';
         echo '<th data-column="1" scope="col">'
-            . Initiator::e($grantHeader)
+            . \Initiator::e($grantHeader)
             . '</th>';
         echo '</tr></thead><tbody></tbody></table>';
         echo '</div>';
@@ -1911,7 +1911,7 @@ class LDAPManagement extends FOGPage
                     if (null === $d) {
                         return sprintf(
                             '%s - (%d)',
-                            Initiator::e(_('Unknown')),
+                            \Initiator::e(_('Unknown')),
                             (int)$row[$map['targetKey']]
                         );
                     }
@@ -1937,8 +1937,8 @@ class LDAPManagement extends FOGPage
             ],
         ];
 
-        $this->jsonSend(HTTPResponseCodes::HTTP_SUCCESS, json_encode(
-            FOGManagerController::complex(
+        $this->jsonSend(\FOG\Router\HTTPResponseCodes::HTTP_SUCCESS, json_encode(
+            \FOG\Base\FOGManagerController::complex(
                 $pass_vars,
                 $map['assoc'],
                 $map['assocId'],

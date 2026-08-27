@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLDAPAPI extends Hook
+class AddLDAPAPI extends \FOG\Base\Hook
 {
     /**
      * Add LDAP API

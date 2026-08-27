@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddServiceConfiguration extends Hook
+class AddServiceConfiguration extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -87,12 +87,12 @@ class AddServiceConfiguration extends Hook
         $labelClass = 'col-sm-3 col-form-label';
 
         $arguments['fields'][
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 $labelClass,
                 'snapinsend',
                 _('Enable Sending via Location')
             )
-        ] = FOGPage::makeInput(
+        ] = \FOG\Base\FOGPage::makeInput(
             '',
             'snapinsend',
             '',

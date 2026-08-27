@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class TasktypeeditManagement extends FOGPage
+class TasktypeeditManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node to work from.

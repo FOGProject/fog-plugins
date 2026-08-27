@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OU extends FOGController
+class OU extends \FOG\Base\FOGController
 {
     /**
      * The location table
@@ -66,7 +66,7 @@ class OU extends FOGController
      */
     public function destroy($key = 'id')
     {
-        Route::deletemass(
+        \FOG\Router\Route::deletemass(
             'ouassociation',
             ['ouID' => $this->get('id')]
         );

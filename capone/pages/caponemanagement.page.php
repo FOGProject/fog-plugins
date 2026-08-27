@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class CaponeManagement extends FOGPage
+class CaponeManagement extends \FOG\Base\FOGPage
 {
     /**
      * The node this page displays with.
@@ -133,7 +133,7 @@ class CaponeManagement extends FOGPage
                 $key = trim(
                     filter_input(INPUT_POST, 'key')
                 );
-                $image = new Image($imageID);
+                $image = new \FOG\Items\Image($imageID);
                 $os = $image->getOS();
                 $osID = $os->get('id');
                 if (!$image->isValid()) {
@@ -261,7 +261,7 @@ class CaponeManagement extends FOGPage
         $key = trim(
             filter_input(INPUT_POST, 'key')
         );
-        $image = new Image($imageID);
+        $image = new \FOG\Items\Image($imageID);
         $os = $image->getOS();
         $osID = $os->get('id');
 
@@ -321,7 +321,7 @@ class CaponeManagement extends FOGPage
                 'FOG_PLUGIN_CAPONE_SHUTDOWN'
             ]
         ];
-        $settings = Route::getIds(
+        $settings = \FOG\Router\Route::getIds(
             'setting',
             $find,
             'value'
@@ -443,7 +443,7 @@ class CaponeManagement extends FOGPage
                 throw new \Exception(_('Unable to set action field'));
             }
             $hook = 'CAPONE_GLOBAL_EDIT_SUCCESS';
-            $code = HTTPResponseCodes::HTTP_ACCEPTED;
+            $code = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $msg = json_encode(
                 [
                     'msg' => _('Global settings updated!'),
@@ -454,8 +454,8 @@ class CaponeManagement extends FOGPage
             $hook = 'CAPONE_GLOBAL_EDIT_FAIL';
             $code = (
                 $serverFault ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $msg = json_encode(
                 [

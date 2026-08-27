@@ -26,7 +26,7 @@
  * old changeitems.hook.php filename and therefore its class name. Only one of
  * the two ever loaded per request, decided by readdir order.
  */
-class OUChangeItems extends Hook
+class OUChangeItems extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -76,7 +76,7 @@ class OUChangeItems extends Hook
         if (!$arguments['Host']->isValid()) {
             return;
         }
-        $OUAssocs = Route::getList(
+        $OUAssocs = \FOG\Router\Route::getList(
             'ouassociation',
             ['hostID' => $arguments['Host']->get('id')]
         );

@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddSlackMenuItem extends Hook
+class AddSlackMenuItem extends \FOG\Base\Hook
 {
     /**
      * Name of the hook.

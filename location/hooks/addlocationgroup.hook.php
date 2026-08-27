@@ -21,7 +21,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class AddLocationGroup extends Hook
+class AddLocationGroup extends \FOG\Base\Hook
 {
     /**
      * The name of this hook.
@@ -99,14 +99,14 @@ class AddLocationGroup extends Hook
             ->buildSelectBox($locationID, 'location');
 
         $fields = [
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'location',
                 _('Group Location')
             ) => $locationSelector
         ];
 
-        $buttons = FOGPage::makeButton(
+        $buttons = \FOG\Base\FOGPage::makeButton(
             'location-send',
             _('Update'),
             'btn btn-primary float-end'
@@ -116,7 +116,7 @@ class AddLocationGroup extends Hook
         // it, and immediately after Update so Update stays the row's rightmost
         // (primary) button with this one to its left. The modal it returns is
         // echoed after the form -- see below for why it cannot go inside.
-        $createModal = FOGPage::renderAssocCreate(
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
             'group-location',
             'location',
             $buttons,
@@ -131,13 +131,13 @@ class AddLocationGroup extends Hook
                 'Group' => &$obj
             ]
         );
-        $rendered = FOGPage::formFields($fields);
+        $rendered = \FOG\Base\FOGPage::formFields($fields);
         unset($fields);
 
-        echo FOGPage::makeFormTag(
+        echo \FOG\Base\FOGPage::makeFormTag(
             '',
             'group-location-form',
-            FOGPage::makeTabUpdateURL(
+            \FOG\Base\FOGPage::makeTabUpdateURL(
                 'group-location',
                 $obj->get('id')
             ),
@@ -179,13 +179,13 @@ class AddLocationGroup extends Hook
         );
         $insert_fields = ['hostID', 'locationID'];
         $insert_values = [];
-        $hosts = Route::getIds(
+        $hosts = \FOG\Router\Route::getIds(
             'groupassociation',
             ['groupID' => $obj->get('id')],
             'hostID'
         );
         if (count($hosts ?: [])) {
-            Route::deletemass(
+            \FOG\Router\Route::deletemass(
                 'locationassociation',
                 ['hostID' => $hosts]
             );
@@ -228,7 +228,7 @@ class AddLocationGroup extends Hook
                 default:
                     return;
             }
-            $arguments['code'] = HTTPResponseCodes::HTTP_ACCEPTED;
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
             $arguments['hook'] = 'GROUP_EDIT_LOCATION_SUCCESS';
             $arguments['msg'] = json_encode(
                 [
@@ -239,8 +239,8 @@ class AddLocationGroup extends Hook
         } catch (\Exception $e) {
             $arguments['code'] = (
                 $arguments['serverFault'] ?
-                HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
-                HTTPResponseCodes::HTTP_BAD_REQUEST
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
             );
             $arguments['hook'] = 'GROUP_EDIT_LOCATION_FAIL';
             $arguments['msg'] = json_encode(
@@ -269,7 +269,7 @@ class AddLocationGroup extends Hook
             ->buildSelectBox($locationID, 'location');
 
         $arguments['fields'][
-            FOGPage::makeLabel(
+            \FOG\Base\FOGPage::makeLabel(
                 'col-sm-3 col-form-label',
                 'location',
                 _('Group Location')

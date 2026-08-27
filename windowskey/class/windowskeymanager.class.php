@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class WindowsKeyManager extends FOGManagerController
+class WindowsKeyManager extends \FOG\Base\FOGManagerController
 {
     /**
      * The base table name.
@@ -125,7 +125,7 @@ class WindowsKeyManager extends FOGManagerController
      */
     public function install()
     {
-        $res = Schema::applyUpdates($this->schema(), 0);
+        $res = \FOG\Items\Schema::applyUpdates($this->schema(), 0);
         return $res['error'] === null;
     }
     /**

@@ -37,7 +37,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OIDCUserGrant extends FOGController
+class OIDCUserGrant extends \FOG\Base\FOGController
 {
     /**
      * Target kinds, matching the association tables they mirror.

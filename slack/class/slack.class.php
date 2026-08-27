@@ -19,7 +19,7 @@
  * @license  https://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class Slack extends FOGController
+class Slack extends \FOG\Base\FOGController
 {
     /**
      * The table.

@@ -19,6 +19,6 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class Taskstateedit extends TaskState
+class Taskstateedit extends \FOG\Items\TaskState
 {
 }
