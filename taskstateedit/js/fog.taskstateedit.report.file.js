@@ -10,7 +10,7 @@
         {data: 'description'},
         {data: 'order', visible: false},
         {data: 'icon', visible: false}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);

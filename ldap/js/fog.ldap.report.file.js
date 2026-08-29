@@ -29,7 +29,7 @@
         {data: 'nestedDepth', visible: false},
         {data: 'tlsVerify', visible: false},
         {data: 'tlsCaCert', visible: false}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);

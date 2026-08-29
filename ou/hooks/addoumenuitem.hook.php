@@ -61,7 +61,28 @@ class AddOUMenuItem extends \FOG\Base\Hook
             ['PAGES_WITH_OBJECTS', 'addPageWithObject'],
             ['PERMISSION_REGISTRY_DATA', 'permData'],
             ['SUB_MENULINK_DATA', 'menuUpdate'],
+            ['REPORT_TITLE_DATA', 'reportTitle'],
         ]);
+    }
+    /**
+     * Names this plugin's report in the Reports menu.
+     *
+     * Without this the sidebar shows ucwords() of the FILE name -- "Ou Report"
+     * -- while the page it opens is headed "Export OUs". Two names for one
+     * screen, and the file name is the half nobody chose.
+     *
+     * Keyed the way the menu and the base64 `f` parameter are: the file
+     * name with underscores as spaces, lower case. The report reads the
+     * same map back through reportTitle() for its heading, so the two
+     * cannot drift apart again.
+     *
+     * @param mixed $arguments The titles to modify.
+     *
+     * @return void
+     */
+    public function reportTitle($arguments)
+    {
+        $arguments['titles']['ou report'] = _('Export OUs');
     }
     /**
      * Add the new items beyond list/create.

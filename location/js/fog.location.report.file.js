@@ -13,7 +13,7 @@
         {data: 'storagegroupID', visible: false},
         {data: 'storagenodeID', visible: false},
         {data: 'tftp', visible: false}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);

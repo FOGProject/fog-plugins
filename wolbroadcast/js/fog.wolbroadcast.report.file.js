@@ -9,7 +9,7 @@
         {data: 'name'},
         {data: 'description', visible: false},
         {data: 'broadcast'}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);
