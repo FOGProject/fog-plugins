@@ -273,6 +273,59 @@ class OIDCManager extends \FOG\Base\FOGManagerController
                     ]
                 );
             },
+            // 9 - the plugin's eight foreign keys.
+            //
+            // fogproject ADR 0031 decision 8: sweep, then add. ADD CONSTRAINT
+            // validates the rows already in the table and answers 1452 if any
+            // of them point at a parent that is gone -- and applyConstraints()
+            // REPORTS a refusal rather than returning it, so an install that
+            // skipped the sweep would succeed while silently not creating the
+            // constraint. Both calls are filtered to this plugin's own group,
+            // so neither can reach another plugin's tables or core's.
+            //
+            // All eight land here even though five of the tables belong to
+            // other managers, including oidcIdentity, whose own schema() runs
+            // separately at step 1 above. The calls are driven by the table
+            // names in fogproject's commons/schema-constraints.php rather than
+            // by whose manager is executing, so the plugin needs exactly one
+            // constraint step and it belongs in the orchestrator -- by which
+            // point every one of its tables exists.
+            //
+            //   OIDCGroups.ogProviderID                 -> OIDCProviders.opID
+            //   oidcIdentity.oiProviderID               -> OIDCProviders.opID
+            //   oidcIdentity.oiUserID                   -> users.uId
+            //   oidcGroupRoleAssoc.ograGroupID          -> OIDCGroups.ogID
+            //   oidcGroupRoleAssoc.ograRoleID           -> roles.rID
+            //   oidcGroupUserGroupAssoc.ogugGroupID     -> OIDCGroups.ogID
+            //   oidcGroupUserGroupAssoc.ogugUserGroupID -> userGroups.ugID
+            //   oidcUserGrant.ougUserID                 -> users.uId
+            //
+            // All CASCADE. OIDCGroups and oidcIdentity are satellites -- a
+            // group claim mapping and a subject-to-user binding both mean
+            // nothing without the provider they came from -- and the rest are
+            // junctions. oidcIdentity is the one worth being deliberate about:
+            // it is the record that this external subject IS this FOG user, so
+            // deleting either end has to take it. Leaving it would let the
+            // next user created with a recycled id inherit someone else's
+            // identity binding.
+            //
+            // ougTargetID is deliberately excluded and stays polymorphic: its
+            // parent table is chosen by the sibling ougTargetType column, so
+            // there is no single table to reference. Same shape as core's
+            // scheduledTasks.stGroupHostID.
+            //
+            // No column change was needed: all eight are int(11) NOT NULL
+            // against int(11) parents, and none carries a sentinel.
+            //
+            // Appended, never folded into an earlier step -- installdb() SKIPS
+            // the pSchema steps an install has already passed.
+            function () {
+                $res = \FOG\Db\SchemaReconciler::sweepOrphans('oidc');
+                if (is_string($res)) {
+                    return $res;
+                }
+                return \FOG\Db\SchemaReconciler::applyConstraints('oidc');
+            },
         ];
     }
     /**

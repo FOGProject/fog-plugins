@@ -115,6 +115,47 @@ class WindowsKeyManager extends \FOG\Base\FOGManagerController
                 'ALTER TABLE `%s` DROP INDEX `index0`',
                 $this->tablename
             ),
+            // 3 - the plugin's foreign keys.
+            //
+            // fogproject ADR 0031 decision 8: sweep, then add. ADD CONSTRAINT
+            // validates the rows already in the table and answers 1452 if any
+            // of them point at a parent that is gone -- and applyConstraints()
+            // REPORTS a refusal rather than returning it, so an install that
+            // skipped the sweep would succeed while silently not creating the
+            // constraint. The sweep is the precondition for the statement, not
+            // a policy choice.
+            //
+            // Both calls are filtered to this plugin's own group, so neither
+            // can reach another plugin's tables or core's. The relationships
+            // themselves are declared in fogproject's
+            // commons/schema-constraints.php: windowsKeysAssoc.wkaImageID
+            // CASCADE to `images`, windowsKeysAssoc.wkaKeyID CASCADE to
+            // `windowsKeys`. Half of them point at core tables, and that map
+            // is meant to answer "what points at images?" from one file.
+            //
+            // CASCADE on wkaImageID is the behavior that already existed:
+            // deleting an image was never meant to leave a key assigned to it,
+            // and the association carries nothing of its own to preserve.
+            //
+            // Appended rather than folded into an earlier step because
+            // installdb() SKIPS the pSchema steps an install has already
+            // passed instead of replaying them.
+            //
+            // No column change was needed: both columns are already
+            // int(11) NOT NULL against int(11) parents, and neither carries a
+            // sentinel.
+            //
+            // Idempotent, and re-run by the unfiltered reconcile after every
+            // core schema update.
+            function () {
+                $res = \FOG\Db\SchemaReconciler::sweepOrphans('windowskey');
+                if (is_string($res)) {
+                    return $res;
+                }
+                return \FOG\Db\SchemaReconciler::applyConstraints(
+                    'windowskey'
+                );
+            },
         ];
     }
     /**

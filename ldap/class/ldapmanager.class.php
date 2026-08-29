@@ -910,6 +910,56 @@ class LDAPManager extends \FOG\Base\FOGManagerController
                     ]
                 );
             },
+            // 28 - the plugin's six foreign keys.
+            //
+            // fogproject ADR 0031 decision 8: sweep, then add. ADD CONSTRAINT
+            // validates the rows already in the table and answers 1452 if any
+            // of them point at a parent that is gone -- and applyConstraints()
+            // REPORTS a refusal rather than returning it, so an install that
+            // skipped the sweep would succeed while silently not creating the
+            // constraint. Both calls are filtered to this plugin's own group,
+            // so neither can reach another plugin's tables or core's.
+            //
+            // Steps 19-21 above are the same idea hand-written, and they are
+            // why this plugin needed it first: deleting a user, role or user
+            // group did not clear this plugin's rows, so an install upgraded
+            // from before LDAPDeleteMassItems existed holds mappings pointing
+            // at ids that are gone. They stay exactly as they are -- anyone
+            // past them has already run them -- but they only ever ran once,
+            // against a backlog. These constraints are what stops the backlog
+            // ever forming again, in the database rather than in a hook.
+            //
+            // The relationships are declared in fogproject's
+            // commons/schema-constraints.php:
+            //   LDAPGroups.lgServerID              -> LDAPServers.lsID
+            //   ldapGroupRoleAssoc.lgraGroupID     -> LDAPGroups.lgID
+            //   ldapGroupRoleAssoc.lgraRoleID      -> roles.rID
+            //   ldapGroupUserGroupAssoc.lgugGroupID     -> LDAPGroups.lgID
+            //   ldapGroupUserGroupAssoc.lgugUserGroupID -> userGroups.ugID
+            //   ldapUserGrant.lugUserID            -> users.uId
+            // all CASCADE. LDAPGroups is a satellite of its server -- a group
+            // has no meaning without the directory it was read from -- and
+            // the rest are junctions.
+            //
+            // ldapUserGrant.lugTargetID is deliberately NOT among them. Its
+            // parent table is chosen by the sibling lugTargetType column, so
+            // there is no single table to reference; step 19 sweeps it by
+            // hand and LDAPDeleteMassItems keeps it clean. Same shape as
+            // core's scheduledTasks.stGroupHostID.
+            //
+            // No column change was needed: all six are int(11) NOT NULL
+            // against int(11) parents, and none carries a sentinel.
+            //
+            // Appended, never folded into an earlier step -- installdb()
+            // SKIPS the pSchema steps an install has already passed, which is
+            // the mistake steps 10-16 above exist to repair.
+            function () {
+                $res = \FOG\Db\SchemaReconciler::sweepOrphans('ldap');
+                if (is_string($res)) {
+                    return $res;
+                }
+                return \FOG\Db\SchemaReconciler::applyConstraints('ldap');
+            },
         ];
     }
     /**

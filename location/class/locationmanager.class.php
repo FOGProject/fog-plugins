@@ -62,12 +62,18 @@ class LocationManager extends \FOG\Base\FOGManagerController
                 'TINYINT(1)',
                 "ENUM('http', 'https')"
             ],
+            // Nullability, in field order. lStorageNodeID is the one true
+            // entry: the column is a tri-state, and NULL is how it spells
+            // "no specific node -- let the group choose". See step 4 of
+            // schema() for why that stopped being 0, and
+            // Location::getStorageNode() for the reader, which treats any
+            // falsy value the same way and so needed no change.
             [
                 false,
                 false,
                 false,
                 false,
-                false,
+                true,
                 false,
                 false,
                 false,
@@ -158,6 +164,80 @@ class LocationManager extends \FOG\Base\FOGManagerController
                         $this->tablename => ['lTftpEnabled'],
                     ]
                 );
+            },
+            // 4 - lStorageNodeID stops spelling "no node" as 0.
+            //
+            // fogproject ADR 0031. A foreign key accepts NULL for "no
+            // reference" and nothing else: 0 is a value, so a constraint
+            // over this column would demand a storage node with ngmID = 0
+            // and refuse every location that had not pinned one.
+            //
+            // The column is genuinely a tri-state and always has been --
+            // Location::getStorageNode() returns the named node when it is
+            // truthy and falls through to the group's optimal node when it
+            // is not -- so this changes how "none" is spelled, not what the
+            // column means. FOGController::get() reads through isset(), so
+            // NULL comes back as '' and is falsy exactly as 0 was; the
+            // reader needed no change, which is the point.
+            //
+            // Appended rather than folded into step 0 for the reason step 3
+            // gives: installdb() skips the pSchema steps an install has
+            // already passed. createSql() above now builds the column
+            // nullable for a fresh install; this is what an existing one
+            // gets.
+            function () {
+                $sql = sprintf(
+                    'ALTER TABLE `%s` MODIFY COLUMN `lStorageNodeID`'
+                    . ' INTEGER NULL DEFAULT NULL',
+                    $this->tablename
+                );
+                if (false !== self::$DB->query($sql)->error) {
+                    return self::$DB->error;
+                }
+                $sql = sprintf(
+                    'UPDATE `%s` SET `lStorageNodeID` = NULL'
+                    . ' WHERE `lStorageNodeID` = 0',
+                    $this->tablename
+                );
+                if (false !== self::$DB->query($sql)->error) {
+                    return self::$DB->error;
+                }
+                // Logged rather than silent: this rewrites rows, and the
+                // count is the only evidence it did.
+                error_log(
+                    sprintf(
+                        '%s: %s: %d %s',
+                        _('Location schema'),
+                        'lStorageNodeID',
+                        (int)self::$DB->affectedRows(),
+                        _('row(s) converted from 0 to NULL')
+                    )
+                );
+                return true;
+            },
+            // 5 - the plugin's foreign keys.
+            //
+            // fogproject ADR 0031 decision 8: sweep, then add. ADD
+            // CONSTRAINT validates the rows already there and answers 1452
+            // if any of them point at a parent that is gone, so the sweep is
+            // the precondition for the statement rather than a policy
+            // choice. Both calls are filtered to this plugin's own group, so
+            // nothing here can reach another plugin's tables or core's.
+            //
+            // The relationships themselves are declared in fogproject's
+            // commons/schema-constraints.php, not here -- half of them point
+            // at core tables, and the map is meant to answer "what points at
+            // hosts?" from one file.
+            //
+            // Idempotent, and re-run by the unfiltered reconcile after every
+            // core schema update: planConstraints() skips a constraint whose
+            // declaration already matches the map.
+            function () {
+                $res = \FOG\Db\SchemaReconciler::sweepOrphans('location');
+                if (is_string($res)) {
+                    return $res;
+                }
+                return \FOG\Db\SchemaReconciler::applyConstraints('location');
             },
         ];
     }
