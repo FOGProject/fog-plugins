@@ -56,6 +56,7 @@ $expected = [
     'ou' => 'ou/class/oumanager.class.php',
     'windowskey' => 'windowskey/class/windowskeymanager.class.php',
     'ldap' => 'ldap/class/ldapmanager.class.php',
+    'oidc' => 'oidc/class/oidcmanager.class.php',
 ];
 
 /**
