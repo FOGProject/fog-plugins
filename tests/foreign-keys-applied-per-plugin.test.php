@@ -55,6 +55,7 @@ $expected = [
     'location' => 'location/class/locationmanager.class.php',
     'ou' => 'ou/class/oumanager.class.php',
     'windowskey' => 'windowskey/class/windowskeymanager.class.php',
+    'ldap' => 'ldap/class/ldapmanager.class.php',
 ];
 
 /**
