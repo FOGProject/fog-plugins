@@ -53,6 +53,7 @@ $checks = 0;
  */
 $expected = [
     'location' => 'location/class/locationmanager.class.php',
+    'ou' => 'ou/class/oumanager.class.php',
 ];
 
 /**
