@@ -47,14 +47,23 @@ class CaponeManager extends \FOG\Base\FOGManagerController
             ],
             [
                 'INTEGER',
+                // MEDIUMINT(9) matches os.osID. InnoDB requires an EXACT type
+                // match on both sides of a foreign key and answers errno 150
+                // otherwise -- int(11) against mediumint(9) is refused, which
+                // is what this column was until fogproject ADR 0031.
                 'INTEGER',
-                'INTEGER',
+                'MEDIUMINT(9)',
                 'VARCHAR(255)'
             ],
             [
                 false,
-                false,
-                false,
+                // Nullable, because a foreign key spells "no reference" NULL
+                // and nothing else. These carried 0, which is a value: a
+                // constraint over them would demand an image with imageID 0
+                // and an os with osID 0 and refuse every row without one.
+                // Step 2 converts the rows an existing install already has.
+                true,
+                true,
                 false
             ],
             [
@@ -138,6 +147,98 @@ class CaponeManager extends \FOG\Base\FOGManagerController
             // 1
             function () {
                 return $this->seedSettings();
+            },
+            // 2 - cImageID and cOSID stop spelling "no reference" as 0.
+            //
+            // fogproject ADR 0031. A foreign key accepts NULL for "no
+            // reference" and nothing else, so a constraint over these columns
+            // would demand an image with imageID 0 and an OS with osID 0 and
+            // refuse every row that had neither. cOSID also has to become
+            // MEDIUMINT(9): os.osID is mediumint(9) and InnoDB refuses a
+            // foreign key whose sides are not the same type, at errno 150.
+            //
+            // Capone declares no $databaseFieldsRequired, so save()'s
+            // optional-`*id` branch is what wrote the 0 -- the same shape
+            // that made tasks.taskStateID a runtime 1452 and was fixed in
+            // core's schema step 389. Once the column is nullable the branch
+            // writes NULL on its own: FOGBase::columnType() falls back to
+            // _loadPluginColumnTypes(), which reads the server's own catalog
+            // for tables the core manifest does not describe.
+            //
+            // Appended rather than folded into step 0 because installdb()
+            // SKIPS the pSchema steps an install has already passed instead
+            // of replaying them. createSql() above now builds both columns
+            // this way for a fresh install; this is what an existing one
+            // gets.
+            function () {
+                $sql = sprintf(
+                    'ALTER TABLE `%s` MODIFY COLUMN `cImageID` INTEGER NULL'
+                    . ' DEFAULT NULL, MODIFY COLUMN `cOSID` MEDIUMINT(9) NULL'
+                    . ' DEFAULT NULL',
+                    $this->tablename
+                );
+                if (false !== self::$DB->query($sql)->error) {
+                    return self::$DB->error;
+                }
+                $converted = 0;
+                foreach (['cImageID', 'cOSID'] as $column) {
+                    $sql = sprintf(
+                        'UPDATE `%s` SET `%s` = NULL WHERE `%s` = 0',
+                        $this->tablename,
+                        $column,
+                        $column
+                    );
+                    if (false !== self::$DB->query($sql)->error) {
+                        return self::$DB->error;
+                    }
+                    $converted += (int)self::$DB->affectedRows();
+                }
+                // Logged rather than silent: this rewrites rows, and the
+                // count is the only evidence it did.
+                error_log(
+                    sprintf(
+                        '%s: %d %s',
+                        _('Capone schema'),
+                        $converted,
+                        _('row(s) converted from 0 to NULL')
+                    )
+                );
+                return true;
+            },
+            // 3 - the plugin's foreign keys.
+            //
+            // fogproject ADR 0031 decision 8: sweep, then add. ADD CONSTRAINT
+            // validates the rows already in the table and answers 1452 if any
+            // of them point at a parent that is gone -- and applyConstraints()
+            // REPORTS a refusal rather than returning it, so an install that
+            // skipped the sweep would succeed while silently not creating the
+            // constraint. Both columns are nullable by step 2, so the sweep
+            // nulls the dangling references rather than deleting the rows.
+            //
+            // Both calls are filtered to this plugin's own group, so neither
+            // can reach another plugin's tables or core's. The relationships
+            // are declared in fogproject's commons/schema-constraints.php:
+            // capone.cImageID RESTRICT to `images`, capone.cOSID RESTRICT to
+            // `os`.
+            //
+            // RESTRICT, not CASCADE, for both. Nothing in FOG deletes a
+            // capone row today when its image or OS goes -- there is no hook
+            // and deletemass() has no case -- so the reference simply
+            // dangles, and the map's rule is RESTRICT exactly where PHP does
+            // nothing and the reference dangles. CASCADE would silently
+            // delete an administrator's deployment rule as a side effect of
+            // deleting an image, which is the argument core used to reject
+            // CASCADE for storage nodes.
+            //
+            // Idempotent, and re-run by the unfiltered reconcile after every
+            // core schema update: planConstraints() skips a constraint whose
+            // declaration already matches the map.
+            function () {
+                $res = \FOG\Db\SchemaReconciler::sweepOrphans('capone');
+                if (is_string($res)) {
+                    return $res;
+                }
+                return \FOG\Db\SchemaReconciler::applyConstraints('capone');
             },
         ];
     }
