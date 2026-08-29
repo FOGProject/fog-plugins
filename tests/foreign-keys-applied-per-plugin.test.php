@@ -54,6 +54,7 @@ $checks = 0;
 $expected = [
     'location' => 'location/class/locationmanager.class.php',
     'ou' => 'ou/class/oumanager.class.php',
+    'windowskey' => 'windowskey/class/windowskeymanager.class.php',
 ];
 
 /**
@@ -86,7 +87,11 @@ foreach ($expected as $plugin => $relative) {
         $failures[] = "$plugin: $relative does not exist";
         continue;
     }
-    $src = fkStrip($file);
+    // Whitespace stripped as well as comments. A call is the same call
+    // whether or not its argument was wrapped to keep the line under 80,
+    // and the first version of this test failed a perfectly good
+    // applyConstraints( \n 'windowskey' \n ) on formatting alone.
+    $src = preg_replace('/\s+/', '', fkStrip($file));
 
     $sweep = "SchemaReconciler::sweepOrphans('$plugin')";
     $apply = "SchemaReconciler::applyConstraints('$plugin')";
@@ -149,15 +154,16 @@ foreach ($expected as $plugin => $relative) {
  * server.
  */
 $src = fkStrip($root . '/location/class/locationmanager.class.php');
+$tight = preg_replace('/\s+/', '', $src);
 $checks++;
-if (strpos($src, "MODIFY COLUMN `lStorageNodeID`") === false
-    || strpos($src, 'NULL DEFAULT NULL') === false
+if (strpos($tight, "MODIFYCOLUMN`lStorageNodeID`") === false
+    || strpos($tight, 'NULLDEFAULTNULL') === false
 ) {
     $failures[] = 'location: schema() does not make lStorageNodeID nullable;'
         . ' a foreign key cannot accept its 0 sentinel';
 }
 $checks++;
-if (strpos($src, "SET `lStorageNodeID` = NULL") === false) {
+if (strpos($tight, "SET`lStorageNodeID`=NULL") === false) {
     $failures[] = 'location: schema() does not convert lStorageNodeID = 0 to'
         . ' NULL, so existing rows still name a storage node that does not'
         . ' exist';
