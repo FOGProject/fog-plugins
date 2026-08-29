@@ -15,7 +15,7 @@
         {data: 'isAdvanced', visible: false},
         {data: 'access'},
         {data: 'initrd', visible: false}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);

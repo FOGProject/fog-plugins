@@ -28,7 +28,7 @@ class Wolbroadcast_Report extends \FOG\ReportManagement
      */
     public function file()
     {
-        $this->title = _('Export WOL Broadcasts');
+        $this->title = self::reportTitle();
 
         $this->headerData = [
             _('Broadcast Name'),
@@ -44,7 +44,7 @@ class Wolbroadcast_Report extends \FOG\ReportManagement
         echo '<div class="card">';
         echo '<div class="card-header">';
         echo '<h4 class="card-title">';
-        echo _('Export WOL Broadcasts');
+        echo $this->title;
         echo '</h4>';
         echo '<p class="form-text">';
         echo _('Use the selector to choose how many items you want exported');
@@ -56,16 +56,18 @@ class Wolbroadcast_Report extends \FOG\ReportManagement
         echo '</div>';
     }
     /**
-     * Returns the JSON data for this report.
+     * The rows this report serves.
      *
-     * @return void
+     * Split from the emit so the grid and the "CSV (All)" export run the
+     * same query -- ReportManagement::exportAll() serves this, and cannot
+     * take back control from a getList() that exits.
+     *
+     * @return array
      */
-    public function getList()
+    protected function reportRows()
     {
-        header('Content-type: application/json');
         \FOG\Router\Route::listem('wolbroadcast');
-        http_response_code(\FOG\Router\HTTPResponseCodes::HTTP_SUCCESS);
-        echo \FOG\Router\Route::getData();
-        exit;
+
+        return (array) json_decode(\FOG\Router\Route::getData(), true);
     }
 }

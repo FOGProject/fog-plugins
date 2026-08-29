@@ -11,7 +11,7 @@
         {data: 'createdBy', visible: false},
         {data: 'createdTime', visible: false},
         {data: 'ou'}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);

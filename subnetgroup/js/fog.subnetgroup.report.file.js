@@ -8,7 +8,7 @@
       $('#subnetgroup-report-table').registerReportTable([
         {data: 'name'},
         {data: 'groupID'}
-      ]);
+      ], {fullExport: true});
       break;
   }
 })(jQuery);
