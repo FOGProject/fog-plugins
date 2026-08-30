@@ -67,15 +67,14 @@ foreach ($walk as $file) {
     }
 }
 $webRoot = dirname($srcRoot);
-foreach (['pages', 'hooks', 'reports', 'events'] as $dir) {
-    foreach (glob($webRoot . '/lib/' . $dir . '/*.php') as $path) {
-        $short = preg_replace('/\\.(page|hook|report|event)$/', '', basename($path, '.php'));
-        $src = file_get_contents($path);
-        if (preg_match('/^\\s*(?:final\\s+|abstract\\s+)*class\\s+(\\w+)/mi', $src, $m)) {
-            $core[strtolower($m[1])] = 'FOG\\' . $m[1];
-        }
-    }
-}
+// The lib/{pages,hooks,reports,events} pass that used to run here is gone
+// with the directories it read. Those 52 classes were the last holdouts in
+// the flat `namespace FOG;`, kept there because discovery derived their name
+// from the filename; they are PSR-4 files under src/{Pages,Hooks,Reports,
+// Events} now, so the src/ walk above already maps them -- and maps them to
+// the bucketed FQCN a plugin actually has to write. Keeping the pass would
+// have been worse than redundant: it ran AFTER the walk and overwrote each
+// entry with the flat `FOG\<Class>` spelling, which no longer resolves.
 foreach (glob($webRoot . '/commons/*.php') as $path) {
     if (preg_match_all(
         '/^\\s*(?:final\\s+|abstract\\s+)*class\\s+(\\w+)/mi',
