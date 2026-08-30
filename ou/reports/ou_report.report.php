@@ -19,7 +19,7 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
-class OU_Report extends \FOG\ReportManagement
+class OU_Report extends \FOG\Pages\ReportManagement
 {
     /**
      * The page to display.
