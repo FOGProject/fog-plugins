@@ -41,18 +41,37 @@ Each directory is one plugin, laid out exactly as it appears under
 ```
 <plugin>/
   config/plugin.config.php    the manifest
-  class/                      model + manager (schema migrations live here)
-  pages/                      the management page
-  hooks/                      hook registrations
-  tasks/                      scheduled background work (optional)
+  src/                        ALL PHP, laid out exactly like core's src/
+    Items/                    models
+    Managers/                 managers (schema migrations live here)
+    Pages/                    the management page
+    Hooks/                    hook registrations
+    Events/                   event listeners (optional)
+    Reports/                  reports (optional)
+    Tasks/                    scheduled background work (optional)
+    Util/                     plain helpers (optional)
   js/                         fog.<node>.<sub>.js
 ```
 
-A `tasks/<name>.task.php` declares a class extending `PluginTask` with an
+**`<plugin>/src/<Bucket>/<Class>.php` declares
+`FOG\Plugins\<Segment>\<Bucket>\<Class>`**, with the file name equal to the
+class name and `strtolower(<Segment>)` equal to the plugin's directory name.
+`tests/plugin-layout.test.php` gates both. The autoloader derives the path from
+the class name, so a file in the wrong place does not load and a class in the
+wrong bucket is never registered. See
+[ADR 0035](https://github.com/FOGProject/fogproject/blob/working-1.6/docs/adr/0035-a-plugin-is-laid-out-like-core.md);
+the pre-1.6 `class/ pages/ hooks/` layout is refused with a message naming the
+plugin.
+
+`Pages`, `Hooks`, `Events`, `Reports` and `Tasks` are the buckets core
+enumerates. Everything else is autoload-only, so the name is yours — these are
+core's, and using them means someone who knows core knows your plugin.
+
+A `src/Tasks/<Class>.php` declares a class extending `PluginTask` with an
 `$interval` and a `run()`, and the `FOGPluginRunner` daemon runs it while the
 plugin is active and installed — a plugin never ships a systemd unit of its
 own. It runs as the web user rather than root, and `run()` has to be
-idempotent. See `helloworld/tasks/helloworldheartbeat.task.php` for a worked
+idempotent. See `helloworld/src/Tasks/HelloWorldHeartbeat.php` for a worked
 example and ADR 0010 in `FOGProject/fogproject` for why it is shaped this way.
 
 Requires FOG **1.6.0-beta.3350** or newer. The runner itself landed in
@@ -72,10 +91,10 @@ the rest.
 | `ldap` | 1.6.0 | Authenticate FOG users against an LDAP or AD directory |
 | `location` | 1.6.0 | Serve images from the storage node nearest a host — multi-site installs |
 | `ntfy` | 1.6.0 | Notifications via ntfy.sh or a self-hosted ntfy server |
+| `oidc` | 1.6.0 | Sign in through an OpenID Connect provider; the reference for a plugin that adds a route rather than a resource |
 | `ou` | 1.6.0 | Predefine Active Directory OUs and associate them with hosts |
 | `persistentgroups` | 1.6.0 | On joining a group, copy image, AD, printer and location settings from a template host named after that group |
 | `pushbullet` | 1.6.0 | Pushbullet notifications |
-| `site` | 1.6.0 | Group hosts into sites; limit which hosts a user can see |
 | `slack` | 1.6.0 | Slack API integration |
 | `subnetgroup` | 1.6.0 | Assign hosts to groups automatically by IP subnet |
 | `taskstateedit` | 1.6.0 | Edit and create task states |
@@ -83,12 +102,12 @@ the rest.
 | `windowskey` | 1.6.0 | Associate Windows product keys with images |
 | `wolbroadcast` | 1.6.0 | Wake-on-LAN across separate broadcast addresses |
 
-`site` is a special case. Per
+`site` used to be listed here and is not a plugin any more. Per
 [ADR 0006](https://github.com/FOGProject/fogproject/blob/working-1.6/docs/adr/0006-site-object-scope-boundary.md)
 the object-scope boundary is default-allow, so **with no listener the boundary
-does not exist**. `site` is therefore always shipped and must not become
-something an admin can uninstall or a half-failed upgrade can remove. It lives
-here as source; it is not a candidate for the external plugin root.
+does not exist** — which made a plugin an admin could uninstall, or a
+half-failed upgrade could remove, the wrong home for it. Site moved into
+`FOGProject/fogproject` proper; nothing here replaces it.
 
 ## Writing a plugin
 
@@ -96,7 +115,8 @@ The full guide is
 [`docs/plugin-development.md`](https://github.com/FOGProject/fogproject/blob/working-1.6/docs/plugin-development.md)
 in the FOG repository — manifest fields, the `schema()` migration contract,
 hook events, the permission registry, and the gotchas that cost the most time.
-`helloworld/` here is the working skeleton it describes.
+`helloworld/` here is the working skeleton it describes, and §11b of that guide
+is the port table for a plugin still on the pre-1.6 layout.
 
 Third-party plugins belong in your own repository. Ship a `.tar.gz` holding
 one directory named for the plugin with `config/plugin.config.php` inside it,

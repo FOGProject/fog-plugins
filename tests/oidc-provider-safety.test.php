@@ -53,8 +53,8 @@ if (!function_exists('_')) {
 
 require $root . '/tests/stubs/fog-stubs.php';
 
-require $root . '/oidc/class/oidc.class.php';
-require $root . '/oidc/class/oidcmanager.class.php';
+require $root . '/oidc/src/Items/OIDC.php';
+require $root . '/oidc/src/Managers/OIDCManager.php';
 
 /**
  * Records a failure.
@@ -107,7 +107,7 @@ function accepts(callable $fn, $what)
 // 1. The issuer.
 accepts(
     function () {
-        \FOG\Plugins\Oidc\OIDC::assertValidIssuer('https://login.example.com/realms/fog');
+        \FOG\Plugins\OIDC\Items\OIDC::assertValidIssuer('https://login.example.com/realms/fog');
     },
     'a plain https issuer'
 );
@@ -124,14 +124,14 @@ $badIssuers = [
 foreach ($badIssuers as $issuer => $what) {
     refuses(
         function () use ($issuer) {
-            \FOG\Plugins\Oidc\OIDC::assertValidIssuer($issuer);
+            \FOG\Plugins\OIDC\Items\OIDC::assertValidIssuer($issuer);
         },
         $what
     );
 }
 refuses(
     function () {
-        \FOG\Plugins\Oidc\OIDC::assertValidIssuer('https://' . str_repeat('a', 250) . '.com');
+        \FOG\Plugins\OIDC\Items\OIDC::assertValidIssuer('https://' . str_repeat('a', 250) . '.com');
     },
     'an issuer too long for its column'
 );
@@ -146,7 +146,7 @@ $scopeCases = [
     'openid openid profile' => 'openid profile',
 ];
 foreach ($scopeCases as $in => $want) {
-    $got = \FOG\Plugins\Oidc\OIDC::normalizeScopes($in);
+    $got = \FOG\Plugins\OIDC\Items\OIDC::normalizeScopes($in);
     if ($got !== $want) {
         fail(
             sprintf(
@@ -163,14 +163,14 @@ foreach ($scopeCases as $in => $want) {
 //    matches nothing, so every login would be denied with no explanation.
 accepts(
     function () {
-        \FOG\Plugins\Oidc\OIDC::assertValidClaim('preferred_username', 'user claim');
+        \FOG\Plugins\OIDC\Items\OIDC::assertValidClaim('preferred_username', 'user claim');
     },
     'preferred_username'
 );
 foreach (['', '   ', '-leading', str_repeat('a', 65)] as $claim) {
     refuses(
         function () use ($claim) {
-            \FOG\Plugins\Oidc\OIDC::assertValidClaim($claim, 'user claim');
+            \FOG\Plugins\OIDC\Items\OIDC::assertValidClaim($claim, 'user claim');
         },
         'claim name ' . var_export($claim, true)
     );
@@ -180,7 +180,7 @@ foreach (['', '   ', '-leading', str_repeat('a', 65)] as $claim) {
 //    rules as the form. Checked by calling it, not by reading it.
 refuses(
     function () {
-        $o = new \FOG\Plugins\Oidc\OIDC();
+        $o = new \FOG\Plugins\OIDC\Items\OIDC();
         $o->set('issuer', 'http://idp.example.com')
             ->set('clientId', 'fog')
             ->set('userClaim', 'preferred_username')
@@ -190,7 +190,7 @@ refuses(
 );
 refuses(
     function () {
-        $o = new \FOG\Plugins\Oidc\OIDC();
+        $o = new \FOG\Plugins\OIDC\Items\OIDC();
         $o->set('issuer', 'https://idp.example.com')
             ->set('clientId', '')
             ->set('userClaim', 'preferred_username')
@@ -198,7 +198,7 @@ refuses(
     },
     'save() with no client ID'
 );
-$saved = new \FOG\Plugins\Oidc\OIDC();
+$saved = new \FOG\Plugins\OIDC\Items\OIDC();
 $saved->set('issuer', 'https://idp.example.com/realms/fog/')
     ->set('clientId', ' fog ')
     ->set('scopes', 'profile')
@@ -220,7 +220,7 @@ if ('preferred_username' !== $saved->get('userClaim')) {
 
 // 5. The column defaults, read out of what the manager asks Schema for.
 //    Positional, because that is how Schema::createTable() is called.
-(new \FOG\Plugins\Oidc\OIDCManager())->createSql();
+(new \FOG\Plugins\OIDC\Managers\OIDCManager())->createSql();
 $call = \FOG\Items\Schema::$lastCall;
 if (count($call) < 7) {
     fail('OIDCManager::createSql() did not reach Schema::createTable()');
@@ -271,7 +271,7 @@ if (count($call) < 7) {
 
 // 6. The client secret: declared in the tier that is stripped from a single
 //    GET too, kept out of the export, and never echoed back into the form.
-$apiHook = (string)file_get_contents($root . '/oidc/hooks/addoidcapi.hook.php');
+$apiHook = (string)file_get_contents($root . '/oidc/src/Hooks/AddOIDCAPI.php');
 if (false === strpos($apiHook, "\$arguments['always'][\$this->node][] = 'clientSecret'")) {
     fail(
         'the client secret is not declared in the API_SENSITIVE_FIELDS '
@@ -282,7 +282,7 @@ if (false === strpos($apiHook, 'stripClientSecret')) {
     fail('the client secret is not stripped from the CSV export');
 }
 $page = (string)file_get_contents(
-    $root . '/oidc/pages/oidcmanagement.page.php'
+    $root . '/oidc/src/Pages/OIDCManagement.php'
 );
 if (false !== strpos($page, "\$get('clientSecret')")) {
     fail(
@@ -308,10 +308,10 @@ if (false === strpos($page, 'SECRET_UNCHANGED !== $secret')) {
  * than left to be rediscovered. Needs fogproject#1153.
  */
 $declared = [];
-if (property_exists('FOG\Plugins\Oidc\OIDC', 'databaseFieldsNotInt')) {
-    $notInt = new \ReflectionProperty('FOG\Plugins\Oidc\OIDC', 'databaseFieldsNotInt');
+if (property_exists('FOG\Plugins\OIDC\Items\OIDC', 'databaseFieldsNotInt')) {
+    $notInt = new \ReflectionProperty('FOG\Plugins\OIDC\Items\OIDC', 'databaseFieldsNotInt');
     $notInt->setAccessible(true);
-    $declared = array_map('strtolower', (array)$notInt->getValue(new \FOG\Plugins\Oidc\OIDC()));
+    $declared = array_map('strtolower', (array)$notInt->getValue(new \FOG\Plugins\OIDC\Items\OIDC()));
 }
 if (!in_array('clientid', $declared, true)) {
     fail(

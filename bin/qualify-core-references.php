@@ -2,15 +2,21 @@
 /**
  * Rewrites bare references to FOG core classes into fully qualified ones.
  *
- * Plugins are global-namespace by design (ADR 0009) and have always named
- * core classes bare -- `extends Hook`, `Route::listem()`, `new Image()`.
- * Those resolve only because every file under fogproject's packages/web/src/
- * ends in a class_alias() re-exporting itself globally, and that alias set is
- * being retired (fogproject docs/composer-psr4-plan.md, ADR 0013 §2).
+ * Plugins used to be global-namespace and named core classes bare --
+ * `extends Hook`, `Route::listem()`, `new Image()`. Those resolved only
+ * because every file under fogproject's packages/web/src/ ended in a
+ * class_alias() re-exporting itself globally, and that alias set was retired
+ * (fogproject docs/composer-psr4-plan.md, ADR 0013 §2).
  *
  * This qualifies them: `extends \FOG\Base\Hook`, `\FOG\Router\Route::listem()`.
- * The plugin stays in the global namespace -- only the names it reaches into
- * core with change.
+ * It changes only the names a plugin reaches into CORE with; its own
+ * namespace declaration is not this tool's business.
+ *
+ * Written for that one-time sweep and kept as a check. Plugins have since
+ * taken namespaces of their own and then core's layout as well (ADR 0035), so
+ * a plugin file is src/<Bucket>/<Class>.php declaring
+ * FOG\Plugins\<Segment>\<Bucket>\<Class> -- which this tool does not care
+ * about, since it walks by file extension and rewrites by token.
  *
  * The map is read from a fogproject checkout rather than hardcoded, because
  * the bucket a class lives in is fogproject's to decide and a stale copy here

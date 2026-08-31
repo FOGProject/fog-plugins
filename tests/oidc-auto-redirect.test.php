@@ -46,12 +46,12 @@
  * Exit 0 = pass, 1 = fail.
  */
 $root = dirname(__DIR__);
-$flowFile = $root . '/oidc/class/oidcflow.class.php';
-$hookFile = $root . '/oidc/hooks/oidcloginredirect.hook.php';
-$outFile = $root . '/oidc/hooks/oidclogout.hook.php';
-$modelFile = $root . '/oidc/class/oidc.class.php';
-$mgrFile = $root . '/oidc/class/oidcmanager.class.php';
-$pageFile = $root . '/oidc/pages/oidcmanagement.page.php';
+$flowFile = $root . '/oidc/src/Util/OIDCFlow.php';
+$hookFile = $root . '/oidc/src/Hooks/OIDCLoginRedirect.php';
+$outFile = $root . '/oidc/src/Hooks/OIDCLogout.php';
+$modelFile = $root . '/oidc/src/Items/OIDC.php';
+$mgrFile = $root . '/oidc/src/Managers/OIDCManager.php';
+$pageFile = $root . '/oidc/src/Pages/OIDCManagement.php';
 foreach ([$flowFile, $hookFile, $outFile, $modelFile, $mgrFile, $pageFile] as $f) {
     if (!is_readable($f)) {
         echo "cannot read $f -- run this from the repository\n";

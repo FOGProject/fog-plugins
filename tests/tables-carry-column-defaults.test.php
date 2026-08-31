@@ -123,12 +123,18 @@ $managers = [];
 $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root));
 foreach ($it as $file) {
     $path = $file->getPathname();
-    if (!preg_match('/manager\.class\.php$/', $file->getFilename())) {
+    if (!$file->isFile() || strtolower($file->getExtension()) !== 'php') {
         continue;
     }
     if (false !== strpos($path, '/tests/')
         || false !== strpos($path, '/.git/')
     ) {
+        continue;
+    }
+    // Managers live at <plugin>/src/Managers/<Class>.php under the PSR-4
+    // layout (tests/plugin-layout.test.php) -- the bucket directory is what
+    // that layout guarantees, not any filename suffix.
+    if (basename(dirname($path)) !== 'Managers') {
         continue;
     }
     $managers[] = $path;
@@ -181,9 +187,9 @@ foreach ($managers as $path) {
     // manager (an association table, a sub-table) is reached as a STEP inside
     // that one's schema(), by design. Requiring schema() of every manager
     // flags eleven files that are correct.
-    $plugin = basename(dirname(dirname($path)));
+    $plugin = basename(dirname(dirname(dirname($path))));
     $isOwnManager = strtolower(basename($path))
-        === strtolower($plugin) . 'manager.class.php';
+        === strtolower($plugin) . 'manager.php';
     if ($isOwnManager) {
         tcCheck(
             false !== strpos($src, 'function schema('),

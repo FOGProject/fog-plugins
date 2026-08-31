@@ -5,9 +5,9 @@
  * TWO SILENT FAILURES, one gate.
  *
  * The label. fogproject's report menu builds an entry per file under
- * `<plugin>/reports/`, and if nothing names that report the label is
- * `ucwords()` of the FILE name -- so `ou_report.report.php` appears as
- * "Ou Report" while the page it opens is headed "Export OUs". Two names for
+ * `<plugin>/src/Reports/`, and if nothing names that report the label is
+ * `ucwords()` of the FILE name -- so `OU_Report.php` appears as
+ * "OU Report" while the page it opens is headed "Export OUs". Two names for
  * one screen. `REPORT_TITLE_DATA` is the seam that fixes it, and the key it
  * takes has to agree with THREE other things: the file name, the class name
  * (core derives the report's own heading from it) and the base64 `f`
@@ -63,12 +63,14 @@ function reportKey($name)
     return strtolower(str_replace('_', ' ', $name));
 }
 
-$reports = glob($root . '/*/reports/*.report.php');
+// Reports live at <plugin>/src/Reports/<Class>.php under the PSR-4 layout
+// (tests/plugin-layout.test.php); the file's basename IS the class name.
+$reports = glob($root . '/*/src/Reports/*.php');
 check('there are plugin reports to check', count($reports) > 4);
 
 foreach ($reports as $path) {
-    $plugin = basename(dirname(dirname($path)));
-    $base = basename($path, '.report.php');
+    $plugin = basename(dirname(dirname(dirname($path))));
+    $base = basename($path, '.php');
     $key = reportKey($base);
     $src = (string) file_get_contents($path);
     $name = $plugin . '/' . basename($path);
@@ -125,7 +127,7 @@ foreach ($reports as $path) {
     //    that does not match the file is the silent fallback again.
     $registered = false;
     $named = false;
-    foreach ((array) glob($root . '/' . $plugin . '/hooks/*.hook.php') as $hook) {
+    foreach ((array) glob($root . '/' . $plugin . '/src/Hooks/*.php') as $hook) {
         $h = (string) file_get_contents($hook);
         if (false !== strpos($h, "'REPORT_TITLE_DATA'")) {
             $registered = true;

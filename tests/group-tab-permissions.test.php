@@ -44,11 +44,11 @@ $root = dirname(__DIR__);
  */
 $hooks = [
     'ldap' => [
-        $root . '/ldap/hooks/addldapgrouptabs.hook.php',
+        $root . '/ldap/src/Hooks/AddLDAPGroupTabs.php',
         'ldapgroup'
     ],
     'oidc' => [
-        $root . '/oidc/hooks/addoidcgrouptabs.hook.php',
+        $root . '/oidc/src/Hooks/AddOIDCGroupTabs.php',
         'oidcgroup'
     ]
 ];

@@ -26,20 +26,29 @@
 
 $root = dirname(__DIR__);
 
+// The class-name suffix does not always match the plugin directory's own
+// casing (pushbullet's classes are suffixed _PushBullet, not _Pushbullet),
+// so it is named explicitly rather than derived.
+$suffixes = [
+    'slack' => 'Slack',
+    'ntfy' => 'Ntfy',
+    'pushbullet' => 'PushBullet',
+];
+
 $complete = [];
 $fail = [];
-foreach (['slack', 'ntfy', 'pushbullet'] as $plugin) {
+foreach ($suffixes as $plugin => $suffix) {
     $complete[$plugin] = sprintf(
-        '%s/%s/events/imagecomplete_%s.event.php',
+        '%s/%s/src/Events/ImageComplete_%s.php',
         $root,
         $plugin,
-        $plugin
+        $suffix
     );
     $fail[$plugin] = sprintf(
-        '%s/%s/events/imagefail_%s.event.php',
+        '%s/%s/src/Events/ImageFail_%s.php',
         $root,
         $plugin,
-        $plugin
+        $suffix
     );
 }
 
