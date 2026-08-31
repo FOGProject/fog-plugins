@@ -10,6 +10,9 @@
  * @license  http://opensource.org/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Pushbullet;
+
 /**
  * Pushes notification on imaging failure.
  *

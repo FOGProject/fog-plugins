@@ -10,6 +10,9 @@
  * @license  https://opensource.org/license/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Slack;
+
 /**
  * Handles the api calling of Slack messages.
  *

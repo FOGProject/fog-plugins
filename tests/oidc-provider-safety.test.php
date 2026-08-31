@@ -107,7 +107,7 @@ function accepts(callable $fn, $what)
 // 1. The issuer.
 accepts(
     function () {
-        OIDC::assertValidIssuer('https://login.example.com/realms/fog');
+        \FOG\Plugins\Oidc\OIDC::assertValidIssuer('https://login.example.com/realms/fog');
     },
     'a plain https issuer'
 );
@@ -124,14 +124,14 @@ $badIssuers = [
 foreach ($badIssuers as $issuer => $what) {
     refuses(
         function () use ($issuer) {
-            OIDC::assertValidIssuer($issuer);
+            \FOG\Plugins\Oidc\OIDC::assertValidIssuer($issuer);
         },
         $what
     );
 }
 refuses(
     function () {
-        OIDC::assertValidIssuer('https://' . str_repeat('a', 250) . '.com');
+        \FOG\Plugins\Oidc\OIDC::assertValidIssuer('https://' . str_repeat('a', 250) . '.com');
     },
     'an issuer too long for its column'
 );
@@ -146,7 +146,7 @@ $scopeCases = [
     'openid openid profile' => 'openid profile',
 ];
 foreach ($scopeCases as $in => $want) {
-    $got = OIDC::normalizeScopes($in);
+    $got = \FOG\Plugins\Oidc\OIDC::normalizeScopes($in);
     if ($got !== $want) {
         fail(
             sprintf(
@@ -163,14 +163,14 @@ foreach ($scopeCases as $in => $want) {
 //    matches nothing, so every login would be denied with no explanation.
 accepts(
     function () {
-        OIDC::assertValidClaim('preferred_username', 'user claim');
+        \FOG\Plugins\Oidc\OIDC::assertValidClaim('preferred_username', 'user claim');
     },
     'preferred_username'
 );
 foreach (['', '   ', '-leading', str_repeat('a', 65)] as $claim) {
     refuses(
         function () use ($claim) {
-            OIDC::assertValidClaim($claim, 'user claim');
+            \FOG\Plugins\Oidc\OIDC::assertValidClaim($claim, 'user claim');
         },
         'claim name ' . var_export($claim, true)
     );
@@ -180,7 +180,7 @@ foreach (['', '   ', '-leading', str_repeat('a', 65)] as $claim) {
 //    rules as the form. Checked by calling it, not by reading it.
 refuses(
     function () {
-        $o = new OIDC();
+        $o = new \FOG\Plugins\Oidc\OIDC();
         $o->set('issuer', 'http://idp.example.com')
             ->set('clientId', 'fog')
             ->set('userClaim', 'preferred_username')
@@ -190,7 +190,7 @@ refuses(
 );
 refuses(
     function () {
-        $o = new OIDC();
+        $o = new \FOG\Plugins\Oidc\OIDC();
         $o->set('issuer', 'https://idp.example.com')
             ->set('clientId', '')
             ->set('userClaim', 'preferred_username')
@@ -198,7 +198,7 @@ refuses(
     },
     'save() with no client ID'
 );
-$saved = new OIDC();
+$saved = new \FOG\Plugins\Oidc\OIDC();
 $saved->set('issuer', 'https://idp.example.com/realms/fog/')
     ->set('clientId', ' fog ')
     ->set('scopes', 'profile')
@@ -220,7 +220,7 @@ if ('preferred_username' !== $saved->get('userClaim')) {
 
 // 5. The column defaults, read out of what the manager asks Schema for.
 //    Positional, because that is how Schema::createTable() is called.
-(new OIDCManager())->createSql();
+(new \FOG\Plugins\Oidc\OIDCManager())->createSql();
 $call = \FOG\Items\Schema::$lastCall;
 if (count($call) < 7) {
     fail('OIDCManager::createSql() did not reach Schema::createTable()');
@@ -308,10 +308,10 @@ if (false === strpos($page, 'SECRET_UNCHANGED !== $secret')) {
  * than left to be rediscovered. Needs fogproject#1153.
  */
 $declared = [];
-if (property_exists('OIDC', 'databaseFieldsNotInt')) {
-    $notInt = new \ReflectionProperty('OIDC', 'databaseFieldsNotInt');
+if (property_exists('FOG\Plugins\Oidc\OIDC', 'databaseFieldsNotInt')) {
+    $notInt = new \ReflectionProperty('FOG\Plugins\Oidc\OIDC', 'databaseFieldsNotInt');
     $notInt->setAccessible(true);
-    $declared = array_map('strtolower', (array)$notInt->getValue(new OIDC()));
+    $declared = array_map('strtolower', (array)$notInt->getValue(new \FOG\Plugins\Oidc\OIDC()));
 }
 if (!in_array('clientid', $declared, true)) {
     fail(

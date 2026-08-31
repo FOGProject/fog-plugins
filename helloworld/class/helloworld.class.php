@@ -7,9 +7,12 @@
  * get('name') / set('name', ...) / save() / load() / destroy(), and
  * instantiate with an id (new HelloWorld(42)) to auto-load.
  *
- * NOTE: the autoloader uses PHP's default spl_autoload, which lowercases the
- * class name to find the file. So class HelloWorld must live in the file
- * helloworld.class.php.
+ * NOTE: FOG's own autoloader, Initiator::autoload(), resolves the class --
+ * there is no spl_autoload fallback (fogproject ADR 0013 §2b removed it, since
+ * it let a plugin shadow a core class by filename). The filename still has to
+ * match the class name (case-insensitively), because that match is how
+ * Initiator finds the file. So class HelloWorld must live in the file
+ * helloworld.class.php, and declares namespace FOG\Plugins\Helloworld.
  *
  * PHP version 5
  *
@@ -19,6 +22,9 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Helloworld;
+
 /**
  * Hello World example plugin (model).
  *

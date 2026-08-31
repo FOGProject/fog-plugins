@@ -10,6 +10,9 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Oidc;
+
 /**
  * What this plugin granted a user, so it can take it back.
  *

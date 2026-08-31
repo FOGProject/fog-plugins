@@ -11,6 +11,9 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Ntfy;
+
 /**
  * Adds the ntfy menu item to the menu.
  *

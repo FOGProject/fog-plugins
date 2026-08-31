@@ -13,6 +13,9 @@
  * @license  http://opensource.org/license/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Pushbullet;
+
 /**
  * The base class of pushbullet elements
  *

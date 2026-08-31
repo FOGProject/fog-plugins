@@ -441,8 +441,8 @@ $cases = [
 ];
 foreach ($cases as $setting => $want) {
     \FOG\Base\FOGController::$settings['FOG_WEB_ROOT'] = $setting;
-    $gotBase = OIDC::webrootBase();
-    $gotUri = OIDC::redirectUri();
+    $gotBase = \FOG\Plugins\Oidc\OIDC::webrootBase();
+    $gotUri = \FOG\Plugins\Oidc\OIDC::redirectUri();
     if ($gotBase !== $want[0] || $gotUri !== $want[1]) {
         fail(
             sprintf(
@@ -596,7 +596,7 @@ require $root . '/oidc/class/oidcusergrantmanager.class.php';
 
 $indexCases = [
     // class => [table, expected unique index, why]
-    'OIDCGroupManager' => [
+    'FOG\Plugins\Oidc\OIDCGroupManager' => [
         'OIDCGroups',
         [['ogProviderID', 'ogName']],
         'one mapping per (provider, group value). The key covers every'
@@ -605,7 +605,7 @@ $indexCases = [
         . ' index is safe here and is deliberately absent from'
         . ' OIDCProviders'
     ],
-    'OIDCUserGrantManager' => [
+    'FOG\Plugins\Oidc\OIDCUserGrantManager' => [
         'oidcUserGrant',
         [['ougUserID', 'ougTargetType', 'ougTargetID']],
         'the sync rewrites a user\'s grants with plain INSERT IGNORE after'
