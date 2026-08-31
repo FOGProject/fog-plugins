@@ -10,6 +10,9 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Oidc;
+
 /**
  * Provider group to user group associations (collection manager + schema).
  *

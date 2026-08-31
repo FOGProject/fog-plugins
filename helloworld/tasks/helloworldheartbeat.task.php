@@ -34,6 +34,9 @@
  * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
  * @link     https://fogproject.org
  */
+
+namespace FOG\Plugins\Helloworld;
+
 /**
  * Counts this plugin's rows on a schedule and writes the number to the log.
  *
