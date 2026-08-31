@@ -116,7 +116,7 @@ function methodBody($src, $method)
     return null;
 }
 
-$flowFile = $root . '/oidc/class/oidcflow.class.php';
+$flowFile = $root . '/oidc/src/Util/OIDCFlow.php';
 $flowSrc = (string)file_get_contents($flowFile);
 
 /*
@@ -367,7 +367,7 @@ if (false === strpos($flatFlow, 'establishSession(OIDC::AUTH_SOURCE)')) {
  * which here means signing in as them.
  */
 $identSrc = (string)file_get_contents(
-    $root . '/oidc/class/oidcidentity.class.php'
+    $root . '/oidc/src/Items/OIDCIdentity.php'
 );
 $userIdFor = methodBody($identSrc, 'userIdFor');
 if (null === $userIdFor) {
@@ -400,7 +400,7 @@ if (null === $userIdFor) {
  * 7. The routes: under /ext/, declared public, and pointing at the flow.
  */
 $routeSrc = (string)file_get_contents(
-    $root . '/oidc/hooks/addoidcroutes.hook.php'
+    $root . '/oidc/src/Hooks/AddOIDCRoutes.php'
 );
 foreach (['/ext/oidc/start', '/ext/oidc/callback'] as $path) {
     if (false === strpos($routeSrc, "'path' => '$path'")) {
@@ -427,7 +427,7 @@ if (false === strpos($routeSrc, "'enabled' => [1]")) {
  *    provider turns out to point somewhere that does not exist.
  */
 require $root . '/tests/stubs/fog-stubs.php';
-require $root . '/oidc/class/oidc.class.php';
+require $root . '/oidc/src/Items/OIDC.php';
 
 \FOG\Base\FOGController::$settings = ['FOG_WEB_ROOT' => 'fog', 'FOG_WEB_HOST' => 'fog.example'];
 $cases = [
@@ -441,8 +441,8 @@ $cases = [
 ];
 foreach ($cases as $setting => $want) {
     \FOG\Base\FOGController::$settings['FOG_WEB_ROOT'] = $setting;
-    $gotBase = \FOG\Plugins\Oidc\OIDC::webrootBase();
-    $gotUri = \FOG\Plugins\Oidc\OIDC::redirectUri();
+    $gotBase = \FOG\Plugins\OIDC\Items\OIDC::webrootBase();
+    $gotUri = \FOG\Plugins\OIDC\Items\OIDC::redirectUri();
     if ($gotBase !== $want[0] || $gotUri !== $want[1]) {
         fail(
             sprintf(
@@ -591,12 +591,12 @@ if (false === $grantAt) {
  *
  * Run for real against the Schema stub, which records what it was asked for.
  */
-require $root . '/oidc/class/oidcgroupmanager.class.php';
-require $root . '/oidc/class/oidcusergrantmanager.class.php';
+require $root . '/oidc/src/Managers/OIDCGroupManager.php';
+require $root . '/oidc/src/Managers/OIDCUserGrantManager.php';
 
 $indexCases = [
     // class => [table, expected unique index, why]
-    'FOG\Plugins\Oidc\OIDCGroupManager' => [
+    'FOG\Plugins\OIDC\Managers\OIDCGroupManager' => [
         'OIDCGroups',
         [['ogProviderID', 'ogName']],
         'one mapping per (provider, group value). The key covers every'
@@ -605,7 +605,7 @@ $indexCases = [
         . ' index is safe here and is deliberately absent from'
         . ' OIDCProviders'
     ],
-    'FOG\Plugins\Oidc\OIDCUserGrantManager' => [
+    'FOG\Plugins\OIDC\Managers\OIDCUserGrantManager' => [
         'oidcUserGrant',
         [['ougUserID', 'ougTargetType', 'ougTargetID']],
         'the sync rewrites a user\'s grants with plain INSERT IGNORE after'

@@ -108,16 +108,19 @@ function btMethod($file, $method)
     return substr($clean, $at);
 }
 
-$managers = glob($root . '/*/class/*manager.class.php');
+// Managers live at <plugin>/src/Managers/<Class>.php under the PSR-4 layout
+// (tests/plugin-layout.test.php) -- the bucket directory is what the layout
+// guarantees, not any filename suffix.
+$managers = glob($root . '/*/src/Managers/*.php');
 btCheck('plugin managers were found', count($managers) > 0, $failures, $checks);
 
 // The plugins that shipped two-state columns. Named, because "calls
 // enumToTinyint" is only a requirement for a plugin that has something to
 // convert -- every other manager must be free of both.
 $converters = [
-    'ldap/class/ldapmanager.class.php',
-    'oidc/class/oidcmanager.class.php',
-    'location/class/locationmanager.class.php',
+    'ldap/src/Managers/LDAPManager.php',
+    'oidc/src/Managers/OIDCManager.php',
+    'location/src/Managers/LocationManager.php',
 ];
 
 foreach ($managers as $file) {

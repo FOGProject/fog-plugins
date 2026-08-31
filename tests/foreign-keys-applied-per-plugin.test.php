@@ -52,13 +52,13 @@ $checks = 0;
  * ADD A ROW HERE IN THE SAME COMMIT THAT LANDS A PLUGIN'S STEP.
  */
 $expected = [
-    'location' => 'location/class/locationmanager.class.php',
-    'ou' => 'ou/class/oumanager.class.php',
-    'windowskey' => 'windowskey/class/windowskeymanager.class.php',
-    'ldap' => 'ldap/class/ldapmanager.class.php',
-    'oidc' => 'oidc/class/oidcmanager.class.php',
-    'capone' => 'capone/class/caponemanager.class.php',
-    'subnetgroup' => 'subnetgroup/class/subnetgroupmanager.class.php',
+    'location' => 'location/src/Managers/LocationManager.php',
+    'ou' => 'ou/src/Managers/OUManager.php',
+    'windowskey' => 'windowskey/src/Managers/WindowsKeyManager.php',
+    'ldap' => 'ldap/src/Managers/LDAPManager.php',
+    'oidc' => 'oidc/src/Managers/OIDCManager.php',
+    'capone' => 'capone/src/Managers/CaponeManager.php',
+    'subnetgroup' => 'subnetgroup/src/Managers/SubnetGroupManager.php',
 ];
 
 /**
@@ -157,7 +157,7 @@ foreach ($expected as $plugin => $relative) {
  * step 4 alone passes every upgrade test and fails only on a brand new
  * server.
  */
-$src = fkStrip($root . '/location/class/locationmanager.class.php');
+$src = fkStrip($root . '/location/src/Managers/LocationManager.php');
 $tight = preg_replace('/\s+/', '', $src);
 $checks++;
 if (strpos($tight, "MODIFYCOLUMN`lStorageNodeID`") === false

@@ -27,7 +27,7 @@
  *
  * Exit 0 = pass, 1 = fail.
  */
-$flow = dirname(__DIR__) . '/oidc/class/oidcflow.class.php';
+$flow = dirname(__DIR__) . '/oidc/src/Util/OIDCFlow.php';
 if (!is_readable($flow)) {
     echo "cannot read $flow -- run this from the repository\n";
     exit(1);

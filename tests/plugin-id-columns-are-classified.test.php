@@ -123,11 +123,17 @@ $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root)
 );
 foreach ($iterator as $file) {
-    if (!preg_match('/manager\.class\.php$/', $file->getFilename())) {
+    if (!$file->isFile() || strtolower($file->getExtension()) !== 'php') {
         continue;
     }
     $path = $file->getPathname();
     if (false !== strpos($path, '/tests/')) {
+        continue;
+    }
+    // Managers live at <plugin>/src/Managers/<Class>.php under the PSR-4
+    // layout (tests/plugin-layout.test.php) -- the bucket directory is what
+    // that layout guarantees, not any filename suffix.
+    if (basename(dirname($path)) !== 'Managers') {
         continue;
     }
     $src = idStrip($path);

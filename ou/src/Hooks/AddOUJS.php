@@ -1,0 +1,81 @@
+<?php
+/**
+ * Sets the javascript files up for this plugin.
+ *
+ * PHP version 5
+ *
+ * @category AddSiteJS
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @author   Lee Rowlett <nah@nah.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+
+namespace FOG\Plugins\OU\Hooks;
+
+/**
+ * Sets the javascript files up for this plugin.
+ *
+ * @category AddSiteJS
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @author   Lee Rowlett <nah@nah.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+class AddOUJS extends \FOG\Base\Hook
+{
+    /**
+     * The name of this hook.
+     *
+     * @var string
+     */
+    public $name = 'AddOUJS';
+    /**
+     * The description.
+     *
+     * @var string
+     */
+    public $description = 'Add OU JS files.';
+    /**
+     * For posterity.
+     *
+     * @var bool
+     */
+    public $active = true;
+    /**
+     * What plugin this works against.
+     *
+     * @var string
+     */
+    public $node = 'ou';
+    /**
+     * Initialize object.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->registerInstalled([
+            ['PAGE_JS_FILES', 'injectJSFiles'],
+        ]);
+    }
+    /**
+     * The files we need to inject.
+     *
+     * @param mixed $arguments The arguments to modify.
+     *
+     * @return void
+     */
+    public function injectJSFiles($arguments)
+    {
+        $this->injectPluginJS($arguments, [
+            'ou' => ['fallback' => true],
+            'report' => ['secondary' => true, 'fallback' => true],
+            'host' => ['secondary' => true],
+            'group' => ['secondary' => true],
+        ]);
+    }
+}

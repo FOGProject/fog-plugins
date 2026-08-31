@@ -1,0 +1,78 @@
+<?php
+/**
+ * Sets the javascript files up for this plugin.
+ *
+ * PHP version 5
+ *
+ * @category AddNtfyJS
+ * @package  FOGProject
+ * @author   Tony Lam <tonylam5349@gmail.com>
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+
+namespace FOG\Plugins\Ntfy\Hooks;
+
+/**
+ * Sets the javascript files up for this plugin.
+ *
+ * @category AddNtfyJS
+ * @package  FOGProject
+ * @author   Tony Lam <tonylam5349@gmail.com>
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+class AddNtfyJS extends \FOG\Base\Hook
+{
+    /**
+     * The name of this hook.
+     *
+     * @var string
+     */
+    public $name = 'AddNtfyJS';
+    /**
+     * The description.
+     *
+     * @var string
+     */
+    public $description = 'Add ntfy JS files.';
+    /**
+     * For posterity.
+     *
+     * @var bool
+     */
+    public $active = true;
+    /**
+     * What plugin this works against.
+     *
+     * @var string
+     */
+    public $node = 'ntfy';
+    /**
+     * Initialize object.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->registerInstalled([
+            ['PAGE_JS_FILES', 'injectJSFiles'],
+        ]);
+    }
+    /**
+     * The files we need to inject.
+     *
+     * @param mixed $arguments The arguments to modify.
+     *
+     * @return void
+     */
+    public function injectJSFiles($arguments)
+    {
+        $this->injectPluginJS($arguments, [
+            'ntfy' => ['fallback' => true],
+        ]);
+    }
+}
