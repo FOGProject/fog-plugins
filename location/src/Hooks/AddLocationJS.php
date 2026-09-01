@@ -75,7 +75,6 @@ class AddLocationJS extends \FOG\Base\Hook
             'location' => [],
             'report' => ['secondary' => true, 'fallback' => true],
             'host' => ['secondary' => true, 'fallback' => true],
-            'group' => ['secondary' => true, 'fallback' => true],
         ]);
     }
 }

@@ -75,7 +75,6 @@ class AddOUJS extends \FOG\Base\Hook
             'ou' => ['fallback' => true],
             'report' => ['secondary' => true, 'fallback' => true],
             'host' => ['secondary' => true],
-            'group' => ['secondary' => true],
         ]);
     }
 }
