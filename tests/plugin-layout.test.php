@@ -89,8 +89,8 @@ foreach (scandir($root) as $entry) {
 
     $srcDir = $pdir . '/src';
     if (!is_dir($srcDir)) {
-        // persistentgroups is models only and capone has no tasks, but every
-        // plugin has SOMETHING, so an absent src/ is a broken plugin.
+        // capone has no tasks, but every plugin has SOMETHING, so an
+        // absent src/ is a broken plugin.
         $failures[] = sprintf('%s has no src/ directory', $entry);
         continue;
     }

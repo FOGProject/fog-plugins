@@ -93,7 +93,6 @@ the rest.
 | `ntfy` | 1.6.0 | Notifications via ntfy.sh or a self-hosted ntfy server |
 | `oidc` | 1.6.0 | Sign in through an OpenID Connect provider; the reference for a plugin that adds a route rather than a resource |
 | `ou` | 1.6.0 | Predefine Active Directory OUs and associate them with hosts |
-| `persistentgroups` | 1.6.0 | On joining a group, copy image, AD, printer and location settings from a template host named after that group |
 | `pushbullet` | 1.6.0 | Pushbullet notifications |
 | `slack` | 1.6.0 | Slack API integration |
 | `subnetgroup` | 1.6.0 | Assign hosts to groups automatically by IP subnet |
