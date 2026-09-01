@@ -155,3 +155,221 @@ namespace FOG\Items {
         }
     }
 }
+
+namespace FOG\Base {
+    /**
+     * Enough of Hook for a hook's class body to exist and be driven.
+     *
+     * Hooks were unreachable from these tests until now: every one of them
+     * extends this class, so none could be loaded at all, and everything a
+     * hook decided had to be pinned by reading its source. That is the right
+     * default for a hook whose job is to echo a form -- and the wrong one for
+     * a hook that WRITES, where the branch taken decides whether rows survive.
+     *
+     * registerInstalled() records rather than registers, so a test can assert
+     * which events a hook actually asked for.
+     */
+    class Hook
+    {
+        /**
+         * Events this hook registered, as [event, method] pairs.
+         *
+         * @var array
+         */
+        public $registered = [];
+        /**
+         * What getClass() hands back, keyed by class name.
+         *
+         * @var array
+         */
+        public static $classes = [];
+        /**
+         * Initialize.
+         */
+        public function __construct()
+        {
+        }
+        /**
+         * Records the registration.
+         *
+         * @param array $events the [event, method] pairs
+         *
+         * @return void
+         */
+        public function registerInstalled(array $events)
+        {
+            $this->registered = $events;
+        }
+        /**
+         * Hands back a fixture, or a permissive default.
+         *
+         * @param string $class the class wanted
+         * @param mixed  $id    optional id
+         *
+         * @return mixed
+         */
+        public static function getClass($class, $id = null)
+        {
+            if (isset(self::$classes[$class])) {
+                $fixture = self::$classes[$class];
+
+                return is_callable($fixture) ? $fixture($id) : $fixture;
+            }
+
+            return new StubItem($id);
+        }
+        /**
+         * A no-op in tests; the real one throws on a bad token.
+         *
+         * @return void
+         */
+        public static function checkAuthAndCSRF()
+        {
+        }
+    }
+    /**
+     * A stand-in model that exists, has a name, and records writes.
+     */
+    class StubItem
+    {
+        /**
+         * The id it was constructed with.
+         *
+         * @var mixed
+         */
+        public $id;
+        /**
+         * Whether isValid() answers true.
+         *
+         * @var bool
+         */
+        public $valid = true;
+        /**
+         * Every insertBatch() call made on it.
+         *
+         * @var array
+         */
+        public $batches = [];
+        /**
+         * Initialize.
+         *
+         * @param mixed $id the id
+         */
+        public function __construct($id = null)
+        {
+            $this->id = $id;
+        }
+        /**
+         * Whether the record exists.
+         *
+         * @return bool
+         */
+        public function isValid()
+        {
+            return $this->valid;
+        }
+        /**
+         * Read a value.
+         *
+         * @param string $key the key
+         *
+         * @return mixed
+         */
+        public function get($key)
+        {
+            return 'name' === $key ? 'StubName' : $this->id;
+        }
+        /**
+         * Records the batch.
+         *
+         * @param array $fields the columns
+         * @param array $values the rows
+         *
+         * @return void
+         */
+        public function insertBatch($fields, $values)
+        {
+            $this->batches[] = [$fields, $values];
+        }
+        /**
+         * Returns a select box a form can render.
+         *
+         * @return string
+         */
+        public function buildSelectBox(...$args)
+        {
+            $name = $args[1] ?? '';
+
+            return '<select name="' . $name . '"><option value=""></option>'
+                . '</select>';
+        }
+    }
+}
+
+namespace FOG\Router {
+    /**
+     * Enough of Route to record a deletemass rather than perform one.
+     */
+    class Route
+    {
+        /**
+         * Every deletemass() call, as [class, where].
+         *
+         * @var array
+         */
+        public static $deleted = [];
+        /**
+         * Records the delete.
+         *
+         * @param string $class the class name
+         * @param array  $where  the conditions
+         *
+         * @return void
+         */
+        public static function deletemass($class, $where)
+        {
+            self::$deleted[] = [$class, $where];
+        }
+    }
+}
+
+namespace FOG\Util {
+    /**
+     * Enough of SharedHostValues to feed a hint a fixed answer.
+     */
+    class SharedHostValues
+    {
+        /**
+         * What forHostRows() returns, keyed by friendly key.
+         *
+         * @var array
+         */
+        public static $rows = [];
+        /**
+         * Returns the fixture.
+         *
+         * @return array
+         */
+        public static function forHostRows(...$args)
+        {
+            return self::$rows;
+        }
+        /**
+         * Renders the info as text a test can assert on.
+         *
+         * @param array $info the info
+         *
+         * @return string
+         */
+        public static function hint($info)
+        {
+            if (empty($info['uniform'])) {
+                return '(varies)';
+            }
+
+            return '' === (string)$info['value']
+                ? '(empty on all)'
+                : (string)$info['value'];
+        }
+    }
+}

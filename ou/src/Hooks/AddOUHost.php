@@ -61,6 +61,8 @@ class AddOUHost extends \FOG\Base\Hook
         $this->registerInstalled([
             ['PLUGINS_INJECT_TABDATA', 'hostTabData'],
             ['HOST_EDIT_SUCCESS', 'hostAddOUEdit'],
+            ['HOST_MASSEDIT_FIELDS', 'massEditFields'],
+            ['HOST_MASSEDIT_APPLY', 'massEditApply'],
             ['HOST_ADD_FIELDS', 'hostAddOUField'],
             ['HOST_REGISTER', 'hostAddOURegister'],
         ]);
@@ -314,5 +316,152 @@ class AddOUHost extends \FOG\Base\Hook
                 _('Host OU')
             )
         ] = $ouSelector;
+    }
+    /**
+     * Contributes the ou to the host list's Mass Edit form.
+     *
+     * ADR 0038 decision 13. This replaces AddOUGroup, whose only job was
+     * to set one ou across a group's members. That hook was a copy, not a
+     * grant: it read the membership at the instant the button was pressed and
+     * wrote a row per member, so a host added to the group afterward got
+     * nothing and a host removed kept what it had. Worse, it had no way to
+     * express "leave this host alone" -- every save deleted the association
+     * for every member first, so setting one host's ou through the group
+     * wiped it from all of them.
+     *
+     * A ou is single-valued per host: the write path has always been
+     * delete-then-insert-one. That is why this is a mass edit rather than one
+     * of ADR 0038's grant tables -- a grant is a SET that several groups can
+     * union into, and unioning two ous means nothing.
+     *
+     * Core draws the three-state action control around this field, which is
+     * what makes "leave alone" expressible at all. The value control is
+     * rendered EMPTY on purpose: there is no honest value to pre-fill it with
+     * when the selection disagrees. What the hosts hold is stated in the hint
+     * instead, where "(varies)" is sayable.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function massEditFields($arguments)
+    {
+        $hostIDs = (array)$arguments['hostIDs'];
+
+        $arguments['fields']['ou'] = [
+            'label' => _('Host OU'),
+            'input' => self::getClass('OUManager')->buildSelectBox(
+                '',
+                'value[ou]',
+                'name',
+                '',
+                false,
+                'id',
+                'massedit-ou'
+            ),
+            'hint' => \FOG\Util\SharedHostValues::hint(
+                $this->_sharedOU($hostIDs)
+            ),
+        ];
+    }
+    /**
+     * What the selected hosts hold, as a name rather than an id.
+     *
+     * SharedHostValues::forHostRows() answers in the column's own terms, so a
+     * uniform selection comes back as the ou id. Rendering that would put
+     * a bare number in front of the admin where every other hint shows the
+     * value they set. The lookup only happens when the answer is uniform and
+     * non-empty, which is the only case where there is one name to show.
+     *
+     * forHostRows() is also the reason this is not a hand-rolled query: a
+     * host with no ou has no row at all, so counting rows would call
+     * three hosts out of five "in agreement". It compares the row count to
+     * the selection size for exactly that reason.
+     *
+     * @param array $hostIDs the selection
+     *
+     * @return array a SharedHostValues info array
+     */
+    private function _sharedOU(array $hostIDs)
+    {
+        $info = \FOG\Util\SharedHostValues::forHostRows(
+            $hostIDs,
+            'ouAssoc',
+            'oaHostID',
+            ['ou' => 'oaOUID']
+        )['ou'];
+
+        if (!empty($info['uniform']) && '' !== (string)$info['value']) {
+            $item = self::getClass('OU', (int)$info['value']);
+            if ($item->isValid()) {
+                $info['value'] = $item->get('name');
+            }
+        }
+
+        return $info;
+    }
+    /**
+     * Applies a resolved ou action across the selection.
+     *
+     * The action arrives already reduced to leave/set/clear, so there is no
+     * sentinel to parse and no way for an empty control to be mistaken for
+     * "clear it" -- which is the failure the three-state model exists to stop
+     * and the one AddOUGroup could not avoid.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function massEditApply($arguments)
+    {
+        if (!isset($arguments['actions']['ou'])) {
+            return;
+        }
+        $instruction = $arguments['actions']['ou'];
+        $action = $instruction['action'];
+        if ('leave' === $action) {
+            return;
+        }
+        $hostIDs = array_values(
+            array_filter(
+                array_map('intval', (array)$arguments['hostIDs']),
+                function ($id) {
+                    return $id > 0;
+                }
+            )
+        );
+        if (count($hostIDs) < 1) {
+            return;
+        }
+
+        $itemID = 0;
+        if ('set' === $action) {
+            $itemID = (int)$instruction['value'];
+            // A set naming a ou that does not exist is a bad request, not
+            // an instruction to clear: silently turning it into one would
+            // strip the ou off every selected host.
+            if ($itemID < 1
+                || !self::getClass('OU', $itemID)->isValid()
+            ) {
+                throw new \Exception(_('Invalid OU selected'));
+            }
+        }
+
+        // Both branches clear first. The association is single-valued per
+        // host, so a set is a replace -- and doing it in one deletemass
+        // rather than per host keeps it to one statement.
+        \FOG\Router\Route::deletemass(
+            'ouassociation',
+            ['hostID' => $hostIDs]
+        );
+        if ($itemID < 1) {
+            return;
+        }
+        $insert_values = [];
+        foreach ($hostIDs as $hostID) {
+            $insert_values[] = [$hostID, $itemID];
+        }
+        self::getClass('OUAssociationManager')
+            ->insertBatch(['hostID', 'ouID'], $insert_values);
     }
 }
