@@ -154,7 +154,7 @@ class WindowsKeyManagement extends \FOG\Base\FOGPage
                     trim(filter_input(INPUT_POST, 'key')),
                     ''
                 );
-                $exists = self::getClass('WindowsKeyManager')
+                $exists = (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyManager())
                     ->exists($windowskey);
                 if ($exists) {
                     throw new \Exception(
@@ -168,14 +168,14 @@ class WindowsKeyManagement extends \FOG\Base\FOGPage
                 // so a blank one should never reach here, and a blank is not a
                 // meaningful duplicate of another blank anyway.
                 if ($key !== ''
-                    && self::getClass('WindowsKeyManager')
+                    && (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyManager())
                         ->exists($key, 0, 'key')
                 ) {
                     throw new \Exception(
                         _('A Windows Key already exists with this product key!')
                     );
                 }
-                $WindowsKey = self::getClass('WindowsKey')
+                $WindowsKey = (new \FOG\Plugins\WindowsKey\Items\WindowsKey())
                     ->set('name', $windowskey)
                     ->set('description', $description)
                     ->set('key', $key);
@@ -330,7 +330,7 @@ class WindowsKeyManagement extends \FOG\Base\FOGPage
             $this->obj->get('key')
         );
 
-        $exists = self::getClass('WindowsKeyManager')
+        $exists = (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyManager())
             ->exists($windowskey);
         if ($windowskey != $this->obj->get('name')
             && $exists
@@ -344,7 +344,7 @@ class WindowsKeyManagement extends \FOG\Base\FOGPage
         // exists() excludes this row by id, so re-saving an unchanged key is
         // not mistaken for a duplicate.
         if ($key !== ''
-            && self::getClass('WindowsKeyManager')
+            && (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyManager())
                 ->exists($key, $this->obj->get('id'), 'key')
         ) {
             throw new \Exception(

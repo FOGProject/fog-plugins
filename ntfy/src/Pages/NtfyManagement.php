@@ -166,12 +166,12 @@ class NtfyManagement extends \FOG\Base\FOGPage
                         _('A server URL and topic endpoint are required')
                     );
                 }
-                $existing = self::getClass('NtfyManager')
+                $existing = (new \FOG\Plugins\Ntfy\Managers\NtfyManager())
                     ->exists($topicEndpoint, 0, 'topicEndpoint');
                 if ($existing) {
                     throw new \Exception(_('Topic already linked'));
                 }
-                $Ntfy = self::getClass('Ntfy')
+                $Ntfy = (new \FOG\Plugins\Ntfy\Items\Ntfy())
                     ->set('serverURL', $serverURL)
                     ->set('topicEndpoint', $topicEndpoint)
                     ->set('credentials', $credentials);
@@ -179,12 +179,12 @@ class NtfyManagement extends \FOG\Base\FOGPage
                     $serverFault = true;
                     throw new \Exception(_('Add ntfy topic failed!'));
                 }
-                self::getClass(
-                    'NtfyHandler',
+                $handler = new \FOG\Plugins\Ntfy\Util\NtfyHandler(
                     $serverURL,
                     $topicEndpoint,
                     $credentials
-                )->pushNote(
+                );
+                $handler->pushNote(
                     'FOG',
                     _('Topic linked')
                 );

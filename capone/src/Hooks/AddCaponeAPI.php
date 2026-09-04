@@ -99,7 +99,7 @@ class AddCaponeAPI extends \FOG\Base\Hook
             return;
         }
         $arguments['columns'] = [];
-        foreach (self::getClass('CaponeManager')
+        foreach ((new \FOG\Plugins\Capone\Managers\CaponeManager())
             ->getColumns() as $common => &$real
         ) {
             switch ($common) {
@@ -139,7 +139,7 @@ class AddCaponeAPI extends \FOG\Base\Hook
                                 . 'sub=edit&id='
                                 . $d
                                 . '">'
-                                . self::getClass('Image', $d)->get('name')
+                                . (new \FOG\Items\Image($d))->get('name')
                                 . '</a>';
                         }
                     ];
@@ -152,7 +152,7 @@ class AddCaponeAPI extends \FOG\Base\Hook
             }
             unset($real);
         }
-        foreach (self::getClass('OSManager')
+        foreach ((new \FOG\Managers\OSManager())
             ->getColumns() as $common => &$real
         ) {
             $arguments['columns'][] = [

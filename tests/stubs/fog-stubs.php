@@ -228,6 +228,104 @@ namespace FOG\Base {
         }
     }
     /**
+     * A stand-in that FORWARDS to whatever Hook::$classes has registered.
+     *
+     * Hook::getClass() above answers a name from that registry, and for a
+     * long time that was the only way a plugin reached a collaborator -- so a
+     * test could write `Hook::$classes['LocationAssociationManager'] =
+     * $manager` and then assert on $manager->batches, because the plugin was
+     * handed that very object.
+     *
+     * Plugins now write `new \FOG\Plugins\Location\Managers\
+     * LocationAssociationManager()` (fogproject ADR 0043), which PHP resolves
+     * for real and which cannot hand back somebody else's instance. So the
+     * autoloader at the foot of this file materialises the missing class as a
+     * subclass of THIS, whose every method forwards into the registered
+     * fixture. The registry keeps working unchanged, and so does every test
+     * that asserts on the object it registered.
+     *
+     * Unregistered, it is just a StubItem -- the permissive default
+     * getClass() had.
+     */
+    class StubProxy extends StubItem
+    {
+        /**
+         * The registered fixture, or null when there is none.
+         *
+         * @var StubItem|null
+         */
+        private $_target;
+        /**
+         * Resolves the fixture registered for this class's short name.
+         *
+         * @param mixed $id the id
+         */
+        public function __construct($id = null)
+        {
+            parent::__construct($id);
+            $name = static::class;
+            $short = substr($name, strrpos($name, '\\') + 1);
+            $fixture = isset(Hook::$classes[$short])
+                ? Hook::$classes[$short]
+                : null;
+            if (is_callable($fixture)) {
+                $fixture = $fixture($id);
+            }
+            $this->_target = $fixture instanceof StubItem ? $fixture : null;
+        }
+        /**
+         * Whether the record exists.
+         *
+         * @return bool
+         */
+        public function isValid()
+        {
+            return null === $this->_target
+                ? parent::isValid()
+                : $this->_target->isValid();
+        }
+        /**
+         * Read a value.
+         *
+         * @param string $key the key
+         *
+         * @return mixed
+         */
+        public function get($key)
+        {
+            return null === $this->_target
+                ? parent::get($key)
+                : $this->_target->get($key);
+        }
+        /**
+         * Records the batch against the fixture, so the test can see it.
+         *
+         * @param array $fields the columns
+         * @param array $values the rows
+         *
+         * @return void
+         */
+        public function insertBatch($fields, $values)
+        {
+            if (null === $this->_target) {
+                parent::insertBatch($fields, $values);
+                return;
+            }
+            $this->_target->insertBatch($fields, $values);
+        }
+        /**
+         * Returns a select box a form can render.
+         *
+         * @return string
+         */
+        public function buildSelectBox(...$args)
+        {
+            return null === $this->_target
+                ? parent::buildSelectBox(...$args)
+                : $this->_target->buildSelectBox(...$args);
+        }
+    }
+    /**
      * A stand-in model that exists, has a name, and records writes.
      */
     class StubItem
@@ -372,4 +470,34 @@ namespace FOG\Util {
                 : (string)$info['value'];
         }
     }
+}
+
+
+namespace {
+    /*
+     * Materialise any FOG class a test did not declare itself.
+     *
+     * Scoped to the FOG\ prefix and registered last, so it can only answer a
+     * name nothing else could: a plugin file the test require_once'd has
+     * already declared its own classes and never reaches here. What reaches
+     * here is the collaborator that file NAMES but the test never loaded,
+     * which is exactly what Hook::getClass() used to cover.
+     *
+     * eval() rather than class_alias() because the proxy has to know its own
+     * short name to find its fixture, and an alias reports the name of the
+     * class it aliases, not the name it was reached by.
+     */
+    spl_autoload_register(
+        function ($class) {
+            if (0 !== strpos($class, 'FOG\\')) {
+                return;
+            }
+            $cut = strrpos($class, '\\');
+            eval(
+                'namespace ' . substr($class, 0, $cut) . ';'
+                . ' class ' . substr($class, $cut + 1)
+                . ' extends \\FOG\\Base\\StubProxy {}'
+            );
+        }
+    );
 }

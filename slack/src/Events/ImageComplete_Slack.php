@@ -85,7 +85,7 @@ class ImageComplete_Slack extends \FOG\Base\Event
                     $image
                 )
             ];
-            self::getClass('Slack', $Slack->id)->call('chat.postMessage', $args);
+            (new \FOG\Plugins\Slack\Items\Slack($Slack->id))->call('chat.postMessage', $args);
         }
     }
 }

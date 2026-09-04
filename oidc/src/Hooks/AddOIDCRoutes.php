@@ -113,7 +113,7 @@ class AddOIDCRoutes extends \FOG\Base\Hook
     {
         $ids = \FOG\Router\Route::getIds('oidc', ['enabled' => [1]]);
         foreach ((array)$ids as $id) {
-            $provider = self::getClass('OIDC', $id);
+            $provider = new \FOG\Plugins\OIDC\Items\OIDC($id);
             if (!$provider->isValid()) {
                 continue;
             }

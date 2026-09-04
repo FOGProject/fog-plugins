@@ -83,7 +83,7 @@ class TasktypeeditManagement extends \FOG\Base\FOGPage
             $accessTypes,
             $access
         );
-        $iconSel = self::getClass('TaskType')->iconlist($icon);
+        $iconSel = (new \FOG\Items\TaskType())->iconlist($icon);
         unset($accessTypes);
 
         $labelClass = 'col-sm-3 col-form-label';
@@ -255,14 +255,14 @@ class TasktypeeditManagement extends \FOG\Base\FOGPage
                     filter_input(INPUT_POST, 'access')
                 );
                 $advanced = isset($_POST['advanced']);
-                $exists = self::getClass('TaskTypeManager')
+                $exists = (new \FOG\Managers\TaskTypeManager())
                     ->exists($tasktype);
                 if ($exists) {
                     throw new \Exception(
                         _('A task type already exists with this name!')
                     );
                 }
-                $TaskType = self::getClass('TaskType')
+                $TaskType = (new \FOG\Items\TaskType())
                     ->set('name', $tasktype)
                     ->set('description', $description)
                     ->set('icon', $icon)
@@ -338,7 +338,7 @@ class TasktypeeditManagement extends \FOG\Base\FOGPage
             $accessTypes,
             $access
         );
-        $iconSel = self::getClass('TaskType')->iconlist($icon);
+        $iconSel = (new \FOG\Items\TaskType())->iconlist($icon);
         unset($accessTypes);
 
         $labelClass = 'col-sm-3 col-form-label';
@@ -460,7 +460,7 @@ class TasktypeeditManagement extends \FOG\Base\FOGPage
             [
                 'fields' => &$fields,
                 'buttons' => &$buttons,
-                'TaskType' => self::getClass('TaskType')
+                'TaskType' => new \FOG\Items\TaskType()
             ]
         );
         $rendered = self::formFields($fields);
@@ -522,7 +522,7 @@ class TasktypeeditManagement extends \FOG\Base\FOGPage
         );
         $advanced = isset($_POST['advanced']);
 
-        $exists = self::getClass('TaskTypeManager')
+        $exists = (new \FOG\Managers\TaskTypeManager())
             ->exists($tasktype);
         if ($tasktype != $this->obj->get('name')
             && $exists

@@ -101,7 +101,7 @@ class OIDCGroup extends \FOG\Base\FOGController
         if (!$providerID) {
             return \FOG\Router\Route::EMPTY_CELL;
         }
-        $name = self::getClass('OIDC', $providerID)->get('name');
+        $name = (new \FOG\Plugins\OIDC\Items\OIDC($providerID))->get('name');
         // A group outliving its provider should still list, not fatal.
         if (!$name) {
             return \FOG\Router\Route::EMPTY_CELL;

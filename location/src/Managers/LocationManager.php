@@ -130,7 +130,7 @@ class LocationManager extends \FOG\Base\FOGManagerController
             // 0
             $this->createSql(),
             // 1
-            self::getClass('LocationAssociationManager')->createSql(),
+            (new \FOG\Plugins\Location\Managers\LocationAssociationManager())->createSql(),
             // 2 - retire the bogus UNIQUE (lStorageGroupID, lStorageNodeID).
             // See createSql() for what it was doing: silently overwriting an
             // existing location instead of creating a second one in the same
@@ -267,7 +267,7 @@ class LocationManager extends \FOG\Base\FOGManagerController
             'setting',
             ['name' => 'FOG_SNAPIN_LOCATION_SEND_ENABLED']
         );
-        self::getClass('LocationAssociationManager')->uninstall();
+        (new \FOG\Plugins\Location\Managers\LocationAssociationManager())->uninstall();
         return parent::uninstall();
     }
     /**

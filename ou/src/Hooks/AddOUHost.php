@@ -113,7 +113,7 @@ class AddOUHost extends \FOG\Base\Hook
             (int)filter_input(INPUT_POST, 'ou') ?:
             $ou
         );
-        $ouSelector = self::getClass('OUManager')
+        $ouSelector = (new \FOG\Plugins\OU\Managers\OUManager())
             ->buildSelectBox($ouID, 'ou');
 
         $fields = [
@@ -212,7 +212,7 @@ class AddOUHost extends \FOG\Base\Hook
             }
         }
         if (count($insert_values) > 0) {
-            self::getClass('OUAssociationManager')
+            (new \FOG\Plugins\OU\Managers\OUAssociationManager())
                 ->insertBatch(
                     $insert_fields,
                     $insert_values
@@ -239,7 +239,7 @@ class AddOUHost extends \FOG\Base\Hook
         if ($ouID < 1) {
             return;
         }
-        self::getClass('OUAssociationManager')
+        (new \FOG\Plugins\OU\Managers\OUAssociationManager())
             ->insertBatch(
                 ['hostID', 'ouID'],
                 [[$obj->get('id'), $ouID]]
@@ -306,7 +306,7 @@ class AddOUHost extends \FOG\Base\Hook
             return;
         }
         $ouID = (int)filter_input(INPUT_POST, 'ou');
-        $ouSelector = self::getClass('OUManager')
+        $ouSelector = (new \FOG\Plugins\OU\Managers\OUManager())
             ->buildSelectBox($ouID, 'ou');
 
         $arguments['fields'][
@@ -350,7 +350,7 @@ class AddOUHost extends \FOG\Base\Hook
 
         $arguments['fields']['ou'] = [
             'label' => _('Host OU'),
-            'input' => self::getClass('OUManager')->buildSelectBox(
+            'input' => (new \FOG\Plugins\OU\Managers\OUManager())->buildSelectBox(
                 '',
                 'value[ou]',
                 'name',
@@ -392,7 +392,7 @@ class AddOUHost extends \FOG\Base\Hook
         )['ou'];
 
         if (!empty($info['uniform']) && '' !== (string)$info['value']) {
-            $item = self::getClass('OU', (int)$info['value']);
+            $item = new \FOG\Plugins\OU\Items\OU((int)$info['value']);
             if ($item->isValid()) {
                 $info['value'] = $item->get('name');
             }
@@ -441,7 +441,7 @@ class AddOUHost extends \FOG\Base\Hook
             // an instruction to clear: silently turning it into one would
             // strip the ou off every selected host.
             if ($itemID < 1
-                || !self::getClass('OU', $itemID)->isValid()
+                || !(new \FOG\Plugins\OU\Items\OU($itemID))->isValid()
             ) {
                 throw new \Exception(_('Invalid OU selected'));
             }
@@ -461,7 +461,7 @@ class AddOUHost extends \FOG\Base\Hook
         foreach ($hostIDs as $hostID) {
             $insert_values[] = [$hostID, $itemID];
         }
-        self::getClass('OUAssociationManager')
+        (new \FOG\Plugins\OU\Managers\OUAssociationManager())
             ->insertBatch(['hostID', 'ouID'], $insert_values);
     }
 }

@@ -63,7 +63,7 @@ class CaponeManagement extends \FOG\Base\FOGPage
     {
         $image = filter_input(INPUT_POST, 'image');
         $key = filter_input(INPUT_POST, 'key');
-        $imageSelector = self::getClass('ImageManager')
+        $imageSelector = (new \FOG\Managers\ImageManager())
             ->buildSelectBox($image);
 
         $labelClass = 'col-sm-3 col-form-label';
@@ -149,7 +149,7 @@ class CaponeManagement extends \FOG\Base\FOGPage
                         _('The image associated does not have a valid OS!')
                     );
                 }
-                $Capone = self::getClass('Capone')
+                $Capone = (new \FOG\Plugins\Capone\Items\Capone())
                     ->set('imageID', $imageID)
                     ->set('osID', $osID)
                     ->set('key', $key);
@@ -180,7 +180,7 @@ class CaponeManagement extends \FOG\Base\FOGPage
             filter_input(INPUT_POST, 'key') ?:
             $this->obj->get('key')
         );
-        $imageSelector = self::getClass('ImageManager')
+        $imageSelector = (new \FOG\Managers\ImageManager())
             ->buildSelectBox($image);
 
         $labelClass = 'col-sm-3 col-form-label';
@@ -348,7 +348,7 @@ class CaponeManagement extends \FOG\Base\FOGPage
             $actionType
         );
 
-        $dmiSelector = self::getClass('DMIKeyManager')->buildSelectBox(
+        $dmiSelector = (new \FOG\Managers\DMIKeyManager())->buildSelectBox(
             $dmifield, // Match
             'dmifield', // Name of form element
             'name', // Sort by

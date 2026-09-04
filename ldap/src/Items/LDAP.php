@@ -1124,7 +1124,7 @@ class LDAP extends \FOG\Base\FOGController
                 'id'
             );
             foreach ($groupIds as $groupId) {
-                self::getClass('LDAPGroup', (int)$groupId)->destroy();
+                (new \FOG\Plugins\LDAP\Items\LDAPGroup((int)$groupId))->destroy();
             }
         }
         return parent::destroy($key);

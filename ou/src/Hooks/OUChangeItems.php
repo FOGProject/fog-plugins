@@ -96,7 +96,7 @@ class OUChangeItems extends \FOG\Base\Hook
             // left behind by a deleted OU would end the whole check-in with a
             // 404 the client reads as a transport failure, rather than skip
             // one association.
-            $OU = self::getClass('OU', $OUAssoc->ouID);
+            $OU = new \FOG\Plugins\OU\Items\OU($OUAssoc->ouID);
             if (!$OU->isValid()) {
                 continue;
             }

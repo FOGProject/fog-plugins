@@ -121,16 +121,13 @@ class PushbulletManagement extends \FOG\Base\FOGPage
                 $token = trim(
                     filter_input(INPUT_POST, 'apiToken')
                 );
-                $exists = self::getClass('PushbulletManager')
+                $exists = (new \FOG\Plugins\Pushbullet\Managers\PushbulletManager())
                     ->exists($token, '', 'token');
                 if ($exists) {
                     throw new \Exception(_('Account already linked'));
                 }
-                $userInfo = self::getClass(
-                    'PushbulletHandler',
-                    $token
-                )->getUserInformation();
-                $Pushbullet = self::getClass('Pushbullet')
+                $userInfo = (new \FOG\Plugins\Pushbullet\Util\PushbulletHandler($token))->getUserInformation();
+                $Pushbullet = (new \FOG\Plugins\Pushbullet\Items\Pushbullet())
                     ->set('token', $token)
                     ->set('name', $userInfo->name)
                     ->set('email', $userInfo->email);

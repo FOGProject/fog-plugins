@@ -64,7 +64,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
         $subnetgroup = filter_input(INPUT_POST, 'subnetgroup');
         $description = filter_input(INPUT_POST, 'description');
         $group = filter_input(INPUT_POST, 'group');
-        $groupSelector = self::getClass('GroupManager')->buildSelectBox($group);
+        $groupSelector = (new \FOG\Managers\GroupManager())->buildSelectBox($group);
         $subnets = filter_input(INPUT_POST, 'subnets');
 
         $labelClass = 'col-sm-3 col-form-label';
@@ -176,7 +176,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
                     $subnets,
                     $subnetsFound
                 );
-                $exists = self::getClass('SubnetGroupManager')
+                $exists = (new \FOG\Plugins\SubnetGroup\Managers\SubnetGroupManager())
                     ->exists($subnetgroup);
                 if ($exists) {
                     throw new \Exception(
@@ -188,7 +188,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
                         _('A group must be selected.')
                     );
                 }
-                $gexists = self::getClass('SubnetGroupManager')
+                $gexists = (new \FOG\Plugins\SubnetGroup\Managers\SubnetGroupManager())
                     ->exists($group, '', 'groupID');
                 if ($gexists) {
                     throw new \Exception(
@@ -203,7 +203,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
                     );
                 }
                 $subnets = implode(', ', $subnetsFound[0]);
-                $SubnetGroup = self::getClass('SubnetGroup')
+                $SubnetGroup = (new \FOG\Plugins\SubnetGroup\Items\SubnetGroup())
                     ->set('name', $subnetgroup)
                     ->set('description', $description)
                     ->set('groupID', $group)
@@ -235,7 +235,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
             filter_input(INPUT_POST, 'group') ?:
             $this->obj->get('groupID')
         );
-        $groupSelector = self::getClass('GroupManager')->buildSelectBox($group);
+        $groupSelector = (new \FOG\Managers\GroupManager())->buildSelectBox($group);
         $subnets = (
             filter_input(INPUT_POST, 'subnets') ?:
             $this->obj->get('subnets')
@@ -356,7 +356,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
             . "(( )*,( )*([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))+)"
             . "*$/";
 
-        $exists = self::getClass('SubnetGroupManager')
+        $exists = (new \FOG\Plugins\SubnetGroup\Managers\SubnetGroupManager())
             ->exists($subnetgroup);
         if ($subnetgroup != $this->obj->get('name')
             && $exists
@@ -370,7 +370,7 @@ class SubnetGroupManagement extends \FOG\Base\FOGPage
                 _('A group must be selected.')
             );
         }
-        $gexists = self::getClass('SubnetGroupManager')
+        $gexists = (new \FOG\Plugins\SubnetGroup\Managers\SubnetGroupManager())
             ->exists($group, '', 'groupID');
         if ($group != $this->obj->get('groupID')
             && $gexists

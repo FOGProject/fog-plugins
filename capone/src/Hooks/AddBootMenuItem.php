@@ -72,10 +72,10 @@ class AddBootMenuItem extends \FOG\Base\Hook
         if (!$dmi) {
             return;
         }
-        $exists = self::getClass('PXEMenuOptionsManager')
+        $exists = (new \FOG\Managers\PXEMenuOptionsManager())
             ->exists('fog.capone', '', 'name');
         $args = trim("mode=capone shutdown=$shutdown");
-        $entry = self::getClass('PXEMenuOptions')
+        $entry = (new \FOG\Items\PXEMenuOptions())
             ->set('name', 'fog.capone')
             ->load('name');
         if (!$exists) {

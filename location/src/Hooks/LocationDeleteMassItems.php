@@ -102,7 +102,7 @@ class LocationDeleteMassItems extends \FOG\Base\Hook
                 // between deploying this code and running the schema updater
                 // has the column and not the foreign key, and there this is
                 // the only thing doing the work.
-                self::getClass('LocationManager')->update(
+                (new \FOG\Plugins\Location\Managers\LocationManager())->update(
                     ['storagenodeID' => $arguments['itemIDs']],
                     '',
                     ['storagenodeID' => null]

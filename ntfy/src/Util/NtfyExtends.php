@@ -97,12 +97,12 @@ abstract class NtfyExtends extends \FOG\Base\Event
                 ltrim($Ntfy->topicEndpoint, '/')
             );
             try {
-                $response = self::getClass(
-                    'NtfyHandler',
+                $handler = new \FOG\Plugins\Ntfy\Util\NtfyHandler(
                     $Ntfy->serverURL,
                     $Ntfy->topicEndpoint,
                     $Ntfy->credentials
-                )->pushNote(
+                );
+                $response = $handler->pushNote(
                     $title,
                     _(self::$message)
                 );

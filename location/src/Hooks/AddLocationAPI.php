@@ -168,7 +168,7 @@ class AddLocationAPI extends \FOG\Base\Hook
                 if ($locID < 1) {
                     break;
                 }
-                $location = \FOG\Router\Route::getClass('location', $locID);
+                $location = new \FOG\Plugins\Location\Items\Location($locID);
                 if (!$location->isValid()) {
                     break;
                 }
@@ -209,7 +209,7 @@ class AddLocationAPI extends \FOG\Base\Hook
                 }
                 $hosts = [];
                 foreach ($hostIDs as $hid) {
-                    $host = \FOG\Router\Route::getClass('host', $hid);
+                    $host = new \FOG\Items\Host($hid);
                     if (!$host->isValid()) {
                         continue;
                     }

@@ -96,7 +96,7 @@ class OUManager extends \FOG\Base\FOGManagerController
             // 0
             $this->createSql(),
             // 1
-            self::getClass('OUAssociationManager')->createSql(),
+            (new \FOG\Plugins\OU\Managers\OUAssociationManager())->createSql(),
             // 2 - the plugin's foreign keys.
             //
             // fogproject ADR 0031 decision 8: sweep, then add. ADD CONSTRAINT
@@ -155,7 +155,7 @@ class OUManager extends \FOG\Base\FOGManagerController
     public function uninstall()
     {
         $res = true;
-        self::getClass('OUAssociationManager')->uninstall();
+        (new \FOG\Plugins\OU\Managers\OUAssociationManager())->uninstall();
         return parent::uninstall();
     }
 }

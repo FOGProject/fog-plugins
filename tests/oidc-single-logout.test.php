@@ -160,7 +160,10 @@ if (false !== strpos(
  * already run. The LDAP plugin carries repair steps for exactly this.
  */
 $alterAt = strpos($mgr, 'ALTERTABLE`OIDCProviders`ADDCOLUMN`opSingleLogout`');
-$grantAt = strpos($mgr, "getClass('OIDCUserGrantManager')->install()");
+$grantAt = strpos(
+    $mgr,
+    '\\FOG\\Plugins\\OIDC\\Managers\\OIDCUserGrantManager())->install()'
+);
 if (false !== $alterAt && false !== $grantAt && $alterAt > $grantAt) {
     ok('the step is appended after the existing ones');
 } else {
