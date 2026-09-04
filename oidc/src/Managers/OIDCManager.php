@@ -198,27 +198,27 @@ class OIDCManager extends \FOG\Base\FOGManagerController
             $this->createSql(),
             // 1 - the provider-subject to FOG-user links.
             function () {
-                return self::getClass('OIDCIdentityManager')->install();
+                return (new \FOG\Plugins\OIDC\Managers\OIDCIdentityManager())->install();
             },
             // 2 - the group claim values an admin maps.
             function () {
-                return self::getClass('OIDCGroupManager')->install();
+                return (new \FOG\Plugins\OIDC\Managers\OIDCGroupManager())->install();
             },
             // 3 - what a group grants: roles.
             function () {
-                return self::getClass('OIDCGroupRoleAssociationManager')
+                return (new \FOG\Plugins\OIDC\Managers\OIDCGroupRoleAssociationManager())
                     ->install();
             },
             // 4 - what a group grants: user groups.
             function () {
-                return self::getClass('OIDCGroupUserGroupAssociationManager')
+                return (new \FOG\Plugins\OIDC\Managers\OIDCGroupUserGroupAssociationManager())
                     ->install();
             },
             // 5 - the record of what this plugin granted each user, which is
             // what lets a later sign in take a grant back without touching
             // anything an admin assigned by hand.
             function () {
-                return self::getClass('OIDCUserGrantManager')->install();
+                return (new \FOG\Plugins\OIDC\Managers\OIDCUserGrantManager())->install();
             },
             // 6 - RP-initiated logout, per provider (#15). Appended rather
             // than folded into step 0, because installdb() SKIPS the first
@@ -360,11 +360,11 @@ class OIDCManager extends \FOG\Base\FOGManagerController
      */
     public function uninstall()
     {
-        self::getClass('OIDCIdentityManager')->uninstall();
-        self::getClass('OIDCGroupRoleAssociationManager')->uninstall();
-        self::getClass('OIDCGroupUserGroupAssociationManager')->uninstall();
-        self::getClass('OIDCGroupManager')->uninstall();
-        self::getClass('OIDCUserGrantManager')->uninstall();
+        (new \FOG\Plugins\OIDC\Managers\OIDCIdentityManager())->uninstall();
+        (new \FOG\Plugins\OIDC\Managers\OIDCGroupRoleAssociationManager())->uninstall();
+        (new \FOG\Plugins\OIDC\Managers\OIDCGroupUserGroupAssociationManager())->uninstall();
+        (new \FOG\Plugins\OIDC\Managers\OIDCGroupManager())->uninstall();
+        (new \FOG\Plugins\OIDC\Managers\OIDCUserGrantManager())->uninstall();
         return parent::uninstall();
     }
 }

@@ -124,7 +124,7 @@ class AddLocationMenuItem extends \FOG\Base\Hook
         if (self::getSetting('FOG_SNAPIN_LOCATION_SEND_ENABLED') !== null) {
             return;
         }
-        $Setting = self::getClass('Setting')
+        $Setting = (new \FOG\Items\Setting())
             ->set(
                 'name',
                 'FOG_SNAPIN_LOCATION_SEND_ENABLED'

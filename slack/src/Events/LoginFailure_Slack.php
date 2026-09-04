@@ -68,7 +68,7 @@ class LoginFailure_Slack extends \FOG\Base\Event
                     $ip
                 )
             ];
-            self::getClass('Slack', $Slack->id)->call('chat.postMessage', $args);
+            (new \FOG\Plugins\Slack\Items\Slack($Slack->id))->call('chat.postMessage', $args);
             unset($Slack);
         }
     }

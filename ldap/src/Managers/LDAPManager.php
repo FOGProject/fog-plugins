@@ -274,7 +274,7 @@ class LDAPManager extends \FOG\Base\FOGManagerController
                 $category
             ]
         ];
-        $SettingManager = self::getClass('SettingManager');
+        $SettingManager = new \FOG\Managers\SettingManager();
         $toInsert = [];
         foreach ($settings as $setting) {
             if (!$SettingManager->exists($setting[0], '', 'name')) {
@@ -754,16 +754,16 @@ class LDAPManager extends \FOG\Base\FOGManagerController
             // Rewriting a step that anyone has already applied is invisible
             // to them. Only ever append.
             function () {
-                return self::getClass('LDAPGroupManager')->install();
+                return (new \FOG\Plugins\LDAP\Managers\LDAPGroupManager())->install();
             },
             // 6
             function () {
-                return self::getClass('LDAPGroupRoleAssociationManager')
+                return (new \FOG\Plugins\LDAP\Managers\LDAPGroupRoleAssociationManager())
                     ->install();
             },
             // 7
             function () {
-                return self::getClass('LDAPGroupUserGroupAssociationManager')
+                return (new \FOG\Plugins\LDAP\Managers\LDAPGroupUserGroupAssociationManager())
                     ->install();
             },
             // 8
@@ -782,16 +782,16 @@ class LDAPManager extends \FOG\Base\FOGManagerController
             // outrun the copy.
             // 10
             function () {
-                return self::getClass('LDAPGroupManager')->install();
+                return (new \FOG\Plugins\LDAP\Managers\LDAPGroupManager())->install();
             },
             // 11
             function () {
-                return self::getClass('LDAPGroupRoleAssociationManager')
+                return (new \FOG\Plugins\LDAP\Managers\LDAPGroupRoleAssociationManager())
                     ->install();
             },
             // 12
             function () {
-                return self::getClass('LDAPGroupUserGroupAssociationManager')
+                return (new \FOG\Plugins\LDAP\Managers\LDAPGroupUserGroupAssociationManager())
                     ->install();
             },
             // 13
@@ -814,7 +814,7 @@ class LDAPManager extends \FOG\Base\FOGManagerController
             'DROP TABLE IF EXISTS `LDAPGroupMap`',
             // 17
             function () {
-                return self::getClass('LDAPUserGrantManager')->install();
+                return (new \FOG\Plugins\LDAP\Managers\LDAPUserGrantManager())->install();
             },
             // 18
             function () {
@@ -1009,10 +1009,10 @@ class LDAPManager extends \FOG\Base\FOGManagerController
         // Associations first, then the groups they point at: dropping the
         // groups first would leave association rows referencing ids that no
         // longer exist if either drop failed part way.
-        self::getClass('LDAPUserGrantManager')->uninstall();
-        self::getClass('LDAPGroupRoleAssociationManager')->uninstall();
-        self::getClass('LDAPGroupUserGroupAssociationManager')->uninstall();
-        self::getClass('LDAPGroupManager')->uninstall();
+        (new \FOG\Plugins\LDAP\Managers\LDAPUserGrantManager())->uninstall();
+        (new \FOG\Plugins\LDAP\Managers\LDAPGroupRoleAssociationManager())->uninstall();
+        (new \FOG\Plugins\LDAP\Managers\LDAPGroupUserGroupAssociationManager())->uninstall();
+        (new \FOG\Plugins\LDAP\Managers\LDAPGroupManager())->uninstall();
         return parent::uninstall();
     }
 }

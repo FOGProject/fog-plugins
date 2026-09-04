@@ -81,7 +81,7 @@ class AddSubnetGroupAPI extends \FOG\Base\Hook
             'dt' => 'group',
             'removeFromQuery' => true,
             'formatter' => function ($d, $row) use ($arguments) {
-                return self::getClass('group', $row['sgGroupID'])->get();
+                return (new \FOG\Items\Group($row['sgGroupID']))->get();
             }
         ];
     }

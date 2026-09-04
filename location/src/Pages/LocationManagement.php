@@ -70,11 +70,11 @@ class LocationManagement extends \FOG\Base\FOGPage
         $storagegroup = filter_input(INPUT_POST, 'storagegroup');
         $storagenode = filter_input(INPUT_POST, 'storagenode');
         $storagenodeprotocol = filter_input(INPUT_POST, 'storagenodeprotocol');
-        $storagegroupSelector = self::getClass('StorageGroupManager')
+        $storagegroupSelector = (new \FOG\Managers\StorageGroupManager())
             ->buildSelectBox($storagegroup);
-        $storagenodeSelector = self::getClass('StorageNodeManager')
+        $storagenodeSelector = (new \FOG\Managers\StorageNodeManager())
             ->buildSelectBox($storagenode);
-        $storagenodeProtocolSelector = self::getClass('LocationManager')
+        $storagenodeProtocolSelector = (new \FOG\Plugins\Location\Managers\LocationManager())
             ->buildProtocolSelectBox($storagenodeprotocol);
 
         $labelClass = 'col-sm-3 col-form-label';
@@ -195,7 +195,7 @@ class LocationManagement extends \FOG\Base\FOGPage
                     filter_input(INPUT_POST, 'storagenodeprotocol')
                 );
                 $bootfrom = (int)isset($_POST['bootfrom']);
-                $exists = self::getClass('LocationManager')
+                $exists = (new \FOG\Plugins\Location\Managers\LocationManager())
                     ->exists($location);
                 if ($exists) {
                     throw new \Exception(
@@ -208,10 +208,10 @@ class LocationManagement extends \FOG\Base\FOGPage
                     );
                 }
                 if ($storagenode) {
-                    $storagegroup = self::getClass('StorageNode', $storagenode)
+                    $storagegroup = (new \FOG\Items\StorageNode($storagenode))
                         ->get('storagegroupID');
                 }
-                $Location = self::getClass('Location')
+                $Location = (new \FOG\Plugins\Location\Items\Location())
                     ->set('name', $location)
                     ->set('storagegroupID', $storagegroup)
                     ->set('storagenodeID', $storagenode)
@@ -252,11 +252,11 @@ class LocationManagement extends \FOG\Base\FOGPage
             filter_input(INPUT_POST, 'storagenodeprotocol') ?:
             $this->obj->get('protocol')
         );
-        $storagegroupSelector = self::getClass('StorageGroupManager')
+        $storagegroupSelector = (new \FOG\Managers\StorageGroupManager())
             ->buildSelectBox($storagegroup);
-        $storagenodeSelector = self::getClass('StorageNodeManager')
+        $storagenodeSelector = (new \FOG\Managers\StorageNodeManager())
             ->buildSelectBox($storagenode);
-        $storagenodeProtocolSelector = self::getCLass('LocationManager')
+        $storagenodeProtocolSelector = (new \FOG\Plugins\Location\Managers\LocationManager())
             ->buildProtocolSelectBox($storagenodeprotocol);
         $bootfrom = (
             isset($_POST['bootfrom']) ?
@@ -398,7 +398,7 @@ class LocationManagement extends \FOG\Base\FOGPage
         );
         $bootfrom = (int)isset($_POST['bootfrom']);
 
-        $exists = self::getClass('LocationManager')
+        $exists = (new \FOG\Plugins\Location\Managers\LocationManager())
             ->exists($location);
         if ($location != $this->obj->get('name')
             && $exists
@@ -413,7 +413,7 @@ class LocationManagement extends \FOG\Base\FOGPage
             );
         }
         if ($storagenode) {
-            $storagegroup = self::getClass('StorageNode', $storagenode)
+            $storagegroup = (new \FOG\Items\StorageNode($storagenode))
                 ->get('storagegroupID');
         }
         $this->obj

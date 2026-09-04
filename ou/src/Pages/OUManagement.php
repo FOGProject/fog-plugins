@@ -155,14 +155,14 @@ class OUManagement extends \FOG\Base\FOGPage
                 $oudn = trim(
                     filter_input(INPUT_POST, 'oudn')
                 );
-                $exists = self::getClass('OUManager')
+                $exists = (new \FOG\Plugins\OU\Managers\OUManager())
                     ->exists($ou);
                 if ($exists) {
                     throw new \Exception(
                         _('An ou already exists with this name!')
                     );
                 }
-                $OU = self::getClass('OU')
+                $OU = (new \FOG\Plugins\OU\Items\OU())
                     ->set('name', $ou)
                     ->set('description', $description)
                     ->set('ou', $oudn);
@@ -298,7 +298,7 @@ class OUManagement extends \FOG\Base\FOGPage
             filter_input(INPUT_POST, 'oudn')
         );
 
-        $exists = self::getClass('OUManager')
+        $exists = (new \FOG\Plugins\OU\Managers\OUManager())
             ->exists($ou);
         if ($ou != $this->obj->get('name')
             && $exists

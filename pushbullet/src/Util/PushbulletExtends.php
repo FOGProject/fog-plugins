@@ -91,10 +91,7 @@ abstract class PushbulletExtends extends \FOG\Base\Event
                     _(self::$shortdesc)
                 )
             );
-            self::getClass(
-                'PushbulletHandler',
-                $Pushbullet->token
-            )->pushNote(
+            (new \FOG\Plugins\Pushbullet\Util\PushbulletHandler($Pushbullet->token))->pushNote(
                 '',
                 $title,
                 _(self::$message)

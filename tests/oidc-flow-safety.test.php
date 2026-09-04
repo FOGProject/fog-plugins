@@ -258,7 +258,7 @@ if (null === $resolve) {
     fail('OIDCFlow::_resolveUser() is missing');
 } else {
     $flat = preg_replace('#\s+#', '', $resolve);
-    if (false === strpos($flat, "getClass('User')")) {
+    if (false === strpos($flat, 'new\\FOG\\Items\\User(')) {
         fail('OIDCFlow::_resolveUser() no longer looks the account up');
     }
     // Searched in the un-flattened body: collapsing whitespace would also
@@ -344,7 +344,7 @@ $flatFlow = preg_replace('#\s+#', '', $flowSrc);
  * account who completes a sign-in as another silently keeps the first --
  * and the account they land in is not the one just vouched for.
  */
-if (false === strpos($flatFlow, 'self::$FOGUser=self::getClass(\'User\',0)')) {
+if (false === strpos($flatFlow, 'self::$FOGUser=new\\FOG\\Items\\User(0)')) {
     fail(
         'the flow does not clear the identity loaded at boot before'
         . ' establishing the new session; establishSession() would keep the'

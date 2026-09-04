@@ -61,7 +61,7 @@ class TaskstateeditManagement extends \FOG\Base\FOGPage
         $description = filter_input(INPUT_POST, 'description');
         $icon = filter_input(INPUT_POST, 'icon');
         $additional = filter_input(INPUT_POST, 'additional');
-        $iconSel = self::getClass('TaskType')->iconlist($icon);
+        $iconSel = (new \FOG\Items\TaskType())->iconlist($icon);
 
         $labelClass = 'col-sm-3 col-form-label';
 
@@ -163,14 +163,14 @@ class TaskstateeditManagement extends \FOG\Base\FOGPage
                     filter_input(INPUT_POST, 'additional')
                 );
                 $iconval = $icon . ' ' . $additional;
-                $exists = self::getClass('TaskStateManager')
+                $exists = (new \FOG\Managers\TaskStateManager())
                     ->exists($taskstate);
                 if ($exists) {
                     throw new \Exception(
                         _('A task state already exists with this name!')
                     );
                 }
-                $TaskState = self::getClass('TaskState')
+                $TaskState = (new \FOG\Items\TaskState())
                     ->set('name', $taskstate)
                     ->set('description', $description)
                     ->set('icon', $iconval);
@@ -209,7 +209,7 @@ class TaskstateeditManagement extends \FOG\Base\FOGPage
             filter_input(INPUT_POST, 'additional') ?:
             implode(' ', (array)$iconarr)
         );
-        $iconSel = self::getClass('TaskType')->iconlist($icon);
+        $iconSel = (new \FOG\Items\TaskType())->iconlist($icon);
 
         $labelClass = 'col-sm-3 col-form-label';
 
@@ -323,7 +323,7 @@ class TaskstateeditManagement extends \FOG\Base\FOGPage
         );
         $iconval = $icon . ' ' . $additional;
 
-        $exists = self::getClass('TaskTypeManager')
+        $exists = (new \FOG\Managers\TaskTypeManager())
             ->exists($taskstate);
         if ($taskstate != $this->obj->get('name')
             && $exists

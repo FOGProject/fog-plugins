@@ -65,7 +65,7 @@ class SnapinComplete_Slack extends \FOG\Base\Event
                     _('has completed snapin tasking')
                 )
             ];
-            self::getClass('Slack', $Slack->id)->call('chat.postMessage', $args);
+            (new \FOG\Plugins\Slack\Items\Slack($Slack->id))->call('chat.postMessage', $args);
         }
     }
 }

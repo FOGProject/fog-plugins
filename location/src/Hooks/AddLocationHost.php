@@ -113,7 +113,7 @@ class AddLocationHost extends \FOG\Base\Hook
             (int)filter_input(INPUT_POST, 'location') ?:
             $location
         );
-        $locationSelector = self::getClass('LocationManager')
+        $locationSelector = (new \FOG\Plugins\Location\Managers\LocationManager())
             ->buildSelectBox($locationID, 'location');
 
         $fields = [
@@ -203,7 +203,7 @@ class AddLocationHost extends \FOG\Base\Hook
                 'locationassociation',
                 ['hostID' => $hosts]
             );
-            if (self::getClass('Location', $locationID)->isValid()) {
+            if ((new \FOG\Plugins\Location\Items\Location($locationID))->isValid()) {
                 foreach ((array)$hosts as $ind => &$hostID) {
                     $insert_values[] = [$hostID, $locationID];
                     unset($hostID);
@@ -211,7 +211,7 @@ class AddLocationHost extends \FOG\Base\Hook
             }
         }
         if (count($insert_values) > 0) {
-            self::getClass('LocationAssociationManager')
+            (new \FOG\Plugins\Location\Managers\LocationAssociationManager())
                 ->insertBatch(
                     $insert_fields,
                     $insert_values
@@ -235,10 +235,10 @@ class AddLocationHost extends \FOG\Base\Hook
             return;
         }
         $locationID = (int)($_POST['location'] ?? 0);
-        if (!self::getClass('Location', $locationID)->isValid()) {
+        if (!(new \FOG\Plugins\Location\Items\Location($locationID))->isValid()) {
             return;
         }
-        self::getClass('LocationAssociationManager')
+        (new \FOG\Plugins\Location\Managers\LocationAssociationManager())
             ->insertBatch(
                 ['hostID', 'locationID'],
                 [[$obj->get('id'), $locationID]]
@@ -305,7 +305,7 @@ class AddLocationHost extends \FOG\Base\Hook
             return;
         }
         $locationID = (int)filter_input(INPUT_POST, 'location');
-        $locationSelector = self::getClass('LocationManager')
+        $locationSelector = (new \FOG\Plugins\Location\Managers\LocationManager())
             ->buildSelectBox($locationID, 'location');
 
         $arguments['fields'][
@@ -349,7 +349,7 @@ class AddLocationHost extends \FOG\Base\Hook
 
         $arguments['fields']['location'] = [
             'label' => _('Host Location'),
-            'input' => self::getClass('LocationManager')->buildSelectBox(
+            'input' => (new \FOG\Plugins\Location\Managers\LocationManager())->buildSelectBox(
                 '',
                 'value[location]',
                 'name',
@@ -391,7 +391,7 @@ class AddLocationHost extends \FOG\Base\Hook
         )['location'];
 
         if (!empty($info['uniform']) && '' !== (string)$info['value']) {
-            $item = self::getClass('Location', (int)$info['value']);
+            $item = new \FOG\Plugins\Location\Items\Location((int)$info['value']);
             if ($item->isValid()) {
                 $info['value'] = $item->get('name');
             }
@@ -440,7 +440,7 @@ class AddLocationHost extends \FOG\Base\Hook
             // an instruction to clear: silently turning it into one would
             // strip the location off every selected host.
             if ($itemID < 1
-                || !self::getClass('Location', $itemID)->isValid()
+                || !(new \FOG\Plugins\Location\Items\Location($itemID))->isValid()
             ) {
                 throw new \Exception(_('Invalid Location selected'));
             }
@@ -460,7 +460,7 @@ class AddLocationHost extends \FOG\Base\Hook
         foreach ($hostIDs as $hostID) {
             $insert_values[] = [$hostID, $itemID];
         }
-        self::getClass('LocationAssociationManager')
+        (new \FOG\Plugins\Location\Managers\LocationAssociationManager())
             ->insertBatch(['hostID', 'locationID'], $insert_values);
     }
 }

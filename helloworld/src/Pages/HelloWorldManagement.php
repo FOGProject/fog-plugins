@@ -153,14 +153,14 @@ class HelloWorldManagement extends \FOG\Base\FOGPage
                 if (empty($name)) {
                     throw new \Exception(_('Please enter a name'));
                 }
-                $exists = self::getClass('HelloWorldManager')
+                $exists = (new \FOG\Plugins\HelloWorld\Managers\HelloWorldManager())
                     ->exists($name);
                 if ($exists) {
                     throw new \Exception(
                         _('An entry already exists with this name!')
                     );
                 }
-                $HelloWorld = self::getClass('HelloWorld')
+                $HelloWorld = (new \FOG\Plugins\HelloWorld\Items\HelloWorld())
                     ->set('name', $name)
                     ->set('description', $description);
                 if (!$HelloWorld->save()) {
@@ -278,7 +278,7 @@ class HelloWorldManagement extends \FOG\Base\FOGPage
         if (empty($name)) {
             throw new \Exception(_('Please enter a name'));
         }
-        $exists = self::getClass('HelloWorldManager')
+        $exists = (new \FOG\Plugins\HelloWorld\Managers\HelloWorldManager())
             ->exists($name);
         if ($name != $this->obj->get('name')
             && $exists

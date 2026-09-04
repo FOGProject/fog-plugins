@@ -157,14 +157,14 @@ class WOLBroadcastManagement extends \FOG\Base\FOGPage
                 $broadcast = trim(
                     filter_input(INPUT_POST, 'broadcast')
                 );
-                $exists = self::getClass('WOLBroadcastManager')
+                $exists = (new \FOG\Plugins\WOLBroadcast\Managers\WolbroadcastManager())
                     ->exists($wolbroadcast);
                 if ($exists) {
                     throw new \Exception(
                         _('A broadcast already exists with this name!')
                     );
                 }
-                $WOLBroadcast = self::getClass('WOLBroadcast')
+                $WOLBroadcast = (new \FOG\Plugins\WOLBroadcast\Items\Wolbroadcast())
                     ->set('name', $wolbroadcast)
                     ->set('description', $description)
                     ->set('broadcast', $broadcast);
@@ -304,7 +304,7 @@ class WOLBroadcastManagement extends \FOG\Base\FOGPage
             filter_input(INPUT_POST, 'broadcast')
         );
 
-        $exists = self::getClass('WOLBroadcastManager')
+        $exists = (new \FOG\Plugins\WOLBroadcast\Managers\WolbroadcastManager())
             ->exists($wolbroadcast);
         if ($wolbroadcast != $this->obj->get('name')
             && $exists

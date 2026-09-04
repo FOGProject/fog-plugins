@@ -172,7 +172,7 @@ class OIDCGroupManagement extends \FOG\Base\FOGPage
                         _('That group is already defined for this provider!')
                     );
                 }
-                $OIDCGroup = self::getClass('OIDCGroup')
+                $OIDCGroup = (new \FOG\Plugins\OIDC\Items\OIDCGroup())
                     ->set('name', $name)
                     ->set('providerID', $providerID);
                 if (!$OIDCGroup->save()) {
@@ -609,7 +609,7 @@ class OIDCGroupManagement extends \FOG\Base\FOGPage
     public function getRoleFeedList()
     {
         return $this->_feedList(
-            self::getClass('Role', self::_ownerID()),
+            new \FOG\Items\Role(self::_ownerID()),
             'oidcgrouproleassociation',
             'oidcGroupRoleAssoc',
             '`oidcGroupRoleAssoc`.`ograGroupID`',
@@ -625,7 +625,7 @@ class OIDCGroupManagement extends \FOG\Base\FOGPage
     public function getUserGroupFeedList()
     {
         return $this->_feedList(
-            self::getClass('UserGroup', self::_ownerID()),
+            new \FOG\Items\UserGroup(self::_ownerID()),
             'oidcgroupusergroupassociation',
             'oidcGroupUserGroupAssoc',
             '`oidcGroupUserGroupAssoc`.`ogugGroupID`',

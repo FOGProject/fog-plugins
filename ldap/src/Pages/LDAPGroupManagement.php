@@ -172,7 +172,7 @@ class LDAPGroupManagement extends \FOG\Base\FOGPage
                         _('That group is already defined for this server!')
                     );
                 }
-                $LDAPGroup = self::getClass('LDAPGroup')
+                $LDAPGroup = (new \FOG\Plugins\LDAP\Items\LDAPGroup())
                     ->set('name', $name)
                     ->set('serverID', $serverID);
                 if (!$LDAPGroup->save()) {
@@ -602,7 +602,7 @@ class LDAPGroupManagement extends \FOG\Base\FOGPage
     public function getRoleFeedList()
     {
         return $this->_feedList(
-            self::getClass('Role', self::_ownerID()),
+            new \FOG\Items\Role(self::_ownerID()),
             'ldapgrouproleassociation',
             'ldapGroupRoleAssoc',
             '`ldapGroupRoleAssoc`.`lgraGroupID`',
@@ -618,7 +618,7 @@ class LDAPGroupManagement extends \FOG\Base\FOGPage
     public function getUserGroupFeedList()
     {
         return $this->_feedList(
-            self::getClass('UserGroup', self::_ownerID()),
+            new \FOG\Items\UserGroup(self::_ownerID()),
             'ldapgroupusergroupassociation',
             'ldapGroupUserGroupAssoc',
             '`ldapGroupUserGroupAssoc`.`lgugGroupID`',

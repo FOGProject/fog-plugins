@@ -720,14 +720,14 @@ class LDAPManagement extends \FOG\Base\FOGPage
                 // these to reach an LDAPS directory on this server's terms.
                 $tls = self::_tlsFromPost();
                 $nested = self::_nestedFromPost($tls);
-                $exists = self::getClass('LDAPManager')
+                $exists = (new \FOG\Plugins\LDAP\Managers\LDAPManager())
                     ->exists($ldap);
                 if ($exists) {
                     throw new \Exception(
                         _('An LDAP server already exists with this name!')
                     );
                 }
-                $LDAP = self::getClass('LDAP')
+                $LDAP = (new \FOG\Plugins\LDAP\Items\LDAP())
                     ->set('name', $ldap)
                     ->set('description', $description)
                     ->set('address', $address)
@@ -1217,7 +1217,7 @@ class LDAPManagement extends \FOG\Base\FOGPage
             [
                 'fields' => &$fields,
                 'buttons' => &$buttons,
-                'LDAP' => self::getClass('LDAP')
+                'LDAP' => new \FOG\Plugins\LDAP\Items\LDAP()
             ]
         );
         $rendered = self::formFields($fields);
@@ -1317,7 +1317,7 @@ class LDAPManagement extends \FOG\Base\FOGPage
         // reach an LDAPS directory on this server's terms.
         $tls = self::_tlsFromPost();
         $nested = self::_nestedFromPost($tls);
-        $exists = self::getClass('LDAPManager')
+        $exists = (new \FOG\Plugins\LDAP\Managers\LDAPManager())
             ->exists($ldap);
         if ($ldap != $this->obj->get('name')
             && $exists

@@ -97,7 +97,7 @@ class AddWindowsKeyImage extends \FOG\Base\Hook
     {
         $keyID = (int)filter_input(INPUT_POST, 'windowskey');
         // Image keys
-        $windowskeySelector = self::getClass('WindowsKeyManager')
+        $windowskeySelector = (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyManager())
             ->buildSelectBox($keyID, 'windowskey');
 
         $fields = [
@@ -194,7 +194,7 @@ class AddWindowsKeyImage extends \FOG\Base\Hook
             }
         }
         if (count($insert_values) > 0) {
-            self::getClass('WindowsKeyAssociationManager')
+            (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyAssociationManager())
                 ->insertBatch(
                     $insert_fields,
                     $insert_values
@@ -262,7 +262,7 @@ class AddWindowsKeyImage extends \FOG\Base\Hook
             return;
         }
         $keyID = (int)filter_input(INPUT_POST, 'windowskey');
-        $keySelector = self::getClass('WindowsKeyManager')
+        $keySelector = (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyManager())
             ->buildSelectBox($keyID, 'windowskey');
 
         $arguments['fields'][

@@ -188,7 +188,7 @@ class LDAPPluginHook extends \FOG\Base\Hook
         $displayName = '';
         $ldapAPI = 0;
         foreach ($items as $ldap) {
-            $LDAP = self::getClass('LDAP', $ldap->id);
+            $LDAP = new \FOG\Plugins\LDAP\Items\LDAP($ldap->id);
             $matched = $LDAP->authLDAP($user, $pass);
             if (false === $matched) {
                 continue;

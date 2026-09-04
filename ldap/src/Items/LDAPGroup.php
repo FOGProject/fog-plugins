@@ -106,7 +106,7 @@ class LDAPGroup extends \FOG\Base\FOGController
         if (!$serverID) {
             return \FOG\Router\Route::EMPTY_CELL;
         }
-        $name = self::getClass('LDAP', $serverID)->get('name');
+        $name = (new \FOG\Plugins\LDAP\Items\LDAP($serverID))->get('name');
         // A group outliving its server should still list, not fatal.
         if (!$name) {
             return \FOG\Router\Route::EMPTY_CELL;

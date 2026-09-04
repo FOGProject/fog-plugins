@@ -124,7 +124,7 @@ class CaponeManager extends \FOG\Base\FOGManagerController
                 $category
             ]
         ];
-        $SettingManager = self::getClass('SettingManager');
+        $SettingManager = new \FOG\Managers\SettingManager();
         $toInsert = [];
         foreach ($settings as $setting) {
             if (!$SettingManager->exists($setting[0], '', 'name')) {

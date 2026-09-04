@@ -104,10 +104,7 @@ class Slack extends \FOG\Base\FOGController
      */
     public function verifyToken()
     {
-        $testAuth = self::getClass(
-            'SlackHandler',
-            $this->get('token')
-        )->call('auth.test');
+        $testAuth = (new \FOG\Plugins\Slack\Util\SlackHandler($this->get('token')))->call('auth.test');
         return (bool)$testAuth['ok'];
     }
     /**
@@ -130,9 +127,6 @@ class Slack extends \FOG\Base\FOGController
                 $args['as_user'] = true;
             }
         }
-        return self::getClass(
-            'SlackHandler',
-            $this->get('token')
-        )->call($method, $args);
+        return (new \FOG\Plugins\Slack\Util\SlackHandler($this->get('token')))->call($method, $args);
     }
 }

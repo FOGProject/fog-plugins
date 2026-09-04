@@ -99,7 +99,7 @@ class AddSlackAPI extends \FOG\Base\Hook
             return;
         }
         $arguments['columns'] = [];
-        foreach (self::getClass('SlackManager')
+        foreach ((new \FOG\Plugins\Slack\Managers\SlackManager())
             ->getColumns() as $common => $real
         ) {
             switch ($common) {
@@ -115,10 +115,7 @@ class AddSlackAPI extends \FOG\Base\Hook
                         'db' => $real,
                         'dt' => $common,
                         'formatter' => function ($d, $row) {
-                            $team = self::getClass(
-                                'Slack',
-                                $d
-                            )->call('auth.test');
+                            $team = (new \FOG\Plugins\Slack\Items\Slack($d))->call('auth.test');
                             return $team['team'];
                         }
                     ];
@@ -128,10 +125,7 @@ class AddSlackAPI extends \FOG\Base\Hook
                         'db' => $real,
                         'dt' => $common,
                         'formatter' => function ($d, $row) {
-                            $team = self::getClass(
-                                'Slack',
-                                $row['sID']
-                            )->call('auth.test');
+                            $team = (new \FOG\Plugins\Slack\Items\Slack($row['sID']))->call('auth.test');
                             return $team['user'];
                             ;
                         }

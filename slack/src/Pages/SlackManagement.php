@@ -147,7 +147,7 @@ class SlackManagement extends \FOG\Base\FOGPage
                         _('Please start user/channel with @/# respectively')
                     );
                 }
-                $Slack = self::getClass('Slack')
+                $Slack = (new \FOG\Plugins\Slack\Items\Slack())
                     ->set('token', $token)
                     ->set('name', $user);
                 if (!$Slack->verifyToken()) {
@@ -172,9 +172,9 @@ class SlackManagement extends \FOG\Base\FOGPage
                         throw new \Exception(_('Channel not found'));
                     }
                 }
-                $exists = self::getClass('SlackManager')
+                $exists = (new \FOG\Plugins\Slack\Managers\SlackManager())
                     ->exists($token, '', 'token');
-                $exists2 = self::getClass('SlackManager')
+                $exists2 = (new \FOG\Plugins\Slack\Managers\SlackManager())
                     ->exists($usersend);
                 if ($exists || $exists2) {
                     throw new \Exception(

@@ -236,7 +236,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
              */
             self::_session();
             $_SESSION = [];
-            self::$FOGUser = self::getClass('User', 0);
+            self::$FOGUser = new \FOG\Items\User(0);
 
             // Provenance, not decoration: an audit has to be able to tell
             // this session from a password one, and the break-glass rules
@@ -375,7 +375,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
         if ($id < 1) {
             return '';
         }
-        $provider = self::getClass('OIDC', $id);
+        $provider = new \FOG\Plugins\OIDC\Items\OIDC($id);
         if (!$provider->isValid()
             || '1' !== (string)$provider->get('enabled')
             || '1' !== (string)$provider->get('autoRedirect')
@@ -411,7 +411,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
         if (!is_array($stored) || empty($stored['endpoint'])) {
             return '';
         }
-        $provider = self::getClass('OIDC', (int)($stored['provider'] ?? 0));
+        $provider = new \FOG\Plugins\OIDC\Items\OIDC((int)($stored['provider'] ?? 0));
         if (!$provider->isValid()
             || '1' !== (string)$provider->get('enabled')
             || '1' !== (string)$provider->get('singleLogout')
@@ -459,7 +459,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
      */
     private static function _enabledProvider($id)
     {
-        $provider = self::getClass('OIDC', (int)$id);
+        $provider = new \FOG\Plugins\OIDC\Items\OIDC((int)$id);
         if (!$provider->isValid()) {
             throw new \Exception(_('Unknown identity provider'));
         }
@@ -662,7 +662,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
         }
 
         $linkedId = OIDCIdentity::userIdFor($provider->get('id'), $subject);
-        $byName = self::getClass('User')
+        $byName = (new \FOG\Items\User())
             ->set('name', $username)
             ->load('name');
         $namedId = $byName->isValid() ? (int)$byName->get('id') : 0;
@@ -690,7 +690,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
                     _('This identity is linked to a different FOG account')
                 );
             }
-            $user = self::getClass('User', $linkedId);
+            $user = new \FOG\Items\User($linkedId);
             if (!$user->isValid()) {
                 throw new \Exception(
                     _('The FOG account for this identity no longer exists')
@@ -723,7 +723,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
          * unable to use a local password, and taking password login away
          * from an account an admin created is the opposite of break-glass.
          */
-        self::getClass('OIDCIdentity')
+        (new \FOG\Plugins\OIDC\Items\OIDCIdentity())
             ->set('name', $username)
             ->set('providerId', $provider->get('id'))
             ->set('subject', $subject)
@@ -826,7 +826,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
      */
     private static function _provisionUser($provider, array $claims, $username)
     {
-        $user = self::getClass('User')
+        $user = (new \FOG\Items\User())
             ->set('name', $username)
             ->set('display', trim((string)($claims['name'] ?? '')) ?: $username)
             ->set('authsource', OIDC::AUTH_SOURCE)
@@ -840,7 +840,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
         }
         // After the save: the link needs the id, which does not exist until
         // then.
-        self::getClass('OIDCIdentity')
+        (new \FOG\Plugins\OIDC\Items\OIDCIdentity())
             ->set('name', $username)
             ->set('providerId', $provider->get('id'))
             ->set('subject', (string)$claims['sub'])
@@ -1210,7 +1210,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
      */
     private static function _http($url, $method, $body)
     {
-        $requests = self::getClass('FOGURLRequests');
+        $requests = new \FOG\Net\FOGURLRequests();
         $status = 0;
         $response = $requests->process(
             $url,

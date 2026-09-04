@@ -108,7 +108,7 @@ class LocationChangeItems extends \FOG\Base\Hook
         $TaskType = $arguments['TaskType'] ?? null;
         $method = false;
         foreach ($LocationAssocs as &$LocationAssoc) {
-            $Location = self::getClass('Location', $LocationAssoc->locationID);
+            $Location = new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID);
             if (!$Location->isValid()) {
                 continue;
             }
@@ -165,7 +165,7 @@ class LocationChangeItems extends \FOG\Base\Hook
             ['hostID' => $arguments['Host']->get('id')]
         );
         foreach ($LocationAssocs as &$LocationAssoc) {
-            $StorageGroup = self::getClass('Location', $LocationAssoc->locationID)
+            $StorageGroup = (new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID))
                 ->getStorageGroup();
             // Inverted since it was written: this skipped the groups it
             // should have answered with and offered up only invalid ones,
@@ -197,7 +197,7 @@ class LocationChangeItems extends \FOG\Base\Hook
             ['hostID' => $arguments['Host']->get('id')]
         );
         foreach ($LocationAssocs as &$LocationAssoc) {
-            $Location = self::getClass('Location', $LocationAssoc->locationID);
+            $Location = new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID);
             if (!$Location->get('tftp')) {
                 continue;
             }

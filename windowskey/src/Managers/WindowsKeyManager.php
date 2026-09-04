@@ -109,7 +109,7 @@ class WindowsKeyManager extends \FOG\Base\FOGManagerController
             // 0
             $this->createSql(),
             // 1
-            self::getClass('WindowsKeyAssociationManager')->createSql(),
+            (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyAssociationManager())->createSql(),
             // 2 - retire UNIQUE (wkKey); see createSql() for why it could not
             // hold. It sat at position 0, hence `index0`. applyUpdates()
             // tolerates 1091, which is what a fresh install -- built from the
@@ -179,7 +179,7 @@ class WindowsKeyManager extends \FOG\Base\FOGManagerController
      */
     public function uninstall()
     {
-        self::getClass('WindowsKeyAssociationManager')->uninstall();
+        (new \FOG\Plugins\WindowsKey\Managers\WindowsKeyAssociationManager())->uninstall();
         return parent::uninstall();
     }
 }

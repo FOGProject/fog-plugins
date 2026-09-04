@@ -145,7 +145,7 @@ class AddLocationImport extends \FOG\Base\Hook
         );
         $names = [];
         foreach ((array)$locationIDs as $locationID) {
-            $Location = self::getClass('Location', $locationID);
+            $Location = new \FOG\Plugins\Location\Items\Location($locationID);
             if ($Location->isValid()) {
                 $names[] = $Location->get('name');
             }
@@ -173,8 +173,8 @@ class AddLocationImport extends \FOG\Base\Hook
             ['hostID' => $hostID]
         );
         $locationID = array_shift($ids);
-        if (self::getClass('Location', $locationID)->isValid()) {
-            self::getClass('LocationAssociationManager')
+        if ((new \FOG\Plugins\Location\Items\Location($locationID))->isValid()) {
+            (new \FOG\Plugins\Location\Managers\LocationAssociationManager())
                 ->insertBatch(
                     ['hostID', 'locationID'],
                     [[$hostID, $locationID]]

@@ -256,12 +256,12 @@ class OIDCManagement extends \FOG\Base\FOGPage
                 if ('' === $name) {
                     throw new \Exception(_('Please enter a name'));
                 }
-                if (self::getClass('OIDCManager')->exists($name)) {
+                if ((new \FOG\Plugins\OIDC\Managers\OIDCManager())->exists($name)) {
                     throw new \Exception(
                         _('A provider already exists with this name!')
                     );
                 }
-                $OIDC = self::getClass('OIDC')
+                $OIDC = (new \FOG\Plugins\OIDC\Items\OIDC())
                     ->set('name', $name)
                     ->set(
                         'description',
@@ -609,7 +609,7 @@ class OIDCManagement extends \FOG\Base\FOGPage
             throw new \Exception(_('Please enter a name'));
         }
         if ($name != $this->obj->get('name')
-            && self::getClass('OIDCManager')->exists($name)
+            && (new \FOG\Plugins\OIDC\Managers\OIDCManager())->exists($name)
         ) {
             throw new \Exception(
                 _('A provider already exists with this name!')
