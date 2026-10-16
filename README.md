@@ -3,7 +3,7 @@
 The plugins that ship with [FOG Project](https://github.com/FOGProject/fogproject).
 One repository, one release, per-plugin versions in each manifest.
 
-This is the source of truth for the 15 bundled plugins. The FOG build pins a
+This is the source of truth for the 16 bundled plugins. The FOG build pins a
 revision of this repository and lays its contents into
 `packages/web/lib/plugins/` in the tarball.
 
@@ -87,6 +87,7 @@ the rest.
 | Plugin | Version | What it does |
 |---|---|---|
 | `capone` | 1.6.0 | Automation plugin — image a host straight from PXE without registering it |
+| `directorygroups` | 1.6.0 | Group hosts by Active Directory OU, across one or more domains |
 | `helloworld` | 1.6.0 | Skeleton example: config, model, manager, page, hooks, JS |
 | `ldap` | 1.6.0 | Authenticate FOG users against an LDAP or AD directory |
 | `location` | 1.6.0 | Serve images from the storage node nearest a host — multi-site installs |

@@ -1,0 +1,467 @@
+<?php
+/**
+ * Adds the ou choice to host.
+ *
+ * PHP version 5
+ *
+ * @category AddDirectoryGroupsHost
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @author   Lee Rowlett <nah@nah.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+
+namespace FOG\Plugins\DirectoryGroups\Hooks;
+
+/**
+ * Adds the ou choice to host.
+ *
+ * @category AddDirectoryGroupsHost
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @author   Lee Rowlett <nah@nah.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+class AddDirectoryGroupsHost extends \FOG\Base\Hook
+{
+    /**
+     * The name of this hook.
+     *
+     * @var string
+     */
+    public $name = 'AddDirectoryGroupsHost';
+    /**
+     * The description of this hook.
+     *
+     * @var string
+     */
+    public $description = 'Add OU to Hosts';
+    /**
+     * The active flag (always true but for posterity)
+     *
+     * @var bool
+     */
+    public $active = true;
+    /**
+     * THe node this hook enacts with.
+     *
+     * @var string
+     */
+    public $node = 'directorygroups';
+    /**
+     * Initialize object.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->registerInstalled([
+            ['PLUGINS_INJECT_TABDATA', 'hostTabData'],
+            ['HOST_EDIT_SUCCESS', 'hostAddDirectoryGroupsEdit'],
+            ['HOST_MASSEDIT_FIELDS', 'massEditFields'],
+            ['HOST_MASSEDIT_APPLY', 'massEditApply'],
+            ['HOST_ADD_FIELDS', 'hostAddDirectoryGroupsField'],
+            ['HOST_REGISTER', 'hostAddDirectoryGroupsRegister'],
+        ]);
+    }
+    /**
+     * The host tab data.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function hostTabData($arguments)
+    {
+        global $node;
+        if ($node != 'host') {
+            return;
+        }
+        $obj = $arguments['obj'];
+
+        $arguments['pluginsTabData'][] = [
+            'name' => _('Directory Group'),
+            'id' => 'host-directorygroups',
+            'generator' => function () use ($obj) {
+                $this->hostDirectoryGroups($obj);
+            }
+        ];
+    }
+    /**
+     * The host ou display
+     *
+     * @param object $obj The host object we're working with.
+     *
+     * @return void
+     */
+    public function hostDirectoryGroups($obj)
+    {
+        $items = \FOG\Router\Route::getList('directorygroupsassociation');
+        $ou = 0;
+        foreach ($items as &$item) {
+            if ($item->hostID == $obj->get('id')) {
+                $ou = $item->directorygroupsID;
+                unset($item);
+                break;
+            }
+            unset($item);
+        }
+        $directorygroupsID = (
+            (int)filter_input(INPUT_POST, 'directorygroups') ?:
+            $ou
+        );
+        $ouSelector = (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsManager())
+            ->buildSelectBox($directorygroupsID, 'directorygroups');
+
+        $fields = [
+            \FOG\Base\FOGPage::makeLabel(
+                'col-sm-3 col-form-label',
+                'directorygroups',
+                _('Host OU')
+            ) => $ouSelector
+        ];
+
+        $buttons = \FOG\Base\FOGPage::makeButton(
+            'directorygroups-send',
+            _('Update'),
+            'btn btn-primary float-end'
+        );
+        // Create-and-associate, the same button and modal the core association
+        // tabs get. Added before the *_FIELDS event so a listener can still see
+        // it, and immediately after Update so Update stays the row's rightmost
+        // (primary) button with this one to its left. The modal it returns is
+        // echoed after the form -- see below for why it cannot go inside.
+        $createModal = \FOG\Base\FOGPage::renderAssocCreate(
+            'host-directorygroups',
+            'directorygroups',
+            $buttons,
+            $obj->get('id'),
+            _('OU')
+        );
+
+        self::$HookManager->processEvent(
+            'HOST_DIRECTORYGROUPS_FIELDS',
+            [
+                'fields' => &$fields,
+                'buttons' => &$buttons,
+                'Host' => &$obj
+            ]
+        );
+        $rendered = \FOG\Base\FOGPage::formFields($fields);
+        unset($fields);
+
+        echo \FOG\Base\FOGPage::makeFormTag(
+            '',
+            'host-directorygroups-form',
+            \FOG\Base\FOGPage::makeTabUpdateURL(
+                'host-directorygroups',
+                $obj->get('id')
+            ),
+            'post',
+            'application/x-www-form-urlencoded',
+            true
+        );
+        echo '<div class="card">';
+        echo '<div class="card-header">';
+        echo '<h4 class="card-title">';
+        echo _('OU');
+        echo '</h4>';
+        echo '</div>';
+        echo '<div class="card-body">';
+        echo $rendered;
+        echo '</div>';
+        echo '<div class="card-footer">';
+        echo $buttons;
+        echo '</div>';
+        echo '</div>';
+        echo '</form>';
+        // Outside the form, deliberately. The modal holds the fetched create
+        // form, and a <form> inside another <form> is invalid markup: the
+        // browser drops the inner one and the create would post nothing.
+        echo $createModal;
+    }
+    /**
+     * The ou updater element.
+     *
+     * @param object $obj The object we're working with.
+     *
+     * @return void
+     */
+    public function hostDirectoryGroupsPost($obj)
+    {
+        self::checkAuthAndCSRF();
+        $directorygroupsID = trim(
+            (int)filter_input(INPUT_POST, 'directorygroups')
+        );
+        $insert_fields = ['hostID', 'directorygroupsID'];
+        $insert_values = [];
+        $hosts = [$obj->get('id')];
+        if (count($hosts ?: [])) {
+            \FOG\Router\Route::deletemass(
+                'directorygroupsassociation',
+                ['hostID' => $hosts]
+            );
+            if ($directorygroupsID > 0) {
+                foreach ((array)$hosts as $ind => &$hostID) {
+                    $insert_values[] = [$hostID, $directorygroupsID];
+                    unset($hostID);
+                }
+            }
+        }
+        if (count($insert_values) > 0) {
+            (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
+                ->insertBatch(
+                    $insert_fields,
+                    $insert_values
+                );
+        }
+    }
+    /**
+     * Associates the OU posted during host (auto) registration.
+     *
+     * The Registration class decodes $_POST in place before firing
+     * HOST_REGISTER, so the posted 'directorygroups' is already a plain id here.
+     *
+     * @param mixed $arguments The hook arguments (contains Host).
+     *
+     * @return void
+     */
+    public function hostAddDirectoryGroupsRegister($arguments)
+    {
+        $obj = $arguments['Host'];
+        if (!$obj->isValid()) {
+            return;
+        }
+        $directorygroupsID = (int)($_POST['directorygroups'] ?? 0);
+        if ($directorygroupsID < 1) {
+            return;
+        }
+        (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
+            ->insertBatch(
+                ['hostID', 'directorygroupsID'],
+                [[$obj->get('id'), $directorygroupsID]]
+            );
+    }
+    /**
+     * The host ou selector.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function hostAddDirectoryGroupsEdit($arguments)
+    {
+        self::checkAuthAndCSRF();
+        global $tab;
+        global $node;
+        if ($node != 'host') {
+            return;
+        }
+        $obj = $arguments['Host'];
+        try {
+            switch ($tab) {
+                case 'host-directorygroups':
+                    $this->hostDirectoryGroupsPost($obj);
+                    break;
+                default:
+                    return;
+            }
+            $arguments['code'] = \FOG\Router\HTTPResponseCodes::HTTP_ACCEPTED;
+            $arguments['hook'] = 'HOST_EDIT_DIRECTORYGROUPS_SUCCESS';
+            $arguments['msg'] = json_encode(
+                [
+                    'msg' => _('Host OU Updated!'),
+                    'title' => _('Host OU Update Success')
+                ]
+            );
+        } catch (\Exception $e) {
+            $arguments['code'] = (
+                $arguments['serverFault'] ?
+                \FOG\Router\HTTPResponseCodes::HTTP_INTERNAL_SERVER_ERROR :
+                \FOG\Router\HTTPResponseCodes::HTTP_BAD_REQUEST
+            );
+            $arguments['hook'] = 'HOST_EDIT_DIRECTORYGROUPS_FAIL';
+            $arguments['msg'] = json_encode(
+                [
+                    'error' => $e->getMessage(),
+                    'title' => _('Host Update OU Fail')
+                ]
+            );
+        }
+    }
+    /**
+     * The host ou field for function add.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function hostAddDirectoryGroupsField($arguments)
+    {
+        global $node;
+        if ($node != 'host') {
+            return;
+        }
+        $directorygroupsID = (int)filter_input(INPUT_POST, 'directorygroups');
+        $ouSelector = (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsManager())
+            ->buildSelectBox($directorygroupsID, 'directorygroups');
+
+        $arguments['fields'][
+            \FOG\Base\FOGPage::makeLabel(
+                'col-sm-3 col-form-label',
+                'directorygroups',
+                _('Host OU')
+            )
+        ] = $ouSelector;
+    }
+    /**
+     * Contributes the ou to the host list's Mass Edit form.
+     *
+     * ADR 0038 decision 13. This replaces AddOUGroup, whose only job was
+     * to set one ou across a group's members. That hook was a copy, not a
+     * grant: it read the membership at the instant the button was pressed and
+     * wrote a row per member, so a host added to the group afterward got
+     * nothing and a host removed kept what it had. Worse, it had no way to
+     * express "leave this host alone" -- every save deleted the association
+     * for every member first, so setting one host's ou through the group
+     * wiped it from all of them.
+     *
+     * A ou is single-valued per host: the write path has always been
+     * delete-then-insert-one. That is why this is a mass edit rather than one
+     * of ADR 0038's grant tables -- a grant is a SET that several groups can
+     * union into, and unioning two ous means nothing.
+     *
+     * Core draws the three-state action control around this field, which is
+     * what makes "leave alone" expressible at all. The value control is
+     * rendered EMPTY on purpose: there is no honest value to pre-fill it with
+     * when the selection disagrees. What the hosts hold is stated in the hint
+     * instead, where "(varies)" is sayable.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function massEditFields($arguments)
+    {
+        $hostIDs = (array)$arguments['hostIDs'];
+
+        $arguments['fields']['directorygroups'] = [
+            'label' => _('Host OU'),
+            'input' => (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsManager())->buildSelectBox(
+                '',
+                'value[directorygroups]',
+                'name',
+                '',
+                false,
+                'id',
+                'massedit-directorygroups'
+            ),
+            'hint' => \FOG\Util\SharedHostValues::hint(
+                $this->_sharedDirectoryGroups($hostIDs)
+            ),
+        ];
+    }
+    /**
+     * What the selected hosts hold, as a name rather than an id.
+     *
+     * SharedHostValues::forHostRows() answers in the column's own terms, so a
+     * uniform selection comes back as the ou id. Rendering that would put
+     * a bare number in front of the admin where every other hint shows the
+     * value they set. The lookup only happens when the answer is uniform and
+     * non-empty, which is the only case where there is one name to show.
+     *
+     * forHostRows() is also the reason this is not a hand-rolled query: a
+     * host with no ou has no row at all, so counting rows would call
+     * three hosts out of five "in agreement". It compares the row count to
+     * the selection size for exactly that reason.
+     *
+     * @param array $hostIDs the selection
+     *
+     * @return array a SharedHostValues info array
+     */
+    private function _sharedDirectoryGroups(array $hostIDs)
+    {
+        $info = \FOG\Util\SharedHostValues::forHostRows(
+            $hostIDs,
+            'directoryOUAssoc',
+            'doaHostID',
+            ['directorygroups' => 'doaOUID']
+        )['directorygroups'];
+
+        if (!empty($info['uniform']) && '' !== (string)$info['value']) {
+            $item = new \FOG\Plugins\DirectoryGroups\Items\DirectoryGroups((int)$info['value']);
+            if ($item->isValid()) {
+                $info['value'] = $item->get('name');
+            }
+        }
+
+        return $info;
+    }
+    /**
+     * Applies a resolved ou action across the selection.
+     *
+     * The action arrives already reduced to leave/set/clear, so there is no
+     * sentinel to parse and no way for an empty control to be mistaken for
+     * "clear it" -- which is the failure the three-state model exists to stop
+     * and the one AddOUGroup could not avoid.
+     *
+     * @param mixed $arguments The arguments to change.
+     *
+     * @return void
+     */
+    public function massEditApply($arguments)
+    {
+        if (!isset($arguments['actions']['directorygroups'])) {
+            return;
+        }
+        $instruction = $arguments['actions']['directorygroups'];
+        $action = $instruction['action'];
+        if ('leave' === $action) {
+            return;
+        }
+        $hostIDs = array_values(
+            array_filter(
+                array_map('intval', (array)$arguments['hostIDs']),
+                function ($id) {
+                    return $id > 0;
+                }
+            )
+        );
+        if (count($hostIDs) < 1) {
+            return;
+        }
+
+        $itemID = 0;
+        if ('set' === $action) {
+            $itemID = (int)$instruction['value'];
+            // A set naming a ou that does not exist is a bad request, not
+            // an instruction to clear: silently turning it into one would
+            // strip the ou off every selected host.
+            if ($itemID < 1
+                || !(new \FOG\Plugins\DirectoryGroups\Items\DirectoryGroups($itemID))->isValid()
+            ) {
+                throw new \Exception(_('Invalid OU selected'));
+            }
+        }
+
+        // Both branches clear first. The association is single-valued per
+        // host, so a set is a replace -- and doing it in one deletemass
+        // rather than per host keeps it to one statement.
+        \FOG\Router\Route::deletemass(
+            'directorygroupsassociation',
+            ['hostID' => $hostIDs]
+        );
+        if ($itemID < 1) {
+            return;
+        }
+        $insert_values = [];
+        foreach ($hostIDs as $hostID) {
+            $insert_values[] = [$hostID, $itemID];
+        }
+        (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
+            ->insertBatch(['hostID', 'directorygroupsID'], $insert_values);
+    }
+}
