@@ -80,7 +80,7 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
         );
     }
     /**
-     * Declares a domain's bind password as a secret the API never emits.
+     * Declares a domain's bind and join passwords as secrets the API never emits.
      *
      * The 'always' tier, as the ldap plugin does for its own bind password:
      * only the server binds with it, so nothing has a reason to read it
@@ -93,6 +93,7 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
     public function declareSensitiveFields($arguments)
     {
         $arguments['always']['directorydomain'][] = 'bindPwd';
+        $arguments['always']['directorydomain'][] = 'joinPwd';
     }
     /**
      * Refuses API writes to a directory group's core group.
@@ -110,11 +111,11 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
         $arguments['fields']['directorygroups'][] = 'groupID';
     }
     /**
-     * Keeps the bind password out of the domain export.
+     * Keeps the bind and join passwords out of the domain export.
      *
      * The list is covered by the sensitive-field tier above. FOGPage::export()
      * builds its CSV from the table's own columns and does not consult that
-     * tier, so without this the export would carry the password.
+     * tier, so without this the export would carry the passwords.
      *
      * @param mixed $arguments The arguments to modify.
      *
@@ -126,7 +127,7 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
             array_filter(
                 $arguments['columns'],
                 function ($column) {
-                    return 'bindPwd' !== $column['dt'];
+                    return !in_array($column['dt'], ['bindPwd', 'joinPwd'], true);
                 }
             )
         );

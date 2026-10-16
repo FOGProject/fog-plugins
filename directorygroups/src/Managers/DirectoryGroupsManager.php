@@ -167,6 +167,10 @@ class DirectoryGroupsManager extends \FOG\Base\FOGManagerController
                 }
                 return \FOG\Db\SchemaReconciler::applyConstraints('directorygroups');
             },
+            // 8, 9 - the account hosts in a domain join with (GH-1887). The
+            // password is stored as typed, like the bind password.
+            "ALTER TABLE `directoryDomains` ADD COLUMN `ddJoinUser` VARCHAR(255) NOT NULL DEFAULT ''",
+            "ALTER TABLE `directoryDomains` ADD COLUMN `ddJoinPwd` VARCHAR(255) NOT NULL DEFAULT ''",
         ];
     }
     /**

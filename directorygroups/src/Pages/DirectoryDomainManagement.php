@@ -111,7 +111,19 @@ class DirectoryDomainManagement extends \FOG\Base\FOGPage
             ]
             + $text('caCert', _('CA Certificate Path'), '/etc/ssl/certs/example-ca.pem')
             + $text('baseDN', _('Computer Search Base'), 'DC=example,DC=com')
-            + $text('ouBase', _('OU Browse Base'), _('Blank starts at the domain root'));
+            + $text('ouBase', _('OU Browse Base'), _('Blank starts at the domain root'))
+            + $text('joinUser', _('Join Username'), _('Blank: each host joins with its own account'))
+            + [
+                self::makeLabel($labelClass, 'joinPwd', _('Join Password'))
+                => self::makeInput(
+                    'form-control',
+                    'joinPwd',
+                    $isEdit ? _('Leave blank to keep the current password') : '',
+                    'password',
+                    'joinPwd',
+                    ''
+                )
+            ];
     }
     /**
      * The posted connection fields, trimmed.
@@ -123,11 +135,12 @@ class DirectoryDomainManagement extends \FOG\Base\FOGPage
     private static function _posted()
     {
         $out = [];
-        foreach (['name', 'description', 'uri', 'bindDN', 'caCert', 'baseDN', 'ouBase'] as $key) {
+        foreach (['name', 'description', 'uri', 'bindDN', 'caCert', 'baseDN', 'ouBase', 'joinUser'] as $key) {
             $out[$key] = trim((string)filter_input(INPUT_POST, $key));
         }
         $out['name'] = strtolower($out['name']);
         $out['bindPwd'] = (string)filter_input(INPUT_POST, 'bindPwd');
+        $out['joinPwd'] = (string)filter_input(INPUT_POST, 'joinPwd');
         return $out;
     }
     /**
@@ -217,7 +230,7 @@ class DirectoryDomainManagement extends \FOG\Base\FOGPage
     public function directorydomainGeneral()
     {
         $values = [];
-        foreach (['name', 'description', 'uri', 'bindDN', 'caCert', 'baseDN', 'ouBase'] as $key) {
+        foreach (['name', 'description', 'uri', 'bindDN', 'caCert', 'baseDN', 'ouBase', 'joinUser'] as $key) {
             $values[$key] = filter_input(INPUT_POST, $key) ?: $this->obj->get($key);
         }
         $fields = $this->_fields($values, true);
@@ -277,6 +290,9 @@ class DirectoryDomainManagement extends \FOG\Base\FOGPage
         self::_assertNameFree($in['name'], $this->obj->get('id'));
         if ('' === $in['bindPwd']) {
             unset($in['bindPwd']);
+        }
+        if ('' === $in['joinPwd']) {
+            unset($in['joinPwd']);
         }
         foreach ($in as $key => $value) {
             $this->obj->set($key, $value);
