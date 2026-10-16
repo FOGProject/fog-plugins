@@ -148,13 +148,9 @@ $cases = [
         'assoc' => 'ouassociation',
         'col'   => 'ouID',
     ],
-    [
-        'file'  => 'directorygroups/src/Hooks/AddDirectoryGroupsHost.php',
-        'class' => 'FOG\Plugins\DirectoryGroups\Hooks\AddDirectoryGroupsHost',
-        'key'   => 'directorygroups',
-        'assoc' => 'directorygroupsassociation',
-        'col'   => 'directorygroupsID',
-    ],
+    // directorygroups is not here: its hosts are a core group's members, so
+    // a set goes through Group::save(). tests/directorygroups-membership
+    // pins what that changes.
 ];
 
 foreach ($cases as $case) {

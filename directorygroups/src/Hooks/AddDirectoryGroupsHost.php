@@ -99,16 +99,7 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
      */
     public function hostDirectoryGroups($obj)
     {
-        $items = \FOG\Router\Route::getList('directorygroupsassociation');
-        $ou = 0;
-        foreach ($items as &$item) {
-            if ($item->hostID == $obj->get('id')) {
-                $ou = $item->directorygroupsID;
-                unset($item);
-                break;
-            }
-            unset($item);
-        }
+        $ou = self::currentDirectoryGroup($obj->get('id'));
         $directorygroupsID = (
             (int)filter_input(INPUT_POST, 'directorygroups') ?:
             $ou
@@ -193,31 +184,10 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
     public function hostDirectoryGroupsPost($obj)
     {
         self::checkAuthAndCSRF();
-        $directorygroupsID = trim(
+        self::setDirectoryGroup(
+            [$obj->get('id')],
             (int)filter_input(INPUT_POST, 'directorygroups')
         );
-        $insert_fields = ['hostID', 'directorygroupsID'];
-        $insert_values = [];
-        $hosts = [$obj->get('id')];
-        if (count($hosts ?: [])) {
-            \FOG\Router\Route::deletemass(
-                'directorygroupsassociation',
-                ['hostID' => $hosts]
-            );
-            if ($directorygroupsID > 0) {
-                foreach ((array)$hosts as $ind => &$hostID) {
-                    $insert_values[] = [$hostID, $directorygroupsID];
-                    unset($hostID);
-                }
-            }
-        }
-        if (count($insert_values) > 0) {
-            (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
-                ->insertBatch(
-                    $insert_fields,
-                    $insert_values
-                );
-        }
     }
     /**
      * Associates the OU posted during host (auto) registration.
@@ -239,11 +209,7 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
         if ($directorygroupsID < 1) {
             return;
         }
-        (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
-            ->insertBatch(
-                ['hostID', 'directorygroupsID'],
-                [[$obj->get('id'), $directorygroupsID]]
-            );
+        self::setDirectoryGroup([$obj->get('id')], $directorygroupsID);
     }
     /**
      * The host ou selector.
@@ -367,16 +333,11 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
     /**
      * What the selected hosts hold, as a name rather than an id.
      *
-     * SharedHostValues::forHostRows() answers in the column's own terms, so a
-     * uniform selection comes back as the ou id. Rendering that would put
-     * a bare number in front of the admin where every other hint shows the
-     * value they set. The lookup only happens when the answer is uniform and
-     * non-empty, which is the only case where there is one name to show.
-     *
-     * forHostRows() is also the reason this is not a hand-rolled query: a
-     * host with no ou has no row at all, so counting rows would call
-     * three hosts out of five "in agreement". It compares the row count to
-     * the selection size for exactly that reason.
+     * _sharedMembership() answers with the directory group id. Rendering
+     * that would put a bare number in front of the admin where every other
+     * hint shows the value they set. The lookup only happens when the answer
+     * is uniform and non-empty, which is the only case where there is one
+     * name to show.
      *
      * @param array $hostIDs the selection
      *
@@ -384,12 +345,7 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
      */
     private function _sharedDirectoryGroups(array $hostIDs)
     {
-        $info = \FOG\Util\SharedHostValues::forHostRows(
-            $hostIDs,
-            'directoryOUAssoc',
-            'doaHostID',
-            ['directorygroups' => 'doaOUID']
-        )['directorygroups'];
+        $info = self::_sharedMembership($hostIDs);
 
         if (!empty($info['uniform']) && '' !== (string)$info['value']) {
             $item = new \FOG\Plugins\DirectoryGroups\Items\DirectoryGroups((int)$info['value']);
@@ -399,6 +355,37 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
         }
 
         return $info;
+    }
+    /**
+     * forHostRows() over directory group membership.
+     *
+     * Membership is a join, not a table forHostRows() can read, so this asks
+     * the same two questions itself: does every selected host have a
+     * directory group, and is it the same one. A host with none makes the
+     * selection "(varies)", as a host with no row does there.
+     *
+     * @param array $hostIDs the selection
+     *
+     * @return array ['uniform' => bool, 'value' => string]
+     */
+    private function _sharedMembership(array $hostIDs)
+    {
+        $hostIDs = array_values(array_unique(array_filter(array_map('intval', $hostIDs))));
+        if (count($hostIDs) < 1) {
+            return ['uniform' => false, 'value' => ''];
+        }
+        $row = self::$DB->query(
+            'SELECT COUNT(DISTINCT `gm`.`gmHostID`) AS `n`,'
+            . ' COUNT(DISTINCT `d`.`doID`) AS `d`, MIN(`d`.`doID`) AS `v`'
+            . ' FROM `groupMembers` `gm`'
+            . ' JOIN `directoryOUs` `d` ON `d`.`doGroupID` = `gm`.`gmGroupID`'
+            . ' WHERE `gm`.`gmHostID` IN (' . implode(',', $hostIDs) . ')'
+        )->fetch();
+        $n = (int)$row->get('n');
+        return [
+            'uniform' => $n === count($hostIDs) && 1 === (int)$row->get('d'),
+            'value' => (string)$row->get('v')
+        ];
     }
     /**
      * Applies a resolved ou action across the selection.
@@ -447,21 +434,62 @@ class AddDirectoryGroupsHost extends \FOG\Base\Hook
             }
         }
 
-        // Both branches clear first. The association is single-valued per
-        // host, so a set is a replace -- and doing it in one deletemass
-        // rather than per host keeps it to one statement.
-        \FOG\Router\Route::deletemass(
-            'directorygroupsassociation',
-            ['hostID' => $hostIDs]
-        );
-        if ($itemID < 1) {
+        self::setDirectoryGroup($hostIDs, $itemID);
+    }
+    /**
+     * The directory group a host is in, or 0.
+     *
+     * @param int $hostID the host
+     *
+     * @return int the directory group id
+     */
+    public static function currentDirectoryGroup($hostID)
+    {
+        $row = self::$DB->query(
+            'SELECT `d`.`doID` AS `id` FROM `directoryOUs` `d`'
+            . ' JOIN `groupMembers` `gm` ON `gm`.`gmGroupID` = `d`.`doGroupID`'
+            . ' WHERE `gm`.`gmHostID` = :host ORDER BY `d`.`doID` LIMIT 1',
+            [],
+            [':host' => (int)$hostID]
+        )->fetch()->get('id');
+        return (int)$row;
+    }
+    /**
+     * Puts hosts in one directory group, or takes them out of all of them.
+     *
+     * A join goes through the directory group's core group, so core fires
+     * ASSOCIATION_UPDATED and AddDirectoryGroupsMembership takes each host
+     * out of its old directory group and writes the new OU onto it.
+     *
+     * @param array $hostIDs           the hosts
+     * @param int   $directorygroupsID the directory group, or 0 for none
+     *
+     * @throws \Exception when the directory group does not exist
+     *
+     * @return void
+     */
+    public static function setDirectoryGroup(array $hostIDs, $directorygroupsID)
+    {
+        $hostIDs = array_values(array_filter(array_map('intval', $hostIDs)));
+        if (count($hostIDs) < 1) {
             return;
         }
-        $insert_values = [];
-        foreach ($hostIDs as $hostID) {
-            $insert_values[] = [$hostID, $itemID];
+        if ($directorygroupsID > 0) {
+            $item = new \FOG\Plugins\DirectoryGroups\Items\DirectoryGroups($directorygroupsID);
+            $Group = new \FOG\Items\Group((int)$item->get('groupID'));
+            if (!$item->isValid() || !$Group->isValid()) {
+                throw new \Exception(_('Invalid OU selected'));
+            }
+            $Group->addHost($hostIDs)->save();
+            return;
         }
-        (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
-            ->insertBatch(['hostID', 'directorygroupsID'], $insert_values);
+        $rows = self::$DB->query(
+            'SELECT DISTINCT `gm`.`gmGroupID` AS `g` FROM `groupMembers` `gm`'
+            . ' JOIN `directoryOUs` `d` ON `d`.`doGroupID` = `gm`.`gmGroupID`'
+            . ' WHERE `gm`.`gmHostID` IN (' . implode(',', $hostIDs) . ')'
+        )->fetch(\PDO::FETCH_ASSOC, 'fetch_all')->get();
+        foreach ((array)$rows as $row) {
+            (new \FOG\Items\Group((int)$row['g']))->removeHost($hostIDs)->save();
+        }
     }
 }

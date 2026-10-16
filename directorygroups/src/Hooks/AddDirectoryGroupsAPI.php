@@ -59,6 +59,7 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
         $this->registerInstalled([
             ['API_VALID_CLASSES', 'injectAPIElements'],
             ['API_SENSITIVE_FIELDS', 'declareSensitiveFields'],
+            ['API_SERVER_OWNED_FIELDS', 'declareServerOwnedFields'],
             ['DIRECTORYDOMAIN_EXPORT_ITEMS', 'stripBindPassword'],
         ]);
     }
@@ -75,7 +76,6 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
         array_push(
             $arguments['validClasses'],
             $this->node,
-            'directorygroupsassociation',
             'directorydomain'
         );
     }
@@ -93,6 +93,21 @@ class AddDirectoryGroupsAPI extends \FOG\Base\Hook
     public function declareSensitiveFields($arguments)
     {
         $arguments['always']['directorydomain'][] = 'bindPwd';
+    }
+    /**
+     * Refuses API writes to a directory group's core group.
+     *
+     * DirectoryGroups::save() creates that group and keeps its name in step.
+     * A client that pointed groupID at another group would move every host
+     * of the directory group into it.
+     *
+     * @param mixed $arguments The field map to modify.
+     *
+     * @return void
+     */
+    public function declareServerOwnedFields($arguments)
+    {
+        $arguments['fields']['directorygroups'][] = 'groupID';
     }
     /**
      * Keeps the bind password out of the domain export.

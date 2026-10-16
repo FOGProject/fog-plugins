@@ -61,7 +61,7 @@ class DirectoryGroupsDeleteMassItems extends \FOG\Base\Hook
         ]);
     }
     /**
-     * Prepares to clean up associations
+     * Deletes a directory group's core group with it
      *
      * @param mixed $arguments The items to change.
      *
@@ -69,21 +69,28 @@ class DirectoryGroupsDeleteMassItems extends \FOG\Base\Hook
      */
     public function deletemassitems($arguments)
     {
-        switch ($arguments['classname']) {
-            case 'host':
-                $arguments['removeItems']['directorygroupsassociation'] = [
-                    'hostID' => $arguments['itemIDs']
-                ];
-                break;
-            case 'directorygroups':
-                // Only treat itemIDs as ouIDs when an OU itself is deleted.
-                // A bare default would mis-fire for every other entity now that
-                // all delete paths funnel through DELETEMASS_API, deleting
-                // ouassociation rows whose directorygroupsID collides with the deleted id.
-                $arguments['removeItems']['directorygroupsassociation'] = [
-                    'directorygroupsID' => $arguments['itemIDs']
-                ];
-                break;
+        // A deleted host leaves its directory group by core's own cascade:
+        // the membership is a groupMembers row now.
+        if ('directorygroups' !== $arguments['classname']) {
+            return;
+        }
+        // A deleted directory group takes its core group with it. Only the
+        // ids that exist: an empty list would reach deletemass() as "no
+        // filter", which matches every group.
+        $ids = array_values(array_filter(array_map('intval', (array)$arguments['itemIDs'])));
+        if (count($ids) < 1) {
+            return;
+        }
+        $groupIDs = array_values(
+            array_filter(
+                array_map(
+                    'intval',
+                    (array)\FOG\Router\Route::getIds('directorygroups', ['id' => $ids], 'groupID')
+                )
+            )
+        );
+        if (count($groupIDs) > 0) {
+            $arguments['removeItems']['group'] = ['id' => $groupIDs];
         }
     }
 }
