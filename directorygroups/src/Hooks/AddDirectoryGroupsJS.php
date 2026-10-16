@@ -73,6 +73,7 @@ class AddDirectoryGroupsJS extends \FOG\Base\Hook
     {
         $this->injectPluginJS($arguments, [
             'directorygroups' => ['fallback' => true],
+            'directorydomain' => ['fallback' => true],
             'report' => ['secondary' => true, 'fallback' => true],
             'host' => ['secondary' => true],
         ]);

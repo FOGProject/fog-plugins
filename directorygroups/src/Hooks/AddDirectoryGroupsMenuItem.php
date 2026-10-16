@@ -27,6 +27,14 @@ namespace FOG\Plugins\DirectoryGroups\Hooks;
 class AddDirectoryGroupsMenuItem extends \FOG\Base\Hook
 {
     /**
+     * The domains' own node. It is separate from the groups so a role can
+     * be allowed to group hosts without being allowed to read or change a
+     * domain's bind account.
+     *
+     * @var string
+     */
+    const DOMAIN_NODE = 'directorydomain';
+    /**
      * The name of this hook.
      *
      * @var string
@@ -96,6 +104,10 @@ class AddDirectoryGroupsMenuItem extends \FOG\Base\Hook
      */
     public function menuUpdate($arguments)
     {
+        if ($arguments['node'] == self::DOMAIN_NODE) {
+            $arguments['menu']['export'] = _('Export Domains');
+            return;
+        }
         if ($arguments['node'] != $this->node) {
             return;
         }
@@ -113,6 +125,8 @@ class AddDirectoryGroupsMenuItem extends \FOG\Base\Hook
     {
         $arguments['hook_main'][$this->node]
             = [_('Directory Groups'), 'fas fa-folder-tree'];
+        $arguments['hook_main'][self::DOMAIN_NODE]
+            = [_('Directory Domains'), 'fas fa-sitemap'];
     }
     /**
      * Adds the ou page to search elements.
@@ -124,6 +138,7 @@ class AddDirectoryGroupsMenuItem extends \FOG\Base\Hook
     public function addSearch($arguments)
     {
         $arguments['searchPages'][] = $this->node;
+        $arguments['searchPages'][] = self::DOMAIN_NODE;
     }
     /**
      * Adds the ou page to objects elements.
@@ -135,6 +150,7 @@ class AddDirectoryGroupsMenuItem extends \FOG\Base\Hook
     public function addPageWithObject($arguments)
     {
         $arguments['PagesWithObjects'][] = $this->node;
+        $arguments['PagesWithObjects'][] = self::DOMAIN_NODE;
     }
 
     /**
@@ -148,6 +164,9 @@ class AddDirectoryGroupsMenuItem extends \FOG\Base\Hook
     public function permData($arguments)
     {
         $arguments['registry'][$this->node] = [
+            'view', 'create', 'edit', 'delete'
+        ];
+        $arguments['registry'][self::DOMAIN_NODE] = [
             'view', 'create', 'edit', 'delete'
         ];
     }

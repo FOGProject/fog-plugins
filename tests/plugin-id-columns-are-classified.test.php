@@ -57,7 +57,7 @@ $primary = [
     'ldapUserGrant.lugID', 'location.lID', 'locationAssoc.laID', 'ntfy.nID',
     'oidcGroupRoleAssoc.ograID', 'oidcGroupUserGroupAssoc.ogugID',
     'oidcIdentity.oiID', 'oidcUserGrant.ougID', 'ou.ouID', 'ouAssoc.oaID',
-    'directoryOUs.doID', 'directoryOUAssoc.doaID',
+    'directoryOUs.doID', 'directoryOUAssoc.doaID', 'directoryDomains.ddID',
     'pushbullet.pID', 'slack.sID', 'subnetgroup.sgID', 'windowsKeys.wkID',
     'windowsKeysAssoc.wkaID', 'wolbroadcast.wbID',
 ];
