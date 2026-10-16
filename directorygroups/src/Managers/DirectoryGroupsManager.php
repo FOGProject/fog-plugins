@@ -149,7 +149,105 @@ class DirectoryGroupsManager extends \FOG\Base\FOGManagerController
                 }
                 return \FOG\Db\SchemaReconciler::applyConstraints('directorygroups');
             },
+            // 5 - each directory group is backed by a core group (GH-1879
+            // follow-up). NULL until step 6 creates it. A re-run answers
+            // 1060, which applyUpdates() tolerates; MySQL has no IF NOT EXISTS.
+            'ALTER TABLE `directoryOUs` ADD COLUMN `doGroupID` INTEGER NULL DEFAULT NULL',
+            // 6 - create the core groups, move the hosts into them, and
+            // retire directoryOUAssoc: core groupMembers holds them now.
+            function () {
+                return self::moveToCoreGroups();
+            },
+            // 7 - declare directoryOUs.doGroupID, CASCADE to `groups`. Same
+            // sweep-then-add as step 4.
+            function () {
+                $res = \FOG\Db\SchemaReconciler::sweepOrphans('directorygroups');
+                if (is_string($res)) {
+                    return $res;
+                }
+                return \FOG\Db\SchemaReconciler::applyConstraints('directorygroups');
+            },
         ];
+    }
+    /**
+     * Backs every directory group with a core group, and moves its hosts.
+     *
+     * For each directory group with no core group yet:
+     * - create a core group (DirectoryGroups::groupName() picks the name);
+     * - copy its directoryOUAssoc rows into groupMembers;
+     * - write its OU, and its domain when it has one, onto each host. That
+     *   is what joining does from now on, and it replaces the check-in
+     *   override the plugin used to apply to the legacy client.
+     *
+     * Then directoryOUAssoc is dropped. Every write before the drop is
+     * idempotent, so a run that fails part way is safe to repeat.
+     *
+     * @return true|string true, or the database error
+     */
+    public static function moveToCoreGroups()
+    {
+        $rows = self::$DB->query(
+            'SELECT `d`.`doID` AS `id`, `d`.`doName` AS `name`, `d`.`doDN` AS `dn`,'
+            . ' `d`.`doCreatedBy` AS `by`, `dd`.`ddName` AS `domain`'
+            . ' FROM `directoryOUs` `d`'
+            . ' LEFT JOIN `directoryDomains` `dd` ON `dd`.`ddID` = `d`.`doDomainID`'
+            . ' WHERE `d`.`doGroupID` IS NULL'
+        )->fetch(\PDO::FETCH_ASSOC, 'fetch_all')->get();
+        foreach ((array)$rows as $row) {
+            $Group = (new \FOG\Items\Group())
+                ->set(
+                    'name',
+                    \FOG\Plugins\DirectoryGroups\Items\DirectoryGroups::groupName(
+                        $row['name'],
+                        $row['id']
+                    )
+                )
+                ->set('description', _('Hosts in directory group') . ' ' . $row['name'])
+                ->set('createdBy', $row['by'] ?: 'fog');
+            if (!$Group->save()) {
+                return sprintf(
+                    '%s: %s',
+                    _('Could not create the core group for directory group'),
+                    $row['name']
+                );
+            }
+            $statements = [
+                [
+                    'UPDATE `directoryOUs` SET `doGroupID` = :gid WHERE `doID` = :id',
+                    [':gid' => $Group->get('id'), ':id' => $row['id']]
+                ],
+            ];
+            if (self::_tableExists('directoryOUAssoc')) {
+                $statements[] = [
+                    'INSERT IGNORE INTO `groupMembers` (`gmHostID`, `gmGroupID`)'
+                    . ' SELECT `a`.`doaHostID`, :gid FROM `directoryOUAssoc` `a`'
+                    . ' JOIN `hosts` `h` ON `h`.`hostID` = `a`.`doaHostID`'
+                    . ' WHERE `a`.`doaOUID` = :id',
+                    [':gid' => $Group->get('id'), ':id' => $row['id']]
+                ];
+                $statements[] = [
+                    'UPDATE `hosts` `h` JOIN `directoryOUAssoc` `a`'
+                    . ' ON `a`.`doaHostID` = `h`.`hostID`'
+                    . ' SET `h`.`hostADOU` = :dn,'
+                    . ' `h`.`hostADDomain` = IF(:domain = \'\', `h`.`hostADDomain`, :domain2)'
+                    . ' WHERE `a`.`doaOUID` = :id',
+                    [
+                        ':dn' => (string)$row['dn'],
+                        ':domain' => (string)$row['domain'],
+                        ':domain2' => (string)$row['domain'],
+                        ':id' => $row['id']
+                    ]
+                ];
+            }
+            foreach ($statements as list($sql, $params)) {
+                if (false !== self::$DB->query($sql, [], $params)->error) {
+                    return self::$DB->error;
+                }
+            }
+        }
+        $res = (new \FOG\Plugins\DirectoryGroups\Managers\DirectoryGroupsAssociationManager())
+            ->uninstall();
+        return $res ? true : _('Could not drop directoryOUAssoc');
     }
     /**
      * Installs the database non-destructively (create-if-absent + apply any

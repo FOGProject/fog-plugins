@@ -87,6 +87,7 @@ $constrained = [
     'doaOUID' => ['directorygroups', 'DirectoryGroupsAssociation', 'directorygroupsID'],
     'doaHostID' => ['directorygroups', 'DirectoryGroupsAssociation', 'hostID'],
     'doDomainID' => ['directorygroups', 'DirectoryGroups', 'domainID'],
+    'doGroupID' => ['directorygroups', 'DirectoryGroups', 'groupID'],
     'sgGroupID' => ['subnetgroup', 'SubnetGroup', 'groupID'],
     // satellite / junction, ldap
     'lgServerID' => ['ldap', 'LDAPGroup', 'serverID'],

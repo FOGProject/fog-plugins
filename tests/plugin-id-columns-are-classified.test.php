@@ -71,7 +71,7 @@ $classified = [
     'location.lStorageGroupID', 'location.lStorageNodeID',
     'ouAssoc.oaOUID', 'ouAssoc.oaHostID',
     'directoryOUAssoc.doaOUID', 'directoryOUAssoc.doaHostID',
-    'directoryOUs.doDomainID',
+    'directoryOUs.doDomainID', 'directoryOUs.doGroupID',
     'windowsKeysAssoc.wkaImageID', 'windowsKeysAssoc.wkaKeyID',
     'LDAPGroups.lgServerID', 'ldapGroupRoleAssoc.lgraGroupID',
     'ldapGroupRoleAssoc.lgraRoleID', 'ldapGroupUserGroupAssoc.lgugGroupID',
@@ -151,8 +151,23 @@ foreach ($iterator as $file) {
     // query elsewhere in the manager is not this table declaring it.
     $chunk = substr($src, (int)strpos($src, 'createTableSql('), 2000);
     preg_match_all('/.([A-Za-z_]+(?:ID|Id)).\s*[,\]]/', $chunk, $cm);
+    $keys = [];
     foreach (array_unique($cm[1]) as $column) {
-        $key = $table . '.' . $column;
+        $keys[] = $table . '.' . $column;
+    }
+    // A column a later schema step adds. Released steps are append-only, so
+    // a new column on an existing table arrives this way and never appears
+    // in createTableSql() (directoryOUs.doGroupID).
+    preg_match_all(
+        '/ALTER TABLE\s+`([A-Za-z_]+)`\s+ADD COLUMN\s+`([A-Za-z_]+(?:ID|Id))`/',
+        $src,
+        $am,
+        PREG_SET_ORDER
+    );
+    foreach ($am as $m) {
+        $keys[] = $m[1] . '.' . $m[2];
+    }
+    foreach (array_unique($keys) as $key) {
         $seen[$key] = true;
         $checks++;
         if (!isset($decided[$key])) {

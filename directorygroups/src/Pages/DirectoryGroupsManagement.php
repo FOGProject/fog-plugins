@@ -402,20 +402,27 @@ class DirectoryGroupsManagement extends \FOG\Base\FOGPage
     /**
      * OU -> host membership list
      *
+     * The hosts live in the directory group's core group, so the list is
+     * that group's own host list. It runs on the core Group because
+     * getItemsList() marks a row "associated" by comparing it with the id of
+     * the object it runs on; on the directory group no row would match.
+     *
      * @return void
      */
     public function getHostsList()
     {
-        return $this->assocItemsList(
+        $Group = new \FOG\Items\Group((int)$this->obj->get('groupID'));
+        return $Group->getItemsList(
             'host',
-            'directorygroupsassociation',
-            'directoryOUAssoc',
-            '`hosts`.`hostID`',
-            '`directoryOUAssoc`.`doaHostID`',
-            '`directoryOUAssoc`.`doaOUID`',
+            'groupassociation',
+            [
+                'LEFT OUTER JOIN `groupMembers` ON `hosts`.`hostID` = `groupMembers`.`gmHostID` '
+                . "AND `groupMembers`.`gmGroupID` = '" . (int)$Group->get('id') . "'"
+            ],
+            '',
             [
                 [
-                    'db' => 'directoryOUAssoc',
+                    'db' => 'groupAssoc',
                     'dt' => 'association',
                     'removeFromQuery' => true
                 ]

@@ -16,6 +16,11 @@ namespace FOG\Plugins\DirectoryGroups\Items;
 /**
  * The association between hosts and ous.
  *
+ * Retired: schema step 6 moves these rows into core groupMembers and drops
+ * the table. The class stays because DirectoryGroupsAssociationManager
+ * resolves it by name, and that manager still creates the table for steps
+ * 2 and 3 on a fresh install.
+ *
  * @category DirectoryGroupsAssociation
  * @package  FOGProject
  * @author   Tom Elliott <tommygunsster@gmail.com>
