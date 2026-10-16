@@ -79,6 +79,7 @@ class AddDirectoryDomainConnection extends \FOG\Base\Hook
         parent::__construct();
         $this->registerInstalled([
             ['DIRECTORY_CONNECTION', 'connection'],
+            ['DIRECTORY_JOIN_ACCOUNT', 'joinAccount'],
             ['SETTINGS_HIDDEN', 'hideSettings'],
         ]);
     }
@@ -100,6 +101,28 @@ class AddDirectoryDomainConnection extends \FOG\Base\Hook
         $arguments['connection'] = $domain
             ? $domain->connection()
             : ['uri' => '', 'bindDN' => '', 'password' => '', 'caCert' => '', 'baseDN' => ''];
+    }
+    /**
+     * Answers with the join account of the host's domain.
+     *
+     * The domain's account beats the one saved on the host when the domain
+     * has one (GH-1887). Registration copies the default account onto every
+     * host, so the other way round the domain's account would almost never
+     * apply. A domain with no join account, or no domain in the list, leaves
+     * the host's own account.
+     *
+     * @param mixed $arguments The event arguments.
+     *
+     * @return void
+     */
+    public function joinAccount($arguments)
+    {
+        $domain = DirectoryDomain::forName($arguments['domain'] ?? '');
+        $account = $domain ? $domain->joinAccount() : null;
+        if (null === $account) {
+            return;
+        }
+        list($arguments['user'], $arguments['password']) = $account;
     }
     /**
      * Hides the settings the domain list replaces.

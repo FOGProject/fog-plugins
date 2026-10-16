@@ -60,7 +60,9 @@ class DirectoryDomain extends \FOG\Base\FOGController
         'bindPwd' => 'ddBindPwd',
         'caCert' => 'ddCACert',
         'baseDN' => 'ddBaseDN',
-        'ouBase' => 'ddOUBase'
+        'ouBase' => 'ddOUBase',
+        'joinUser' => 'ddJoinUser',
+        'joinPwd' => 'ddJoinPwd'
     ];
     /**
      * The required fields.
@@ -113,6 +115,25 @@ class DirectoryDomain extends \FOG\Base\FOGController
             'caCert' => (string)$this->get('caCert'),
             'baseDN' => (string)$this->get('baseDN')
         ];
+    }
+    /**
+     * The account hosts in this domain join with, or null.
+     *
+     * Both halves must be set. A user with no password, or a password with
+     * no user, is not an account, and the host keeps its own (GH-1887).
+     *
+     * @return array|null [user, password]
+     */
+    public function joinAccount()
+    {
+        $user = trim((string)$this->get('joinUser'));
+        $password = \FOG\Agent\DirectoryPlacement::decodeStored(
+            (string)$this->get('joinPwd')
+        );
+        if ('' === $user || '' === $password) {
+            return null;
+        }
+        return [$user, $password];
     }
     /**
      * Where the OU browser starts.
