@@ -57,6 +57,7 @@ $primary = [
     'ldapUserGrant.lugID', 'location.lID', 'locationAssoc.laID', 'ntfy.nID',
     'oidcGroupRoleAssoc.ograID', 'oidcGroupUserGroupAssoc.ogugID',
     'oidcIdentity.oiID', 'oidcUserGrant.ougID', 'ou.ouID', 'ouAssoc.oaID',
+    'directoryOUs.doID', 'directoryOUAssoc.doaID',
     'pushbullet.pID', 'slack.sID', 'subnetgroup.sgID', 'windowsKeys.wkID',
     'windowsKeysAssoc.wkaID', 'wolbroadcast.wbID',
 ];
@@ -69,6 +70,8 @@ $classified = [
     'locationAssoc.laLocationID', 'locationAssoc.laHostID',
     'location.lStorageGroupID', 'location.lStorageNodeID',
     'ouAssoc.oaOUID', 'ouAssoc.oaHostID',
+    'directoryOUAssoc.doaOUID', 'directoryOUAssoc.doaHostID',
+    'directoryOUs.doDomainID',
     'windowsKeysAssoc.wkaImageID', 'windowsKeysAssoc.wkaKeyID',
     'LDAPGroups.lgServerID', 'ldapGroupRoleAssoc.lgraGroupID',
     'ldapGroupRoleAssoc.lgraRoleID', 'ldapGroupUserGroupAssoc.lgugGroupID',

@@ -148,6 +148,13 @@ $cases = [
         'assoc' => 'ouassociation',
         'col'   => 'ouID',
     ],
+    [
+        'file'  => 'directorygroups/src/Hooks/AddDirectoryGroupsHost.php',
+        'class' => 'FOG\Plugins\DirectoryGroups\Hooks\AddDirectoryGroupsHost',
+        'key'   => 'directorygroups',
+        'assoc' => 'directorygroupsassociation',
+        'col'   => 'directorygroupsID',
+    ],
 ];
 
 foreach ($cases as $case) {
@@ -230,6 +237,7 @@ foreach ($cases as $case) {
         \FOG\Base\Hook::$classes = [
             'LocationAssociationManager' => $manager,
             'OUAssociationManager' => $manager,
+            'DirectoryGroupsAssociationManager' => $manager,
         ];
         if (isset($action['invalid'])) {
             \FOG\Base\Hook::$classes['Location'] = function ($id) {
@@ -239,6 +247,8 @@ foreach ($cases as $case) {
                 return $item;
             };
             \FOG\Base\Hook::$classes['OU'] =
+                \FOG\Base\Hook::$classes['Location'];
+            \FOG\Base\Hook::$classes['DirectoryGroups'] =
                 \FOG\Base\Hook::$classes['Location'];
         }
         $hostIDs = [1, 2, 3];

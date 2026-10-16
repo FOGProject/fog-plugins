@@ -1,0 +1,134 @@
+<?php
+/**
+ * The OU class.
+ *
+ * PHP version 5
+ *
+ * @category OU
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+
+namespace FOG\Plugins\DirectoryGroups\Items;
+
+/**
+ * The OU class.
+ *
+ * @category OU
+ * @package  FOGProject
+ * @author   Tom Elliott <tommygunsster@gmail.com>
+ * @license  http://opensource.org/licenses/gpl-3.0 GPLv3
+ * @link     https://fogproject.org
+ */
+class DirectoryGroups extends \FOG\Base\FOGController
+{
+    /**
+     * The location table
+     *
+     * @var string
+     */
+    protected $databaseTable = 'directoryOUs';
+    /**
+     * The location table fields and common names
+     *
+     * @var array
+     */
+    protected $databaseFields = [
+        'id' => 'doID',
+        'name' => 'doName',
+        'description' => 'doDesc',
+        'createdBy' => 'doCreatedBy',
+        'createdTime' => 'doCreatedTime',
+        'ou' => 'doDN',
+        'domainID' => 'doDomainID'
+    ];
+    /**
+     * The required fields
+     *
+     * @var array
+     */
+    protected $databaseFieldsRequired = [
+        'name',
+        'ou'
+    ];
+    /**
+     * Additional fields.
+     *
+     * @var array
+     */
+    protected $additionalFields = [
+        'hosts'
+    ];
+    /**
+     * Destroy this particular object.
+     *
+     * @param string $key the key to destroy for match
+     *
+     * @return bool
+     */
+    public function destroy($key = 'id')
+    {
+        \FOG\Router\Route::deletemass(
+            'directorygroupsassociation',
+            ['directorygroupsID' => $this->get('id')]
+        );
+        return parent::destroy($key);
+    }
+    /**
+     * Stores the item in the DB either stored or updated.
+     *
+     * @return object
+     */
+    public function save()
+    {
+        parent::save();
+        return $this
+            ->assocSetter('DirectoryGroups', 'host')
+            ->load();
+    }
+    /**
+     * Add host to the location.
+     *
+     * @param array $addArray the items to add.
+     *
+     * @return object
+     */
+    public function addHost($addArray)
+    {
+        return $this->addRemItem(
+            'hosts',
+            (array)$addArray,
+            'merge'
+        );
+    }
+    /**
+     * Remove host from the location.
+     *
+     * @param array $removeArray the items to remove.
+     *
+     * @return object
+     */
+    public function removeHost($removeArray)
+    {
+        return $this->addRemItem(
+            'hosts',
+            (array)$removeArray,
+            'diff'
+        );
+    }
+    /**
+     * Loads the locations hosts.
+     *
+     * @return void
+     */
+    protected function loadHosts()
+    {
+        $this->_loadHostIds(
+            'directorygroupsassociation',
+            ['directorygroupsID' => $this->get('id')],
+            'hostID'
+        );
+    }
+}

@@ -54,6 +54,7 @@ $checks = 0;
 $expected = [
     'location' => 'location/src/Managers/LocationManager.php',
     'ou' => 'ou/src/Managers/OUManager.php',
+    'directorygroups' => 'directorygroups/src/Managers/DirectoryGroupsManager.php',
     'windowskey' => 'windowskey/src/Managers/WindowsKeyManager.php',
     'ldap' => 'ldap/src/Managers/LDAPManager.php',
     'oidc' => 'oidc/src/Managers/OIDCManager.php',
