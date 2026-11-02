@@ -965,7 +965,96 @@ class LDAPManager extends \FOG\Base\FOGManagerController
                 }
                 return \FOG\Db\SchemaReconciler::applyConstraints('ldap');
             },
+            // 29 - the five columns a 1.5 table never had (forum 18300).
+            // CREATE TABLE IF NOT EXISTS left a 1.5 table as it was, and
+            // save() names every declared column, so each add or edit of a
+            // server failed with "Unknown column 'lsGroupNamAttr'".
+            function () {
+                return $this->_addMissing15Columns();
+            },
         ];
+    }
+    /**
+     * Adds the LDAPServers columns that a table created by 1.5 lacks, and
+     * backfills the existing rows to what 1.5 did without the column.
+     *
+     * A column that is already present is left alone, rows and all.
+     *
+     * @return bool|string true, or the database error
+     */
+    private function _addMissing15Columns()
+    {
+        $columns = [
+            // 1.5 hard-coded (name=%s) as the group-name filter.
+            'lsGroupNamAttr' => [
+                'definition' => "VARCHAR(255) NOT NULL DEFAULT ''",
+                'backfill' => "UPDATE `LDAPServers` SET `lsGroupNamAttr` = 'name'",
+            ],
+            // 1.5 had no display-name feature.
+            'lsDisplayNameEnabled' => [
+                'definition' => 'TINYINT(1) NOT NULL DEFAULT 0',
+                'backfill' => null,
+            ],
+            'lsDisplayNameAttr' => [
+                'definition' => "VARCHAR(255) NOT NULL DEFAULT ''",
+                'backfill' => null,
+            ],
+            // 1.5 chose LDAPS by port, with this exact list.
+            'lsIsLDAPs' => [
+                'definition' => 'TINYINT(1) NOT NULL DEFAULT 0',
+                'backfill' => 'UPDATE `LDAPServers` SET `lsIsLDAPs` = 1 '
+                    . 'WHERE `lsPort` IN (636, 686, 3269, 7636)',
+            ],
+            // 1.5 had no API sign-in through LDAP; keep it off.
+            'lsAllowAPI' => [
+                'definition' => 'TINYINT(1) NOT NULL DEFAULT 0',
+                'backfill' => null,
+            ],
+        ];
+        $rows = self::$DB->query(
+            "SELECT `COLUMN_NAME` AS `c` "
+            . "FROM `information_schema`.`COLUMNS` "
+            . "WHERE `TABLE_SCHEMA` = DATABASE() "
+            . "AND LOWER(`TABLE_NAME`) = 'ldapservers'"
+        )->fetch(\PDO::FETCH_ASSOC, 'fetch_all')->get();
+        if (self::$DB->error) {
+            // A failed read must not record the step as applied: it would
+            // never run again.
+            return self::$DB->error;
+        }
+        $have = array_map(
+            function ($row) {
+                return strtolower((string)($row['c'] ?? ''));
+            },
+            (array)$rows
+        );
+        if (!count($have)) {
+            // Step 0 creates the table, so this is not expected. Change
+            // nothing rather than guess.
+            return true;
+        }
+        foreach ($columns as $column => $spec) {
+            if (in_array(strtolower($column), $have, true)) {
+                continue;
+            }
+            $statements = [
+                sprintf(
+                    'ALTER TABLE `LDAPServers` ADD COLUMN `%s` %s',
+                    $column,
+                    $spec['definition']
+                ),
+            ];
+            if ($spec['backfill']) {
+                $statements[] = $spec['backfill'];
+            }
+            foreach ($statements as $sql) {
+                self::$DB->query($sql);
+                if (self::$DB->error) {
+                    return self::$DB->error;
+                }
+            }
+        }
+        return true;
     }
     /**
      * Installs the plugin database non-destructively (create-if-absent +
