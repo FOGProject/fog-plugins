@@ -45,6 +45,46 @@ class CaponeTasking extends \FOG\Base\FOGBase
         4 => 'dd'
     ];
     /**
+     * Builds the unencoded line FOS reads for one Capone image.
+     *
+     * Fields: path|osid|type|parttype|format|storage|storageip|osfamily.
+     * Fields 1-7 keep their order because an old FOS reads them by position
+     * and ignores a field it does not know. The eighth is the OS family, so
+     * FOS can place an osid it has no table entry for. It is empty when core
+     * has no Image::getOSFamily() (before fogproject#2085), which FOS reads
+     * as "not sent". This lives in its own static method because the
+     * constructor reads filter_input() and builds its own Image, so a test
+     * cannot drive it (FOGProject/fog-plugins#43).
+     *
+     * @param object $Image       the image
+     * @param object $StorageNode the storage node the image comes from
+     * @param array  $imgTypes    image type id => FOS type name
+     *
+     * @return string
+     */
+    public static function imageLine($Image, $StorageNode, array $imgTypes)
+    {
+        $strSetup = '%s|%s|%s|%s|%s|%s|%s|%s';
+        $family = method_exists($Image, 'getOSFamily') ?
+            $Image->getOSFamily() :
+            '';
+        return sprintf(
+            $strSetup,
+            $Image->get('path'),
+            $Image->get('osID'),
+            $imgTypes[$Image->get('imageTypeID')],
+            $Image->getPartitionType(),
+            (int)$Image->get('format'),
+            sprintf(
+                '%s:%s',
+                $StorageNode->get('ip'),
+                $StorageNode->get('path')
+            ),
+            $StorageNode->get('ip'),
+            $family
+        );
+    }
+    /**
      * Initializes the Capone tasking class.
      *
      * @return void
@@ -63,7 +103,6 @@ class CaponeTasking extends \FOG\Base\FOGBase
                     break;
                 }
                 try {
-                    $strSetup = "%s|%s|%s|%s|%s|%s|%s";
                     ob_start();
                     $capones = \FOG\Router\Route::getList(
                         'capone',
@@ -81,27 +120,13 @@ class CaponeTasking extends \FOG\Base\FOGBase
                         ) {
                             continue;
                         }
-                        $path = $Image->get('path');
-                        $osid = $Image->get('osID');
-                        $itid = $Image->get('imageTypeID');
-                        $ptid = $Image->getPartitionType();
-                        $format = $Image->get('format');
                         printf(
                             "%s\n",
                             base64_encode(
-                                sprintf(
-                                    $strSetup,
-                                    $path,
-                                    $osid,
-                                    $this->imgTypes[$itid],
-                                    $ptid,
-                                    (int)$format,
-                                    sprintf(
-                                        '%s:%s',
-                                        $StorageNode->get('ip'),
-                                        $StorageNode->get('path')
-                                    ),
-                                    $StorageNode->get('ip')
+                                self::imageLine(
+                                    $Image,
+                                    $StorageNode,
+                                    $this->imgTypes
                                 )
                             )
                         );
