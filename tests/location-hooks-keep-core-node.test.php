@@ -281,6 +281,10 @@ namespace {
     $group->nodes = [4, 5];
     $hook->storageGroupSetting($args);
     $check('a group with nodes is set', $group === $StorageGroup);
+    $check(
+        'a group with nodes is not logged',
+        1 === count(\FOG\Plugins\Location\Items\Location::$logged)
+    );
 
     // An empty location node keeps the node FOG chose.
     $StorageNode = $coreNode;
@@ -308,6 +312,11 @@ namespace {
     }
     $check('a capture with no master does not throw', !$threw);
     $check('a capture with no master keeps the given node', $coreNode === $StorageNode);
+    $last = end(\FOG\Plugins\Location\Items\Location::$logged);
+    $check(
+        'a capture with no master is logged',
+        is_string($last) && false !== strpos($last, 'No master nodes available')
+    );
 
     if ($fails) {
         echo 'FAIL (' . count($fails) . ")\n";

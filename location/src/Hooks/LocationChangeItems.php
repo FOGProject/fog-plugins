@@ -183,8 +183,8 @@ class LocationChangeItems extends \FOG\Base\Hook
             ['hostID' => $arguments['Host']->get('id')]
         );
         foreach ($LocationAssocs as &$LocationAssoc) {
-            $StorageGroup = (new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID))
-                ->getStorageGroup();
+            $Location = new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID);
+            $StorageGroup = $Location->getStorageGroup();
             // Inverted since it was written: this skipped the groups it
             // should have answered with and offered up only invalid ones,
             // so every caller fell through to the image's or snapin's own
@@ -200,9 +200,10 @@ class LocationChangeItems extends \FOG\Base\Hook
             if (count((array)$StorageGroup->get('allnodes')) < 1) {
                 \FOG\Plugins\Location\Items\Location::logOnce(
                     sprintf(
-                        'location id %d has Storage Group id %d, which has '
-                        . 'no storage nodes',
-                        (int)$LocationAssoc->locationID,
+                        'location "%s" (id %d) has Storage Group id %d, which '
+                        . 'has no storage nodes',
+                        $Location->get('name'),
+                        (int)$Location->get('id'),
                         (int)$StorageGroup->get('id')
                     )
                 );

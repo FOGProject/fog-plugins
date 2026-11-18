@@ -209,6 +209,9 @@ class Location extends \FOG\Base\FOGController
      *
      * The boot menu fires the location hooks several times per boot, so
      * the same problem would otherwise fill the log with identical lines.
+     * The set lives as long as the PHP process. A web request gets its own,
+     * but the FOGTaskScheduler service keeps one until it restarts, so
+     * there a problem is logged once per service start.
      *
      * @param string $problem what is wrong, naming the location
      *
