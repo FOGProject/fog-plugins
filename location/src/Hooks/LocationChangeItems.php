@@ -128,21 +128,39 @@ class LocationChangeItems extends \FOG\Base\Hook
                     || ($arguments['snapin'] === true
                     && self::getSetting('FOG_SNAPIN_LOCATION_SEND_ENABLED') > 0)
                 ) {
-                    $arguments['StorageNode'] = $Location
-                        ->getStorageNode();
-                    $arguments['StorageNode']->{"location_url"} = sprintf(
-                        '%s://%s/%s',
-                        $Location->get('protocol') ?: self::$httpproto,
-                        $arguments['StorageNode']->get('ip'),
-                        $arguments['StorageNode']->get('webroot')
-                    );
+                    // An empty node means the location's group gave none
+                    // (Location::getStorageNode() logged why). Keep the
+                    // node FOG already chose, not an empty one.
+                    $LocationNode = $Location->getStorageNode();
+                    if ($LocationNode->isValid()) {
+                        $arguments['StorageNode'] = $LocationNode;
+                        $arguments['StorageNode']->{"location_url"} = sprintf(
+                            '%s://%s/%s',
+                            $Location->get('protocol') ?: self::$httpproto,
+                            $arguments['StorageNode']->get('ip'),
+                            $arguments['StorageNode']->get('webroot')
+                        );
+                    }
                 }
                 if (!$method) {
                     continue;
                 }
-                $arguments['StorageNode'] = $Location
-                    ->getStorageGroup()
-                    ->{$method}();
+                // The same for a capture or multicast: a group with no
+                // master throws, and that must not stop the boot.
+                try {
+                    $arguments['StorageNode'] = $Location
+                        ->getStorageGroup()
+                        ->{$method}();
+                } catch (\Exception $e) {
+                    \FOG\Plugins\Location\Items\Location::logOnce(
+                        sprintf(
+                            'location "%s" (id %d): %s',
+                            $Location->get('name'),
+                            (int)$Location->get('id'),
+                            $e->getMessage()
+                        )
+                    );
+                }
             }
             unset($Location);
             unset($LocationAssoc);
@@ -165,8 +183,8 @@ class LocationChangeItems extends \FOG\Base\Hook
             ['hostID' => $arguments['Host']->get('id')]
         );
         foreach ($LocationAssocs as &$LocationAssoc) {
-            $StorageGroup = (new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID))
-                ->getStorageGroup();
+            $Location = new \FOG\Plugins\Location\Items\Location($LocationAssoc->locationID);
+            $StorageGroup = $Location->getStorageGroup();
             // Inverted since it was written: this skipped the groups it
             // should have answered with and offered up only invalid ones,
             // so every caller fell through to the image's or snapin's own
@@ -174,6 +192,21 @@ class LocationChangeItems extends \FOG\Base\Hook
             // storageNodeSetting() overrode the node regardless, which is
             // why the two could disagree.
             if (!$StorageGroup->isValid()) {
+                continue;
+            }
+            // A group with no nodes cannot serve a task: the core asks it
+            // for a node and throws "No nodes available", which stopped the
+            // boot with an HTTP 500 (forums 18310). Keep FOG's own group.
+            if (count((array)$StorageGroup->get('allnodes')) < 1) {
+                \FOG\Plugins\Location\Items\Location::logOnce(
+                    sprintf(
+                        'location "%s" (id %d) has Storage Group id %d, which '
+                        . 'has no storage nodes',
+                        $Location->get('name'),
+                        (int)$Location->get('id'),
+                        (int)$StorageGroup->get('id')
+                    )
+                );
                 continue;
             }
             $arguments['StorageGroup'] = $StorageGroup;
