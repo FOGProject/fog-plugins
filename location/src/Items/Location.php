@@ -173,6 +173,14 @@ class Location extends \FOG\Base\FOGController
     /**
      * Get the storage node.
      *
+     * With no node set, the location's group chooses one. A group with no
+     * nodes, or a group that no longer exists, makes the core throw "No
+     * nodes available". Uncaught, that stopped every PXE boot for the
+     * location's hosts with an HTTP 500 (forums 18310). So the exception
+     * becomes one error log line, naming the location, and an empty node.
+     * The hook callers in LocationChangeItems check isValid() and then
+     * keep FOG's own choice. A new caller must check isValid() too.
+     *
      * @return object
      */
     public function getStorageNode()
@@ -180,7 +188,43 @@ class Location extends \FOG\Base\FOGController
         if ($this->get('storagenodeID')) {
             return $this->get('storagenode');
         }
-        return $this->getStorageGroup()->getOptimalStorageNode();
+        try {
+            return $this->getStorageGroup()->getOptimalStorageNode();
+        } catch (\Exception $e) {
+            self::logOnce(
+                sprintf(
+                    'location "%s" (id %d) has no Storage Node set, and its '
+                    . 'Storage Group (id %d) gave no node: %s',
+                    $this->get('name'),
+                    (int)$this->get('id'),
+                    (int)$this->get('storagegroupID'),
+                    $e->getMessage()
+                )
+            );
+            return new \FOG\Items\StorageNode();
+        }
+    }
+    /**
+     * Writes a location problem to the error log once per request.
+     *
+     * The boot menu fires the location hooks several times per boot, so
+     * the same problem would otherwise fill the log with identical lines.
+     *
+     * @param string $problem what is wrong, naming the location
+     *
+     * @return void
+     */
+    public static function logOnce($problem)
+    {
+        static $logged = [];
+        if (isset($logged[$problem])) {
+            return;
+        }
+        $logged[$problem] = true;
+        error_log(
+            'FOG location: ' . $problem
+            . '. Its hosts use the storage FOG picks without the location.'
+        );
     }
     /**
      * Loads the locations hosts.

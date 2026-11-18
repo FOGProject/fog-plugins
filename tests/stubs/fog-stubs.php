@@ -428,6 +428,24 @@ namespace FOG\Router {
         {
             self::$deleted[] = [$class, $where];
         }
+        /**
+         * Rows getList() returns, keyed by class name.
+         *
+         * @var array
+         */
+        public static $lists = [];
+        /**
+         * Returns the rows a test put in $lists for the class.
+         *
+         * @param string $class the class name
+         * @param array  $where the conditions, ignored
+         *
+         * @return array
+         */
+        public static function getList($class, $where = [])
+        {
+            return self::$lists[$class] ?? [];
+        }
     }
 }
 
