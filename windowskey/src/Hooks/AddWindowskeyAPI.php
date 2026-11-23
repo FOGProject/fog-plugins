@@ -66,13 +66,14 @@ class AddWindowskeyAPI extends \FOG\Base\Hook
      *
      * windowskey.key is a Windows product key, which is the same kind of
      * thing as core's host.productKey -- so it goes in the same tier core
-     * puts that one in, the ORDINARY tier, not 'always'. That tier is
-     * stripped from API list payloads and kept on a direct single-entity
-     * GET, which is the shape that stops a bulk dump of every key an install
-     * holds without breaking a caller that asks for one key it is entitled
-     * to. The plugin's own pages are unaffected either way: they read the
-     * model directly, and the list grid is served by the web tier at
-     * ?node=windowskey&sub=list, not by the API emitter that strips.
+     * puts that one in: 'always', which the API strips from every payload,
+     * a direct single-entity GET included. It used to be in the ordinary
+     * tier, which a single GET keeps, so any windowskey.view holder could
+     * read one key at a time. Core moved host.productKey to 'always' for
+     * the same reason (GHSA-q38j-qx5x-w25v). The plugin's own pages are
+     * unaffected: they read the model directly, and the list grid is served
+     * by the web tier at ?node=windowskey&sub=list, not by the API emitter
+     * that strips.
      *
      * windowskeyassociation.windowskeyID is the opposite case. It matches
      * Redaction::CREDENTIAL_PATTERN only because the word "key" is in the
@@ -90,7 +91,7 @@ class AddWindowskeyAPI extends \FOG\Base\Hook
      */
     public function declareSensitiveFields($arguments)
     {
-        $arguments['fields'][$this->node][] = 'key';
+        $arguments['always'][$this->node][] = 'key';
         $arguments['exempt']['windowskeyassociation'][] = 'windowskeyID';
     }
     /**
