@@ -199,14 +199,16 @@ refuses(
     'save() with no client ID'
 );
 $saved = new \FOG\Plugins\OIDC\Items\OIDC();
-$saved->set('issuer', 'https://idp.example.com/realms/fog/')
+$saved->set('issuer', ' https://auth.example.com/application/o/fog/ ')
     ->set('clientId', ' fog ')
     ->set('scopes', 'profile')
     ->set('userClaim', ' preferred_username ')
     ->set('groupClaim', '')
     ->save();
-if ('https://idp.example.com/realms/fog' !== $saved->get('issuer')) {
-    fail('save() did not strip the trailing slash from the issuer');
+// Trimmed, and otherwise kept as typed: the issuer is compared exactly, and
+// Authentik's ends in a slash (fog-plugins #49).
+if ('https://auth.example.com/application/o/fog/' !== $saved->get('issuer')) {
+    fail('save() changed the issuer beyond trimming whitespace');
 }
 if ('fog' !== $saved->get('clientId')) {
     fail('save() did not trim the client ID');

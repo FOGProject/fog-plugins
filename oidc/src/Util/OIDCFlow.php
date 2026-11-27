@@ -491,6 +491,9 @@ class OIDCFlow extends \FOG\Base\FOGBase
     private static function _discover($provider)
     {
         $issuer = (string)$provider->get('issuer');
+        // OIDC Discovery 4.1: drop a terminating "/" before appending the
+        // well-known path. Only the URL is trimmed; the check below compares
+        // the issuer as stored, because 4.3 requires it to be identical.
         $config = self::_getJson(
             rtrim($issuer, '/') . '/.well-known/openid-configuration'
         );
