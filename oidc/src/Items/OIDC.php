@@ -141,7 +141,7 @@ class OIDC extends \FOG\Base\FOGController
      */
     public function save()
     {
-        $this->set('issuer', rtrim(trim((string)$this->get('issuer')), '/'));
+        $this->set('issuer', trim((string)$this->get('issuer')));
         self::assertValidIssuer($this->get('issuer'));
 
         $this->set('clientId', trim((string)$this->get('clientId')));

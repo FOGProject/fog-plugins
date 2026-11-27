@@ -492,7 +492,7 @@ class OIDCFlow extends \FOG\Base\FOGBase
     {
         $issuer = (string)$provider->get('issuer');
         $config = self::_getJson(
-            $issuer . '/.well-known/openid-configuration'
+            rtrim($issuer, '/') . '/.well-known/openid-configuration'
         );
         /*
          * The document's own issuer must be the one we asked. This is the
