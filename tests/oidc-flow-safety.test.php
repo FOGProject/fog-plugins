@@ -237,6 +237,14 @@ if (null === $discover) {
             . ' document names the issuer that was asked for'
         );
     }
+    // Discovery 4.1: an issuer ending in "/" (Authentik) must not fetch
+    // ".../fog//.well-known/openid-configuration".
+    if (false === strpos($flat, "rtrim(\$issuer,'/').'/.well-known/openid-configuration'")) {
+        fail(
+            'OIDCFlow::_discover() no longer drops a trailing slash from the'
+            . ' issuer before appending the discovery path'
+        );
+    }
     if (false === strpos($flat, "stripos(\$value,'https://')")) {
         fail(
             'OIDCFlow::_discover() no longer requires the published'

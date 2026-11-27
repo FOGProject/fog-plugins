@@ -73,8 +73,8 @@ class OIDC extends \FOG\Base\FOGController
         'createdBy' => 'opCreatedBy',
         'createdTime' => 'opCreatedTime',
         // The issuer identifier, which is also the discovery base: the
-        // endpoints are read from <issuer>/.well-known/openid-configuration
-        // rather than stored, so they cannot drift from what the provider
+        // endpoints are read from the discovery document (see
+        // OIDCFlow::_discover()) rather than stored, so they cannot drift from what the provider
         // currently publishes.
         'issuer' => 'opIssuer',
         'clientId' => 'opClientID',
@@ -141,7 +141,11 @@ class OIDC extends \FOG\Base\FOGController
      */
     public function save()
     {
-        $this->set('issuer', rtrim(trim((string)$this->get('issuer')), '/'));
+        // Whitespace only. The issuer is compared exactly with the discovery
+        // document and the ID token (OIDC Discovery 4.3, Core 3.1.3.7), so a
+        // trailing slash is part of it: Authentik's issuer ends in one.
+        // _discover() drops a trailing slash only to build the discovery URL.
+        $this->set('issuer', trim((string)$this->get('issuer')));
         self::assertValidIssuer($this->get('issuer'));
 
         $this->set('clientId', trim((string)$this->get('clientId')));
